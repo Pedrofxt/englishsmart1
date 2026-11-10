@@ -259,7 +259,7 @@
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Como funciona a assinatura Premium?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
-          <p class="mt-3 text-slate-500">Custa R$ 29,99 por mês, cobrados automaticamente no cartão pelo Mercado Pago. Você cancela quando quiser em "Meu plano", sem multa, e continua com acesso até o fim do mês pago. Na primeira assinatura, você tem 7 dias para desistir com reembolso total.</p>
+          <p class="mt-3 text-slate-500">Custa R$ 29,99 por mês. No cartão, a cobrança é automática todo mês pelo Mercado Pago e você cancela quando quiser em "Meu plano", sem multa, mantendo o acesso até o fim do mês pago. No Pix, você paga pelo QR Code e ganha 30 dias de acesso, sem renovação automática: é só pagar outro Pix quando quiser continuar. Na primeira assinatura, você tem 7 dias para desistir com reembolso total.</p>
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Posso refazer a prova de nivelamento?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
@@ -276,6 +276,7 @@
       <div class="flex items-center gap-5 text-sm">
         <a href="#/termos" class="hover:text-white transition">Termos de Uso</a>
         <a href="#/termos?aba=privacidade" class="hover:text-white transition">Privacidade</a>
+        <button data-cookies class="hover:text-white transition">Cookies</button>
         <a href="#/entrar" class="hover:text-white transition">Entrar</a>
       </div>
     </div>
@@ -888,7 +889,8 @@
       <ul>
         <li><b>O que inclui:</b> todas as lições dos 16 níveis, os testes de nível, os certificados e a revisão inteligente.</li>
         <li><b>Preço:</b> R$ 29,99 (vinte e nove reais e noventa e nove centavos) por mês, cobrados automaticamente a cada mês, a partir da contratação, até o cancelamento. Eventuais reajustes serão avisados com pelo menos 30 dias de antecedência, e você poderá cancelar antes que passem a valer.</li>
-        <li><b>Pagamento:</b> processado pelo <b>Mercado Pago</b>, de acordo com os termos dele. Nós não recebemos nem armazenamos o número do seu cartão.</li>
+        <li><b>Formas de pagamento:</b> (a) <b>cartão de crédito</b>, com cobrança automática todo mês até o cancelamento; ou (b) <b>Pix</b>, pagamento avulso de R$ 29,99 que libera 30 (trinta) dias de acesso Premium, sem renovação automática. Cada novo Pix soma 30 dias ao período que ainda resta. O QR Code vale por 30 minutos.</li>
+        <li><b>Processamento:</b> os pagamentos são processados pelo <b>Mercado Pago</b>, de acordo com os termos dele. Nós não recebemos nem armazenamos o número do seu cartão nem dados bancários.</li>
         <li><b>Cancelamento:</b> a qualquer momento, sem multa, em <b>Meu plano → Cancelar assinatura</b> (ou na sua conta do Mercado Pago). Não haverá novas cobranças, e o acesso Premium continua até o fim do período já pago.</li>
         <li><b>Direito de arrependimento:</b> na primeira contratação, você pode desistir em até 7 (sete) dias e receber o valor pago de volta integralmente, conforme o art. 49 do Código de Defesa do Consumidor. Basta cancelar e pedir o reembolso pelo e-mail de contato.</li>
         <li><b>Falta de pagamento:</b> se uma cobrança não for aprovada, o acesso Premium é suspenso após 3 dias de tolerância. Seu progresso, nível e certificados já emitidos continuam guardados.</li>
@@ -960,8 +962,14 @@
       </ul>
       <p>Alguns desses fornecedores podem tratar dados fora do Brasil. Nesses casos, a transferência ocorre de acordo com o art. 33 da LGPD.</p>
 
-      <h2>5. Armazenamento no seu navegador</h2>
-      <p>Usamos o armazenamento local do navegador (localStorage) para manter você conectado, guardar respostas de uma prova em andamento e lembrar preferências. Não usamos cookies de publicidade nem ferramentas de rastreamento de terceiros. Ao sair da conta, os dados de sessão são removidos.</p>
+      <h2 id="cookies">5. Cookies e armazenamento no seu navegador</h2>
+      <p>Usamos cookies e o armazenamento local do navegador (localStorage e sessionStorage) em duas categorias:</p>
+      <ul>
+        <li><b>Essenciais (sempre ativos):</b> mantêm você conectado (<code>english-smart-auth</code>), guardam as respostas de uma prova em andamento (<code>es_prova_…</code>), o modo do microfone na sessão (<code>es_voz_falhou</code>) e a sua escolha sobre cookies (<code>es_cookies_v1</code>). Eles são necessários para o serviço funcionar e não dependem de consentimento (art. 7º, V e IX, da LGPD).</li>
+        <li><b>Estatísticas (opcionais):</b> quando ativadas pela Plataforma, medem de forma agregada visitas e páginas mais usadas (Google Analytics, com IP anonimizado). Só são carregadas se você aceitar, e você pode retirar o consentimento a qualquer momento.</li>
+      </ul>
+      <p>Não usamos cookies de publicidade. Ao carregar o site, o navegador também busca fontes e bibliotecas em serviços de terceiros (Google Fonts e CDNs), que recebem dados técnicos como o endereço IP. Ao sair da conta, os dados de sessão são removidos.</p>
+      <p><button data-cookies class="font-semibold text-navy-600 hover:text-brand-red underline underline-offset-2">Alterar minhas preferências de cookies</button></p>
 
       <h2>6. Por quanto tempo guardamos</h2>
       <p>Mantemos os dados enquanto sua conta existir. Ao excluir a conta, apagamos imediatamente da Plataforma o seu login, cadastro, progresso, certificados e foto. Cópias de segurança e registros técnicos mantidos pelo provedor são eliminados automaticamente ao fim do respectivo período de retenção. Podemos conservar dados mínimos quando a lei exigir.</p>
@@ -1005,6 +1013,7 @@
 <script src="js/voz.js"></script>
 <script src="js/atividades.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/cookies.js"></script>
 <script src="js/app.js"></script>
 <script src="js/inicio.js"></script>
 <script src="js/entrar.js"></script>
@@ -1017,6 +1026,6 @@
 <script src="js/perfil.js"></script>
 <script src="js/termos.js"></script>
 <script src="js/admin.js"></script>
-<script>App.iniciar();</script>
+<script>App.iniciar(); Cookies.iniciar();</script>
 </body>
 </html>

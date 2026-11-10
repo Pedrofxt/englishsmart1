@@ -37,6 +37,7 @@
     if (!a) return { nome: 'Grátis', cls: 'bg-slate-100 text-slate-500' };
     const agora = Date.now();
     if (a.status === 'ativa' && a.pago_ate && new Date(a.pago_ate) > agora) return { nome: 'Premium', cls: 'bg-amber-100 text-amber-800', pagante: true };
+    if (a.pago_ate && new Date(a.pago_ate) > agora && a.ultimo_metodo === 'pix') return { nome: 'Premium (Pix)', cls: 'bg-teal-100 text-teal-800', ate: a.pago_ate, pagante: true };
     if (a.pago_ate && new Date(a.pago_ate) > agora) return { nome: 'Premium (cancelado)', cls: 'bg-amber-50 text-amber-700', ate: a.pago_ate };
     if (a.cortesia_ate && new Date(a.cortesia_ate) > agora) return { nome: 'Cortesia', cls: 'bg-sky-100 text-sky-800', ate: a.cortesia_ate, cortesia: true };
     return { nome: 'Grátis', cls: 'bg-slate-100 text-slate-500' };

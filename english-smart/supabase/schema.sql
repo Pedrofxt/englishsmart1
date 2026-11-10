@@ -687,3 +687,15 @@ end $$;
 revoke all on function public.eh_assinante(uuid)        from public, anon, authenticated; -- uso interno das outras funções
 revoke all on function public.admin_cortesia(uuid, int) from public, anon;
 grant execute on function public.admin_cortesia(uuid, int) to authenticated;
+
+
+-- =====================================================================
+-- PIX: pagamento avulso que libera 30 dias de Premium (QR Code gerado pelo Mercado Pago)
+-- =====================================================================
+alter table public.pagamentos add column if not exists metodo text not null default 'cartao' check (metodo in ('cartao', 'pix'));
+alter table public.pagamentos add column if not exists dias int;
+alter table public.pagamentos add column if not exists qr_code text;
+alter table public.pagamentos add column if not exists qr_base64 text;
+alter table public.pagamentos add column if not exists link text;
+alter table public.pagamentos add column if not exists expira_em timestamptz;
+alter table public.assinaturas add column if not exists ultimo_metodo text check (ultimo_metodo in ('cartao', 'pix'));

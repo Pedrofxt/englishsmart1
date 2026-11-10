@@ -50,8 +50,14 @@ O aluno entra com ela e troca em *Meu perfil*.
 | Lições 2, 3 e 4, teste do nível e certificados | | ✓ |
 | Revisão inteligente | | ✓ |
 
-**Como funciona:** o aluno clica em **Assinar** (`#/planos`), paga no Mercado Pago com cobrança automática todo mês e o
-Premium é liberado sozinho, sem recarregar a página. Ele cancela em **Meu plano** e continua com acesso até o fim do mês pago.
+**Formas de pagamento** (em `#/planos`, abas Cartão e Pix):
+- **Cartão de crédito:** assinatura com cobrança automática todo mês pelo Mercado Pago.
+- **Pix:** o site gera na hora o **QR Code** e o **Pix copia e cola** (válidos por 30 minutos, com contagem regressiva).
+  Assim que o banco confirma, o Premium é liberado sozinho por **30 dias**. Cada novo Pix soma 30 dias ao que falta,
+  e faltando 5 dias aparece na trilha o aviso "Renovar com Pix". (A renovação automática pela API do Mercado Pago é no
+  cartão; por isso o Pix funciona como pacote de 30 dias.) Pix estornado retira os 30 dias.
+
+**Como funciona:** o aluno escolhe a forma de pagamento, paga e o Premium é liberado sozinho, sem recarregar a página. Ele cancela em **Meu plano** e continua com acesso até o fim do mês pago.
 Excluir a conta também cancela a cobrança. O professor vê o plano de cada aluno, os assinantes e a receita estimada no
 portal, e pode liberar **Cortesia** (Premium grátis por X dias).
 
@@ -71,6 +77,10 @@ que cria a assinatura, recebe os avisos do Mercado Pago e cancela.
    https://wfxqxvlcrqbwvcvqslzi.supabase.co/functions/v1/mercadopago
    ```
    O Mercado Pago mostra uma **assinatura secreta**: salve-a no Supabase como segredo `MP_WEBHOOK_SECRET` (mesma página do passo 2).
+   Marque também o evento **Pagamentos** (é por ele que chega a confirmação do Pix; cada Pix também já é criado com
+   essa URL de aviso).
+4. **Para o Pix:** a sua conta do Mercado Pago precisa ter uma **chave Pix cadastrada** (app do Mercado Pago → Pix →
+   Minhas chaves). Sem ela, o Mercado Pago não gera o QR Code.
 
 Pronto. Para mudar o preço: altere `PLANO.preco` em `js/config.js` (o que aparece na tela) e crie o segredo `PLANO_VALOR`
 com o novo valor (o que é cobrado). Assinaturas antigas continuam com o valor antigo.
@@ -83,6 +93,14 @@ com o novo valor (o que é cobrado). Assinaturas antigas continuam com o valor a
 - O conteúdo das lições fica no navegador; a trava real está no banco: sem assinatura não há progresso, teste, certificado nem revisão.
 - Os Termos de Uso já têm a cláusula da assinatura (preço, renovação, cancelamento e os 7 dias de arrependimento do CDC)
   e a Política de Privacidade cita o Mercado Pago.
+
+## Aviso de cookies (LGPD)
+Na primeira visita aparece um aviso com **Aceitar todos**, **Só essenciais** e **Personalizar**. A escolha fica guardada
+e pode ser mudada pelo link **Cookies** no rodapé ou pelo botão na Política de Privacidade (seção 5, que lista cada item
+guardado no navegador). Se os Termos mudarem de versão (`VERSAO_TERMOS`), o aviso aparece de novo.
+
+**Estatísticas (opcional):** para medir visitas com o Google Analytics, cole o ID `G-XXXXXXX` em `ANALYTICS_ID`
+(`js/config.js`). Ele só carrega para quem aceitar os cookies de estatística; quem recusar não é medido.
 
 ## A trilha
 
@@ -204,7 +222,8 @@ js/inicio.js          Página inicial
 js/entrar.js          Entrar, criar conta e "esqueci minha senha"
 js/prova.js           Prova de nivelamento
 js/curso.js           Trilha do aluno
-js/plano.js           Plano Premium: assinar, status, pagamentos e cancelamento
+js/plano.js           Plano Premium: cartão ou Pix (QR Code), status, pagamentos e cancelamento
+js/cookies.js         Aviso e preferências de cookies (LGPD)
 js/revisao.js         Revisão inteligente (repetição espaçada e treinos)
 js/licao.js           Player das lições e do teste do nível
 js/certificado.js     Certificado

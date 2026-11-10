@@ -26,6 +26,10 @@ const RESPONSAVEL_DOC = '';    // CPF ou CNPJ (opcional, mas recomendado)
 const CONTATO_EMAIL = 'pedro.farias.toledo@gmail.com';      // ex.: 'contato@seudominio.com.br'
 const VERSAO_TERMOS = '2026-11-09.2';
 
+// Google Analytics 4 (opcional): cole o ID "G-XXXXXXX" para medir visitas.
+// Só é carregado para quem aceitar os cookies de estatística no aviso de cookies.
+const ANALYTICS_ID = '';
+
 // Plano Premium (o valor cobrado de verdade fica na função do servidor: segredo PLANO_VALOR, padrão 29.99)
 const PLANO = { nome: 'Premium', preco: 29.99 };
 const precoBR = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

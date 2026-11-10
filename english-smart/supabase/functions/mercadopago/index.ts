@@ -4,8 +4,10 @@
 //   { acao: 'criar', email?, voltar? }  → cria a assinatura no Mercado Pago e devolve o link de pagamento
 //   { acao: 'sincronizar' }             → consulta o Mercado Pago e atualiza o acesso do aluno
 //   { acao: 'cancelar' }                → cancela a renovação (o acesso continua até o fim do mês pago)
+//   { acao: 'pix', email? }             → gera um Pix (QR Code + copia e cola) que libera 30 dias de Premium
+//   { acao: 'pix_status', id }          → confere se o Pix foi pago
 //
-// Avisos do Mercado Pago (webhook): tópicos subscription_preapproval e subscription_authorized_payment.
+// Avisos do Mercado Pago (webhook): subscription_preapproval, subscription_authorized_payment e payment (Pix).
 // Nunca confiamos no conteúdo do aviso: sempre buscamos os dados direto na API do Mercado Pago.
 //
 // Segredos (Supabase → Edge Functions → Secrets):
@@ -40,6 +42,9 @@ async function mp(caminho: string, init: RequestInit = {}) {
   return corpo;
 }
 
+const DIAS_PIX = Number(Deno.env.get('PIX_DIAS') || '30');
+const MINUTOS_PIX = 30; // validade do QR Code
+const URL_FUNCAO = `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercadopago`;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUS: Record<string, string> = { authorized: 'ativa', paused: 'pausada', cancelled: 'cancelada', pending: 'pendente' };
 const maisUmMes = (d: string | Date) => { const x = new Date(d); x.setMonth(x.getMonth() + 1); x.setDate(x.getDate() + 3); return x; }; // +3 dias de tolerância
@@ -66,6 +71,7 @@ async function aplicarAssinatura(pre: any) {
     email_pagador: pre.payer_email || atual?.email_pagador || null,
     proxima_cobranca: pre.next_payment_date || null,
     pago_ate: maior(atual?.pago_ate, pagoAte)?.toISOString() ?? null,
+    ultimo_metodo: pre.status === 'authorized' ? 'cartao' : atual?.ultimo_metodo ?? null,
     atualizada_em: new Date().toISOString(),
   };
   const { data, error } = await db.from('assinaturas').upsert(linha, { onConflict: 'aluno_id' }).select().single();
@@ -94,6 +100,57 @@ async function aplicarCobranca(cob: any) {
   }
 }
 
+// ---------- PIX ----------
+// Data no formato que o Mercado Pago pede (yyyy-MM-ddTHH:mm:ss.000-03:00), no horário de Brasília
+function dataMP(d: Date) {
+  const br = new Date(d.getTime() - 3 * 3600e3);
+  return br.toISOString().replace('Z', '-03:00');
+}
+const STATUS_PIX: Record<string, string> = {
+  approved: 'aprovado', pending: 'pendente', in_process: 'pendente', authorized: 'pendente',
+  cancelled: 'expirado', rejected: 'recusado', refunded: 'estornado', charged_back: 'estornado',
+};
+
+// Aplica um pagamento Pix vindo da API: aprovado → +30 dias; estornado → tira os 30 dias
+async function aplicarPix(pay: any) {
+  const ref = String(pay.external_reference || '');
+  if (!ref.startsWith('pix:')) return null;
+  const aluno = ref.slice(4);
+  if (!UUID.test(aluno)) return null;
+  const id = String(pay.id);
+  const status = STATUS_PIX[pay.status] || 'pendente';
+  const dias = Number(pay.metadata?.dias || DIAS_PIX);
+  // garante a linha do pagamento (sem sobrescrever)
+  await db.from('pagamentos').upsert({ id, aluno_id: aluno, valor: pay.transaction_amount ?? VALOR, status: 'pendente', metodo: 'pix', dias }, { onConflict: 'id', ignoreDuplicates: true });
+
+  const ajustarAcesso = async (sinal: 1 | -1) => {
+    const { data: a } = await db.from('assinaturas').select('*').eq('aluno_id', aluno).maybeSingle();
+    const agora = Date.now();
+    const base = sinal > 0 ? Math.max(agora, a?.pago_ate ? new Date(a.pago_ate).getTime() : 0) : (a?.pago_ate ? new Date(a.pago_ate).getTime() : agora);
+    const novo = new Date(base + sinal * dias * 864e5).toISOString();
+    await db.from('assinaturas').upsert({
+      aluno_id: aluno, pago_ate: novo, ultimo_metodo: sinal > 0 ? 'pix' : a?.ultimo_metodo ?? null,
+      status: a?.status || 'pendente', valor: a?.valor ?? VALOR, atualizada_em: new Date().toISOString(),
+    }, { onConflict: 'aluno_id' });
+  };
+
+  if (status === 'aprovado') {
+    // só quem "vira" o status para aprovado soma os dias (o aviso e a conferência podem chegar juntos)
+    const { data: virou } = await db.from('pagamentos')
+      .update({ status: 'aprovado', pago_em: pay.date_approved || new Date().toISOString(), qr_code: null, qr_base64: null })
+      .eq('id', id).neq('status', 'aprovado').neq('status', 'estornado').select('id');
+    if (virou?.length) await ajustarAcesso(1);
+  } else if (status === 'estornado') {
+    const { data: virou } = await db.from('pagamentos').update({ status: 'estornado' }).eq('id', id).eq('status', 'aprovado').select('id');
+    if (virou?.length) await ajustarAcesso(-1);
+    else await db.from('pagamentos').update({ status: 'estornado' }).eq('id', id).neq('status', 'estornado');
+  } else {
+    await db.from('pagamentos').update({ status }).eq('id', id).eq('status', 'pendente');
+  }
+  const { data } = await db.from('pagamentos').select('id, status').eq('id', id).maybeSingle();
+  return data;
+}
+
 // Confere a assinatura secreta do webhook (x-signature: ts=...,v1=...)
 async function assinaturaValida(req: Request, idDado: string) {
   if (!SEGREDO_WEBHOOK) return true; // sem segredo configurado: segue, pois os dados são sempre buscados na API
@@ -117,6 +174,7 @@ async function webhook(req: Request, url: URL, corpo: any) {
   try {
     if (tipo === 'subscription_preapproval' || tipo === 'preapproval') await aplicarAssinatura(await mp(`/preapproval/${id}`));
     else if (tipo === 'subscription_authorized_payment' || tipo === 'authorized_payment') await aplicarCobranca(await mp(`/authorized_payments/${id}`));
+    else if (tipo === 'payment' || String(corpo?.action || '').startsWith('payment.')) await aplicarPix(await mp(`/v1/payments/${id}`));
     return json({ ok: true });
   } catch (e) {
     console.error('[webhook]', tipo, id, String(e));
@@ -157,6 +215,47 @@ async function acaoDoAluno(req: Request, corpo: any) {
       atualizada_em: new Date().toISOString(),
     }, { onConflict: 'aluno_id' });
     return json({ link: pre.init_point || pre.sandbox_init_point, id: pre.id });
+  }
+
+  if (corpo.acao === 'pix') {
+    const email = String(corpo.email || user.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ erro: 'Informe um e-mail válido.' }, 400);
+    // reaproveita um QR Code ainda válido (evita gerar vários)
+    const { data: pendentes } = await db.from('pagamentos').select('*').eq('aluno_id', user.id).eq('metodo', 'pix').eq('status', 'pendente');
+    const valido = (pendentes || []).find((x: any) => x.qr_code && x.expira_em && new Date(x.expira_em).getTime() - Date.now() > 5 * 60e3);
+    if (valido) return json({ id: valido.id, qr_code: valido.qr_code, qr_base64: valido.qr_base64, link: valido.link, expira_em: valido.expira_em, valor: Number(valido.valor), dias: valido.dias });
+
+    const expira = new Date(Date.now() + MINUTOS_PIX * 60e3);
+    const pay = await mp('/v1/payments', {
+      method: 'POST',
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+      body: JSON.stringify({
+        transaction_amount: VALOR,
+        description: `English Smart Premium - ${DIAS_PIX} dias`,
+        payment_method_id: 'pix',
+        payer: { email, first_name: String(aluno.nome || '').split(' ')[0] || undefined },
+        external_reference: `pix:${user.id}`,
+        notification_url: URL_FUNCAO,
+        date_of_expiration: dataMP(expira),
+        metadata: { dias: DIAS_PIX },
+      }),
+    });
+    const t = pay.point_of_interaction?.transaction_data || {};
+    if (!t.qr_code) return json({ erro: 'O Mercado Pago não gerou o QR Code. Confira se a sua conta tem uma chave Pix cadastrada.' }, 502);
+    await db.from('pagamentos').upsert({
+      id: String(pay.id), aluno_id: user.id, valor: pay.transaction_amount ?? VALOR, status: 'pendente', metodo: 'pix', dias: DIAS_PIX,
+      qr_code: t.qr_code, qr_base64: t.qr_code_base64, link: t.ticket_url || null, expira_em: expira.toISOString(),
+    }, { onConflict: 'id' });
+    return json({ id: String(pay.id), qr_code: t.qr_code, qr_base64: t.qr_code_base64, link: t.ticket_url || null, expira_em: expira.toISOString(), valor: VALOR, dias: DIAS_PIX });
+  }
+
+  if (corpo.acao === 'pix_status') {
+    const id = String(corpo.id || '');
+    const { data: meu } = await db.from('pagamentos').select('id').eq('id', id).eq('aluno_id', user.id).maybeSingle();
+    if (!meu) return json({ erro: 'Pagamento não encontrado.' }, 404);
+    const r = await aplicarPix(await mp(`/v1/payments/${id}`));
+    const { data: assinatura } = await db.from('assinaturas').select('*').eq('aluno_id', user.id).maybeSingle();
+    return json({ status: r?.status || 'pendente', assinatura });
   }
 
   if (corpo.acao === 'sincronizar') {

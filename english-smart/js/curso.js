@@ -53,7 +53,16 @@
     const metaPct = Math.min(1, est.semana / est.meta);
     const C = 2 * Math.PI * 26;
 
+    const a = perfil.assinatura;
+    const diasPix = perfil.premium && a?.status !== 'ativa' && a?.ultimo_metodo === 'pix' && a?.pago_ate ? Math.ceil((new Date(a.pago_ate) - Date.now()) / 864e5) : null;
     el('painelResumo').innerHTML = `
+      ${diasPix !== null && diasPix <= 5 ? `
+        <a href="#/planos?metodo=pix" id="avisoRenovarPix" class="col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 hover:border-amber-400 transition">
+          <span class="w-12 h-12 shrink-0 rounded-xl bg-[#32BCAD] text-white grid place-items-center">${Icone('relogio', 'w-6 h-6')}</span>
+          <span class="flex-1"><span class="block font-display font-bold text-navy-900">Seu Premium termina em ${diasPix} ${diasPix === 1 ? 'dia' : 'dias'}</span>
+            <span class="block text-sm text-slate-600">Renove com Pix para não perder o acesso às lições, aos testes e à revisão. Os dias novos somam aos que faltam.</span></span>
+          <span class="shrink-0 text-center font-semibold bg-[#32BCAD] text-white rounded-xl px-5 py-2.5">Renovar com Pix</span>
+        </a>` : ''}
       ${!perfil.premium ? `
         <a href="#/planos" id="faixaGratis" class="group col-span-2 lg:col-span-4 relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4 bg-brand-hero text-white rounded-2xl p-5">
           <div class="absolute inset-0 bg-grid opacity-60"></div>
