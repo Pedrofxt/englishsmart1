@@ -1,0 +1,217 @@
+/* brand.css — Identidade visual e animações da English Smart */
+
+:root {
+  --navy-950: #000b2b;
+  --navy-900: #00174f;
+  --navy-600: #023fa0;
+  --red: #eb1f3b;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .font-display { font-family: 'Poppins', system-ui, sans-serif; letter-spacing: -0.02em; }
+::selection { background: var(--red); color: #fff; }
+
+/* ---------- Fundos da marca ---------- */
+.bg-brand-hero {
+  background:
+    radial-gradient(1200px 600px at 100% 100%, rgba(2, 63, 160, 0.55), transparent 60%),
+    radial-gradient(800px 500px at 0% 0%, rgba(1, 31, 99, 0.9), transparent 60%),
+    var(--navy-900);
+}
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+/* Bolhas de luz que se movem devagar */
+.blob {
+  position: absolute; border-radius: 9999px; filter: blur(70px); opacity: 0.55;
+  animation: blob 18s ease-in-out infinite;
+}
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.1); }
+  66% { transform: translate(-30px, 20px) scale(0.95); }
+}
+
+/* ---------- Entradas ---------- */
+.fade-up { opacity: 0; animation: fadeUp 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.25s; }
+.delay-3 { animation-delay: 0.4s; } .delay-4 { animation-delay: 0.55s; }
+.delay-5 { animation-delay: 0.7s; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+
+/* Aparece ao rolar (ativado por ui.js) */
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+/* ---------- Movimento contínuo ---------- */
+.float { animation: float 6s ease-in-out infinite; }
+.float-slow { animation: float 9s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+
+/* Traço vermelho desenhado (igual ao da logo) */
+.swoosh path { stroke-dasharray: 600; stroke-dashoffset: 600; animation: draw 1.4s 0.8s cubic-bezier(0.6, 0, 0.2, 1) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* Brilho que atravessa o botão */
+.btn-shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shine::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%); animation: shine 3.5s ease-in-out infinite;
+}
+@keyframes shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+/* Ponto pulsando */
+.pulse-dot { position: relative; }
+.pulse-dot::before {
+  content: ''; position: absolute; inset: 0; border-radius: 9999px; background: inherit;
+  animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+
+/* Faixa de frases rolando */
+.marquee { display: flex; width: max-content; animation: marquee 40s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* Cursor de digitação */
+.caret::after { content: '|'; margin-left: 2px; color: var(--red); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Anel girando (tela de aguarde) */
+.spin-slow { animation: spin 3s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Troca de lição */
+.lesson-enter { animation: lessonIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes lessonIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+/* Tremida em erro */
+.shake { animation: shake 0.4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+/* Linha nova na tabela */
+.row-in { animation: fadeUp 0.5s ease both; }
+
+/* FAQ */
+details summary { list-style: none; cursor: pointer; }
+details summary::-webkit-details-marker { display: none; }
+details[open] .faq-icon { transform: rotate(45deg); }
+.faq-icon { transition: transform 0.3s ease; }
+
+/* Spinner de botão */
+.spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 9999px; animation: spin 0.7s linear infinite; }
+
+/* Acessibilidade: sem animação para quem prefere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .fade-up, .reveal { opacity: 1 !important; transform: none !important; }
+  .swoosh path { stroke-dashoffset: 0; }
+}
+
+/* ---------- Componentes do app ---------- */
+.campo {
+  width: 100%; background: #fff; border: 1px solid #cbd5e1; border-radius: 0.75rem;
+  padding: 0.875rem 1rem; font-size: 1rem; color: #0f172a; transition: border-color .2s, box-shadow .2s;
+}
+.campo::placeholder { color: #94a3b8; }
+.campo:focus { outline: none; border-color: var(--navy-600); box-shadow: 0 0 0 4px rgba(2, 63, 160, 0.15); }
+.campo.pr-20 { padding-right: 5rem; }
+
+.spinner-escuro { border-color: rgba(0, 23, 79, 0.15); border-top-color: var(--navy-900); }
+
+/* Opção da prova */
+.opcao { transition: border-color .2s, background-color .2s, transform .15s; }
+.opcao:hover { transform: translateY(-1px); }
+.opcao:active { transform: scale(0.99); }
+
+/* Resultado da prova */
+.anel-nivel { animation: anelIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes anelIn { from { transform: scale(0.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.confete { position: absolute; width: 10px; height: 14px; border-radius: 2px; opacity: 0; animation: confete 2.6s ease-out forwards; }
+@keyframes confete {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+}
+@media (prefers-reduced-motion: reduce) { .confete { display: none; } }
+
+/* ---------- Impressão do certificado ---------- */
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  html, body { background: #fff !important; }
+  body > *:not([data-view="certificado"]) { display: none !important; }
+  [data-view="certificado"] { background: #fff !important; min-height: 0 !important; }
+  .no-print { display: none !important; }
+  [data-view="certificado"] > div { padding: 0 !important; overflow: visible !important; }
+  .certificado { box-shadow: none !important; width: 297mm !important; height: 210mm !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+/* ---------- Animações de acerto e erro ---------- */
+.anim-acerto { animation: acerto 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes acerto {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  35% { transform: scale(1.035); }
+  100% { transform: scale(1); box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+}
+.anim-erro { animation: erro 0.45s ease; }
+@keyframes erro {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); } 40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
+}
+.anim-revela { animation: revela 1s ease 0.25s 2; }
+@keyframes revela { 50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.25); } }
+
+/* Painel de correção sobe e o ícone "salta" */
+.anim-sobe { animation: sobe 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes sobe { from { transform: translateY(100%); } to { transform: none; } }
+.anim-pop { animation: pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+/* Faíscas em volta da resposta certa */
+.faiscas { position: absolute; inset: 0; pointer-events: none; }
+.faisca {
+  position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; border-radius: 9999px;
+  animation: faisca 0.7s ease-out forwards;
+}
+@keyframes faisca {
+  from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  to { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.2); opacity: 0; }
+}
+
+/* Barra de progresso dá um brilho quando avança */
+.barra-brilho { animation: barraBrilho 0.6s ease; }
+@keyframes barraBrilho { 50% { filter: brightness(1.4); } }
+
+/* Menu do avatar */
+.menu-avatar { animation: menuIn 0.18s ease-out; transform-origin: top right; }
+@keyframes menuIn { from { opacity: 0; transform: scale(0.95) translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* Menu de navegação rolável no celular */
+.rolagem-x { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rolagem-x::-webkit-scrollbar { display: none; }
+
+/* Texto dos termos */
+.texto-legal h2 { font-size: 1.25rem; font-weight: 700; color: var(--navy-900); margin-top: 2rem; }
+.texto-legal h3 { font-size: 1rem; font-weight: 700; color: var(--navy-900); margin-top: 1.25rem; }
+.texto-legal p, .texto-legal li { color: #475569; line-height: 1.75; margin-top: 0.6rem; }
+.texto-legal ul { list-style: disc; padding-left: 1.25rem; }
+
+@media (prefers-reduced-motion: reduce) { .faiscas { display: none; } }
+.rolagem-dica { -webkit-mask-image: linear-gradient(to right, #000 88%, transparent); mask-image: linear-gradient(to right, #000 88%, transparent); padding-right: 2rem; }
+
+/* Flashcard que vira */
+.flip-cartao { perspective: 1200px; }
+.flip-interno { position: relative; min-height: 190px; transition: transform .6s cubic-bezier(.2,.8,.2,1); transform-style: preserve-3d; }
+.flip-cartao.virado .flip-interno { transform: rotateY(180deg); }
+.flip-face { position: absolute; inset: 0; border-radius: 1.5rem; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip-verso { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: reduce) { .flip-interno { transition: none; } }
