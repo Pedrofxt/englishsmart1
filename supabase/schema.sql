@@ -699,3 +699,135 @@ alter table public.pagamentos add column if not exists qr_base64 text;
 alter table public.pagamentos add column if not exists link text;
 alter table public.pagamentos add column if not exists expira_em timestamptz;
 alter table public.assinaturas add column if not exists ultimo_metodo text check (ultimo_metodo in ('cartao', 'pix'));
+
+
+-- =====================================================================
+-- SEM PLANO GRÁTIS: cadastro e prova de nivelamento são livres; lições, testes e revisão só com assinatura
+-- =====================================================================
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('public.registrar_atividade(int,int,int,int)'::regprocedure);
+  d := replace(d, 'if p_licao <> 1 and not public.eh_assinante(uid) then raise exception ''Conteúdo do plano Premium. Assine para continuar.''; end if;',
+                  'if not public.eh_assinante(uid) then raise exception ''Assine o English Smart para acessar as lições.''; end if;');
+  execute d;
+  d := pg_get_functiondef('public.registrar_revisao(text,jsonb,int,int)'::regprocedure);
+  d := replace(d, 'if p_modo <> ''licao'' and not public.eh_assinante(uid) then raise exception ''A revisão inteligente faz parte do plano Premium.''; end if;',
+                  'if not public.eh_assinante(uid) then raise exception ''Assine o English Smart para acessar a revisão.''; end if;');
+  execute d;
+end $$;
+
+
+-- =====================================================================
+-- LIMITE DE 4 APARELHOS POR CONTA
+-- Sair da conta não libera a vaga; aparelho sem uso há 60 dias sai sozinho;
+-- o aluno remove até 3 aparelhos a cada 30 dias; o professor pode zerar.
+-- =====================================================================
+create table if not exists public.dispositivos (
+  aluno_id  uuid not null references public.alunos(id) on delete cascade,
+  id        text not null check (id ~ '^[A-Za-z0-9-]{8,64}$'),
+  nome      text check (length(nome) <= 80),
+  digital   text check (length(digital) <= 64),
+  criado_em timestamptz not null default now(),
+  visto_em  timestamptz not null default now(),
+  primary key (aluno_id, id)
+);
+create table if not exists public.dispositivos_remocoes (
+  id          bigint generated always as identity primary key,
+  aluno_id    uuid not null references public.alunos(id) on delete cascade,
+  removido_em timestamptz not null default now()
+);
+create index if not exists dispositivos_remocoes_aluno on public.dispositivos_remocoes (aluno_id, removido_em);
+alter table public.dispositivos enable row level security;
+alter table public.dispositivos_remocoes enable row level security;
+drop policy if exists "aluno vê os próprios aparelhos" on public.dispositivos;
+create policy "aluno vê os próprios aparelhos" on public.dispositivos
+  for select to authenticated using (aluno_id = (select auth.uid()) or (select public.eh_admin()));
+drop policy if exists "aluno vê as próprias remoções" on public.dispositivos_remocoes;
+create policy "aluno vê as próprias remoções" on public.dispositivos_remocoes
+  for select to authenticated using (aluno_id = (select auth.uid()) or (select public.eh_admin()));
+
+create or replace function public.registrar_dispositivo(p_id text, p_nome text, p_digital text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); limite constant int := 4; total int; restantes int;
+begin
+  if uid is null then raise exception 'Faça login para continuar.'; end if;
+  if public.eh_admin() or not exists (select 1 from public.alunos where id = uid) then return jsonb_build_object('ok', true, 'limite', limite); end if;
+  if p_id is null or p_id !~ '^[A-Za-z0-9-]{8,64}$' then raise exception 'Aparelho inválido.'; end if;
+  delete from public.dispositivos where aluno_id = uid and visto_em < now() - interval '60 days';
+  update public.dispositivos set visto_em = now(), nome = left(coalesce(p_nome, nome), 80) where aluno_id = uid and id = p_id;
+  if not found and p_digital is not null and length(p_digital) between 8 and 64 then
+    update public.dispositivos set id = p_id, visto_em = now(), nome = left(coalesce(p_nome, nome), 80)
+     where aluno_id = uid and digital = p_digital
+       and ctid = (select ctid from public.dispositivos where aluno_id = uid and digital = p_digital order by visto_em desc limit 1);
+  end if;
+  if not found then
+    select count(*) into total from public.dispositivos where aluno_id = uid;
+    if total >= limite then
+      select greatest(0, 3 - count(*)) into restantes from public.dispositivos_remocoes where aluno_id = uid and removido_em > now() - interval '30 days';
+      return jsonb_build_object('ok', false, 'limite', limite, 'remocoes_restantes', restantes,
+        'dispositivos', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'nome', nome, 'visto_em', visto_em, 'criado_em', criado_em) order by visto_em desc), '[]')
+                           from public.dispositivos where aluno_id = uid));
+    end if;
+    insert into public.dispositivos (aluno_id, id, nome, digital) values (uid, p_id, left(p_nome, 80), left(p_digital, 64));
+  end if;
+  select count(*) into total from public.dispositivos where aluno_id = uid;
+  return jsonb_build_object('ok', true, 'limite', limite, 'total', total);
+end; $$;
+
+create or replace function public.remover_dispositivo(p_id text, p_atual text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); feitas int;
+begin
+  if uid is null then raise exception 'Faça login para continuar.'; end if;
+  if p_id = p_atual then raise exception 'Este é o aparelho que você está usando agora.'; end if;
+  select count(*) into feitas from public.dispositivos_remocoes where aluno_id = uid and removido_em > now() - interval '30 days';
+  if feitas >= 3 then raise exception 'Você já removeu 3 aparelhos nos últimos 30 dias. Fale com o suporte para liberar.'; end if;
+  delete from public.dispositivos where aluno_id = uid and id = p_id;
+  if not found then raise exception 'Aparelho não encontrado.'; end if;
+  insert into public.dispositivos_remocoes (aluno_id) values (uid);
+  return jsonb_build_object('remocoes_restantes', 2 - feitas);
+end; $$;
+
+create or replace function public.dispositivo_ok(p_aluno uuid, p_id text)
+returns boolean language plpgsql security definer set search_path = '' as $$
+begin update public.dispositivos set visto_em = now() where aluno_id = p_aluno and id = p_id; return found; end; $$;
+
+create or replace function public.admin_limpar_dispositivos(p_aluno uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito ao administrador.'; end if;
+  delete from public.dispositivos where aluno_id = p_aluno;
+  delete from public.dispositivos_remocoes where aluno_id = p_aluno;
+end; $$;
+
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('public.registrar_atividade(int,int,int,int)'::regprocedure);
+  d := replace(d, 'p_acertos integer, p_total integer)', 'p_acertos integer, p_total integer, p_dispositivo text DEFAULT NULL)');
+  d := replace(d, 'if not public.eh_assinante(uid) then raise exception ''Assine o English Smart para acessar as lições.''; end if;',
+    'if not public.eh_assinante(uid) then raise exception ''Assine o English Smart para acessar as lições.''; end if;' || chr(10) ||
+    '  if not public.dispositivo_ok(uid, p_dispositivo) then raise exception ''Este aparelho não está liberado nesta conta (limite de 4 aparelhos).''; end if;');
+  drop function public.registrar_atividade(int,int,int,int);
+  execute d;
+  d := pg_get_functiondef('public.registrar_revisao(text,jsonb,int,int)'::regprocedure);
+  d := replace(d, 'p_acertos integer, p_total integer)', 'p_acertos integer, p_total integer, p_dispositivo text DEFAULT NULL)');
+  d := replace(d, 'if not public.eh_assinante(uid) then raise exception ''Assine o English Smart para acessar a revisão.''; end if;',
+    'if not public.eh_assinante(uid) then raise exception ''Assine o English Smart para acessar a revisão.''; end if;' || chr(10) ||
+    '  if not public.dispositivo_ok(uid, p_dispositivo) then raise exception ''Este aparelho não está liberado nesta conta (limite de 4 aparelhos).''; end if;');
+  drop function public.registrar_revisao(text,jsonb,int,int);
+  execute d;
+end $$;
+
+revoke all on function public.registrar_atividade(int,int,int,int,text) from public, anon;
+revoke all on function public.registrar_revisao(text,jsonb,int,int,text) from public, anon;
+revoke all on function public.registrar_dispositivo(text,text,text) from public, anon;
+revoke all on function public.remover_dispositivo(text,text) from public, anon;
+revoke all on function public.admin_limpar_dispositivos(uuid) from public, anon;
+revoke all on function public.dispositivo_ok(uuid,text) from public, anon, authenticated;
+grant execute on function public.registrar_atividade(int,int,int,int,text) to authenticated;
+grant execute on function public.registrar_revisao(text,jsonb,int,int,text) to authenticated;
+grant execute on function public.registrar_dispositivo(text,text,text) to authenticated;
+grant execute on function public.remover_dispositivo(text,text) to authenticated;
+grant execute on function public.admin_limpar_dispositivos(uuid) to authenticated;

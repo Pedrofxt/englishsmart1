@@ -4,7 +4,7 @@
 //   { acao: 'criar', email?, voltar? }  → cria a assinatura no Mercado Pago e devolve o link de pagamento
 //   { acao: 'sincronizar' }             → consulta o Mercado Pago e atualiza o acesso do aluno
 //   { acao: 'cancelar' }                → cancela a renovação (o acesso continua até o fim do mês pago)
-//   { acao: 'pix', email? }             → gera um Pix (QR Code + copia e cola) que libera 30 dias de Premium
+//   { acao: 'pix', email? }             → gera um Pix (QR Code + copia e cola) que libera 30 dias de acesso
 //   { acao: 'pix_status', id }          → confere se o Pix foi pago
 //
 // Avisos do Mercado Pago (webhook): subscription_preapproval, subscription_authorized_payment e payment (Pix).
@@ -202,7 +202,7 @@ async function acaoDoAluno(req: Request, corpo: any) {
     const pre = await mp('/preapproval', {
       method: 'POST',
       body: JSON.stringify({
-        reason: 'English Smart Premium (mensal)',
+        reason: 'Assinatura English Smart (mensal)',
         external_reference: user.id,
         payer_email: email,
         back_url: voltar,
@@ -231,7 +231,7 @@ async function acaoDoAluno(req: Request, corpo: any) {
       headers: { 'X-Idempotency-Key': crypto.randomUUID() },
       body: JSON.stringify({
         transaction_amount: VALOR,
-        description: `English Smart Premium - ${DIAS_PIX} dias`,
+        description: `Assinatura English Smart - ${DIAS_PIX} dias`,
         payment_method_id: 'pix',
         payer: { email, first_name: String(aluno.nome || '').split(' ')[0] || undefined },
         external_reference: `pix:${user.id}`,

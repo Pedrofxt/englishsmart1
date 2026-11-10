@@ -50,19 +50,33 @@ const App = (() => {
     perfilCache = data ? { papel: 'aluno', ...data } : { papel: 'aluno', id: user.id, nome: user.email, email: user.email, semCadastro: true };
     perfilCache.assinatura = assinatura || null;
     perfilCache.premium = temPremium(assinatura);
+    if (data) perfilCache.aparelho = await checarAparelho(forcar);
     return perfilCache;
   }
 
   const limparPerfil = () => { perfilCache = null; };
 
-  // Acesso Premium: mês pago (com tolerância) ou cortesia do professor
+  // ---------- Limite de 4 aparelhos por conta ----------
+  // Registra este aparelho na conta (conferido de novo a cada 2 minutos). Falha de rede não bloqueia:
+  // o banco também recusa salvar progresso de aparelho não liberado.
+  let aparelho = { quando: 0, resultado: null };
+  async function checarAparelho(forcar = false) {
+    if (!forcar && aparelho.resultado && Date.now() - aparelho.quando < 120e3) return aparelho.resultado;
+    const { data, error } = await sb.rpc('registrar_dispositivo', { p_id: DISPOSITIVO.id, p_nome: DISPOSITIVO.nome, p_digital: DISPOSITIVO.digital });
+    if (error || !data) return aparelho.resultado || { ok: true };
+    aparelho = { quando: Date.now(), resultado: data };
+    return data;
+  }
+  const esquecerAparelho = () => { aparelho = { quando: 0, resultado: null }; };
+
+  // Acesso liberado: mês pago (com tolerância) ou cortesia do professor
   function temPremium(a) {
     if (!a) return false;
     const agora = Date.now();
     return (a.pago_ate && new Date(a.pago_ate).getTime() > agora) || (a.cortesia_ate && new Date(a.cortesia_ate).getTime() > agora) || false;
   }
-  // Grátis: prova de nivelamento e a 1ª lição de cada nível
-  const licaoLivre = (p, l) => p?.premium || l === 1;
+  // Sem plano grátis: cadastro e prova são livres; qualquer lição exige assinatura
+  const licaoLivre = (p) => !!p?.premium;
 
   // Progresso e certificados de um aluno (o banco só devolve os dele; o admin vê todos)
   async function dadosDoAluno(id) {
@@ -95,12 +109,14 @@ const App = (() => {
   function destino(p) {
     if (!p) return '#/entrar';
     if (p.papel === 'admin') return '#/admin';
-    return p.nivel_num ? '#/curso' : '#/prova';
+    if (!p.nivel_num) return '#/prova';      // primeiro a prova de nivelamento (grátis)
+    return p.premium ? '#/curso' : '#/planos'; // depois, só com assinatura
   }
 
   async function sair() {
     await sb.auth.signOut().catch(() => {});
     limparPerfil();
+    esquecerAparelho();
     atualizarAvatares(null);
     location.hash = '#/entrar';
   }
@@ -158,7 +174,7 @@ const App = (() => {
         ${item('#/perfil', 'usuario', 'Meu perfil')}
         ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do professor') : item('#/curso', 'capelo', 'Minha trilha')}
         ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
-        ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Meu plano · Premium' : 'Assinar o Premium') : ''}
+        ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
         ${item('#/termos', 'documento', 'Termos e privacidade')}
       </div>
       <button data-menu-sair class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-slate-100 transition">${Icone('sair', 'w-4 h-4')}Sair</button>`;
@@ -196,6 +212,15 @@ const App = (() => {
     Voz.parar();
     Voz.pararGravacao(true); // desliga o microfone ao trocar de tela
     fecharMenuAvatar();
+
+    // aparelho acima do limite: só pode ver a tela de aparelhos, os termos e a página inicial
+    if (!['inicio', 'entrar', 'termos', 'dispositivos'].includes(nome)) {
+      try {
+        const p = (await usuario()) ? await perfil() : null;
+        if (minha !== navegacaoAtual) return;
+        if (p?.papel === 'aluno' && p.aparelho && p.aparelho.ok === false) { location.hash = '#/dispositivos'; return; }
+      } catch { /* a própria tela trata o erro */ }
+    }
 
     try {
       const continuar = await tela.iniciar({ rota, params });
@@ -257,5 +282,5 @@ const App = (() => {
     navegar();
   }
 
-  return { temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
+  return { checarAparelho, temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
 })();

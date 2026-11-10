@@ -74,29 +74,129 @@ const Atividades = (() => {
     return { tipo: 'falar', titulo: 'Fale em inglês', pergunta: 'Ouça e repita a frase em voz alta.', frase: texto };
   }
 
-  // ~14 atividades por lição: vocabulário, escuta, gramática, montar frase, diálogo e fala
+  // ---------- Tipos novos: ligar e escrever ----------
+  // Ligar: duas colunas embaralhadas; cada par tem a chave do item para a revisão
+  function ligar(titulo, pergunta, pares) {
+    const idx = pares.map((_, i) => i);
+    const ordemEsq = embaralhar(idx);
+    let ordemDir = embaralhar(idx);
+    // a coluna da direita nunca fica na mesma ordem da esquerda (seria só ligar em linha reta)
+    for (let t = 0; t < 10 && ordemDir.some((v, k) => v === ordemEsq[k]); t++) ordemDir = embaralhar(idx);
+    return { tipo: 'ligar', titulo, pergunta, pares, ordemEsq, ordemDir };
+  }
+  const ligarVocab = (n, l, lista, licao) => ligar('Ligue as palavras', 'Ligue cada palavra ou expressão em inglês à tradução.',
+    lista.map((v) => ({ a: v[0], b: v[1], audio: v[0], ref: chave('v', n, l, licao.v.indexOf(v)) })));
+  // Falas do diálogo: pergunta (A) → resposta (B)
+  function paresDoDialogo(d) {
+    const pares = [];
+    for (let i = 0; i < d.length - 1; i++) if (d[i][0] === 'A' && d[i + 1][0] === 'B') pares.push([i, i + 1]);
+    return pares;
+  }
+  const ligarFalas = (n, l, d) => ligar('Ligue as falas', 'Ligue cada fala à resposta certa, como no diálogo da lição.',
+    sortear(paresDoDialogo(d), 4).map(([i, j]) => ({ a: d[i][1], b: d[j][1], audio: d[i][1], audioB: d[j][1], ref: chave('d', n, l, j) })));
+  // Metades de frases (estágio C): início ↔ final
+  function ligarMetades(n, l, licao) {
+    const pares = licao.e.map((f, i) => [completa(f), i]).filter(([t]) => t.split(' ').length >= 5).map(([t, i]) => {
+      const w = t.split(' '); const meio = Math.ceil(w.length / 2);
+      return { a: w.slice(0, meio).join(' ') + ' …', b: '… ' + w.slice(meio).join(' '), audio: t, ref: chave('e', n, l, i) };
+    });
+    return pares.length >= 3 ? ligar('Ligue as metades', 'Ligue o começo de cada frase ao final que faz sentido.', pares) : null;
+  }
+
+  // Escrever a palavra (português → inglês), ditado de palavra/frase e lacuna digitada
+  const escreverPalavra = (n, l, licao, v) => ({ tipo: 'digitar', titulo: 'Escreva em inglês', pergunta: `Como se escreve “${v[1]}” em inglês?`, respostas: [v[0]], dica: dicaDe(v[0]), depois: v[0], ref: chave('v', n, l, licao.v.indexOf(v)) });
+  const ditadoPalavra = (n, l, licao, v) => ({ tipo: 'digitar', titulo: 'Ouça e escreva', pergunta: 'Ouça e escreva a palavra ou expressão.', audio: v[0], respostas: [v[0]], depois: v[0], traducao: v[1], ref: chave('v', n, l, licao.v.indexOf(v)) });
+  const ditadoFrase = (ref, frase) => ({ tipo: 'digitar', titulo: 'Ditado', pergunta: 'Ouça e escreva a frase inteira.', audio: frase, respostas: [frase], depois: frase, frase: true, ref });
+  function lacunaDigitada(frase, ref) {
+    const [texto, certa] = frase.split('|');
+    return { tipo: 'digitar', titulo: 'Gramática: complete digitando', pergunta: texto, respostas: [certa], dica: dicaDe(certa), depois: texto.replace('___', certa), ref };
+  }
+
+  // Produção escrita: o aluno cria uma frase com a expressão (correção: usou a expressão e escreveu uma frase completa)
+  function redacao(n, l, licao, v) {
+    const alvo = alternativas(v[0])[0];
+    const chaveAlvo = palavras(alvo).join(' ');
+    const exemplos = [...licao.d.map((x) => x[1]), ...licao.e.map(completa)];
+    const modelo = exemplos.find((t) => palavras(t).join(' ').includes(chaveAlvo)) || '';
+    return { tipo: 'redacao', titulo: 'Escreva com suas palavras', pergunta: `Escreva uma frase sua em inglês usando “${alvo}”.`, traducao: v[1], alvo, modelo, minimo: Math.max(4, palavras(alvo).length + 2), ref: chave('v', n, l, licao.v.indexOf(v)) };
+  }
+  function conferirRedacao(texto, ex) {
+    const d = palavras(texto);
+    const a = palavras(ex.alvo);
+    let usou = false;
+    for (let i = 0; i + a.length <= d.length && !usou; i++) usou = a.every((p, k) => parecidas(p, d[i + k]));
+    if (!usou) return { certo: false, motivo: `Use a expressão “${ex.alvo}” na sua frase.` };
+    if (d.length < ex.minimo) return { certo: false, motivo: `Escreva uma frase completa (pelo menos ${ex.minimo} palavras).` };
+    return { certo: true };
+  }
+
+  // Atividades de cada lição: a quantidade e os tipos mudam com o estágio
+  //   A1–A2: mais reconhecimento (escolher, ligar, ouvir), com primeiras escritas
+  //   B1–B2: metade escrita (digitar, ditado, frase própria) + ligar falas
+  //   C1–C2: quase tudo escrito, sem opções, com metades de frases e redação
   function daLicao(nivel, numero) {
     const l = nivelInfo(nivel).licoes[numero - 1];
+    const estagio = faixaDoNivel(nivel)[0]; // 'A' | 'B' | 'C'
     const rv = (v) => chave('v', nivel, numero, l.v.indexOf(v));
     const rd = (i) => chave('d', nivel, numero, i);
+    const re = (i) => chave('e', nivel, numero, i);
     const falas = l.d.map((x) => x[1]);
     const iFala = (t) => falas.indexOf(t);
-    const montaveis = sortear(falas.filter(bomParaMontar), 2);
-    const vOuvir = sortear(l.v, 1)[0];
-    const vTrad = sortear(l.v, 1)[0];
+    const montaveis = embaralhar(falas.filter(bomParaMontar));
+    const ditaveis = embaralhar(falas.filter((t) => { const k = t.split(' ').length; return k >= 3 && k <= 12; }));
+    const curtas = l.v.filter((v) => palavras(v[0]).length <= 3);
+    const vocab = embaralhar(l.v);
+    const [v1, v2, v3, v4, v5, v6] = vocab;
+    const paraEscrever = embaralhar(curtas.length >= 2 ? curtas : l.v);
+    const temFalas = paresDoDialogo(l.d).length >= 3;
     const fOuvir = sortear(falas, 1)[0];
-    return [
-      ...sortear(l.v, 3).map((v) => significado(v, l.v, rv(v))),
-      traduzir(vTrad, l.v, rv(vTrad)),
-      ouvir(vOuvir[0], l.v.map((v) => v[0]), rv(vOuvir)),
-      ...l.e.slice(0, 2).map((f, i) => lacuna(f, 'Gramática', chave('e', nivel, numero, i))),
-      ...montaveis.slice(0, 1).map((t) => montar(t, rd(iFala(t)))),
-      ouvir(fOuvir, falas, rd(iFala(fOuvir))),
-      ...l.e.slice(2).map((f, i) => lacuna(f, 'Gramática', chave('e', nivel, numero, i + 2))),
-      ...montaveis.slice(1).map((t) => montar(t, rd(iFala(t)))),
-      completarDialogo(l.d, rd),
-      falarFrase(sortear(falas.filter(bomParaMontar).length ? falas.filter(bomParaMontar) : falas, 1)[0]),
-    ];
+    const lista = [];
+    const add = (...xs) => xs.forEach((x) => x && lista.push(x));
+
+    if (estagio === 'A') {
+      add(significado(v1, l.v, rv(v1)), significado(v2, l.v, rv(v2)), significado(v3, l.v, rv(v3)),
+        ligarVocab(nivel, numero, sortear(l.v, 5), l),
+        traduzir(v4, l.v, rv(v4)),
+        ouvir(v5[0], l.v.map((v) => v[0]), rv(v5)),
+        escreverPalavra(nivel, numero, l, paraEscrever[0]),
+        lacuna(l.e[0], 'Gramática', re(0)), lacuna(l.e[1], 'Gramática', re(1)),
+        montaveis[0] && montar(montaveis[0], rd(iFala(montaveis[0]))),
+        ouvir(fOuvir, falas, rd(iFala(fOuvir))),
+        lacuna(l.e[2], 'Gramática', re(2)), lacuna(l.e[3], 'Gramática', re(3)),
+        ditadoPalavra(nivel, numero, l, paraEscrever[1] || v6),
+        temFalas && ligarFalas(nivel, numero, l.d),
+        completarDialogo(l.d, rd));
+    } else if (estagio === 'B') {
+      add(significado(v1, l.v, rv(v1)), significado(v2, l.v, rv(v2)),
+        ligarVocab(nivel, numero, sortear(l.v, 5), l),
+        traduzir(v3, l.v, rv(v3)),
+        escreverPalavra(nivel, numero, l, paraEscrever[0]), escreverPalavra(nivel, numero, l, paraEscrever[1] || v4),
+        lacuna(l.e[0], 'Gramática', re(0)), lacunaDigitada(l.e[1], re(1)),
+        montaveis[0] && montar(montaveis[0], rd(iFala(montaveis[0]))),
+        ouvir(fOuvir, falas, rd(iFala(fOuvir))),
+        lacuna(l.e[2], 'Gramática', re(2)), lacunaDigitada(l.e[3], re(3)),
+        montaveis[1] && montar(montaveis[1], rd(iFala(montaveis[1]))),
+        ditaveis[0] && ditadoFrase(rd(iFala(ditaveis[0])), ditaveis[0]),
+        temFalas && ligarFalas(nivel, numero, l.d),
+        completarDialogo(l.d, rd),
+        redacao(nivel, numero, l, v5));
+    } else {
+      add(ligarVocab(nivel, numero, sortear(l.v, 5), l),
+        escreverPalavra(nivel, numero, l, paraEscrever[0]), escreverPalavra(nivel, numero, l, paraEscrever[1] || v2),
+        traduzir(v3, l.v, rv(v3)),
+        lacunaDigitada(l.e[0], re(0)), lacunaDigitada(l.e[1], re(1)),
+        montaveis[0] && montar(montaveis[0], rd(iFala(montaveis[0]))),
+        ditaveis[0] && ditadoFrase(rd(iFala(ditaveis[0])), ditaveis[0]),
+        lacuna(l.e[2], 'Gramática', re(2)), lacunaDigitada(l.e[3], re(3)),
+        ligarMetades(nivel, numero, l),
+        montaveis[1] && montar(montaveis[1], rd(iFala(montaveis[1]))),
+        ditaveis[1] && ditadoFrase(rd(iFala(ditaveis[1])), ditaveis[1]),
+        temFalas && ligarFalas(nivel, numero, l.d),
+        completarDialogo(l.d, rd),
+        redacao(nivel, numero, l, v4), redacao(nivel, numero, l, v5));
+    }
+    add(falarFrase(sortear(montaveis.length ? montaveis : falas, 1)[0]));
+    return lista;
   }
 
   // Teste do nível: 12 questões misturando as 4 lições (gramática, vocabulário e escuta)
@@ -261,6 +361,8 @@ const Atividades = (() => {
       const formatos = embaralhar(['reconhecer', 'reconhecer', 'reconhecer', 'reconhecer', 'reconhecer', 'reconhecer',
         'escrever', 'escrever', 'escrever', 'escrever', 'escrever', 'ditado', 'ditado', 'ditado', 'ditado', 'reconhecer', 'escrever', 'ditado']);
       const atividades = lista.map((it, k) => paraItem(it, formatos[k]));
+      const vocab = sortear(doEstagio.filter((it) => it.tipo === 'v'), 5);
+      if (vocab.length >= 3) atividades.splice(Math.min(6, atividades.length), 0, ligar('Ligue as palavras', 'Ligue cada palavra em inglês à tradução.', vocab.map((it) => ({ a: it.dado[0], b: it.dado[1], audio: it.dado[0], ref: it.chave }))));
       const falas = doEstagio.filter((it) => it.tipo === 'd' && bomParaMontar(it.dado[1]));
       if (falas.length) atividades.push(falarFrase(sortear(falas, 1)[0].dado[1]));
       return atividades;
@@ -283,5 +385,5 @@ const Atividades = (() => {
     return [];
   }
 
-  return { daLicao, doTeste, daRevisao, conferir, lerChave, itensDasLicoes, embaralhar };
+  return { daLicao, doTeste, daRevisao, conferir, conferirRedacao, lerChave, itensDasLicoes, embaralhar };
 })();

@@ -10,6 +10,12 @@
 
   let st = {}; // estado da sessão atual
 
+  // Nome de cada tipo de atividade (para o resumo antes da prática)
+  const NOMES_TIPOS = (ex) => ({
+    escolha: 'Escolha', ouvir: 'Escuta', dialogo: 'Completar diálogo', ordenar: 'Montar frase', falar: 'Fala',
+    digitar: ex.audio ? 'Ditado' : 'Escrita', ligar: 'Ligar', redacao: 'Frase própria', flashcard: 'Flashcard',
+  }[ex.tipo] || ex.tipo);
+
   const botaoSom = (texto, extra = '') =>
     `<button data-falar="${App.escapar(texto)}" class="shrink-0 w-9 h-9 rounded-lg grid place-items-center text-navy-600 hover:bg-navy-600/10 transition ${extra}" title="Ouvir">${icone.som}</button>`;
   const botaoLento = (texto) =>
@@ -78,6 +84,14 @@
         </section>
 
         ${!Voz.temOuvir ? '<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">Seu navegador não tem leitura em voz alta. Para ouvir os áudios, use o Google Chrome ou o Microsoft Edge.</p>' : ''}
+
+        <section>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Nesta prática</p>
+          <div id="tiposPratica" class="mt-3 flex flex-wrap gap-2">
+            ${Object.entries(st.exercicios.reduce((m, ex) => { const t = NOMES_TIPOS(ex); m[t] = (m[t] || 0) + 1; return m; }, {}))
+              .map(([t, q]) => `<span class="text-sm bg-slate-50 border border-slate-200 text-slate-600 rounded-full px-3 py-1.5">${t}${q > 1 ? ` <b class="text-navy-900">×${q}</b>` : ''}</span>`).join('')}
+          </div>
+        </section>
 
         <button id="btnPraticar" class="btn-shine w-full bg-brand-red hover:bg-brand-redDark text-white font-display font-semibold text-lg py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5">
           Começar as atividades (${st.exercicios.length}) →
@@ -207,6 +221,29 @@
           <button id="btnVerificar" disabled class="flex-1 bg-navy-900 hover:bg-navy-800 disabled:opacity-40 text-white font-semibold py-3.5 rounded-xl transition">Verificar</button>
           <button id="btnNaoSei" class="sm:w-40 border border-slate-200 hover:border-navy-900 text-slate-500 hover:text-navy-900 font-semibold py-3.5 rounded-xl transition">Não sei</button>
         </div>`;
+    } else if (ex.tipo === 'ligar') {
+      const item = (lado, i, texto, audio) => `
+        <div class="flex items-stretch gap-1">
+          <button data-${lado}="${i}" class="flex-1 min-h-[52px] text-left px-3 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-sm md:text-base font-medium text-slate-700 hover:border-navy-600/50 transition break-words">${App.escapar(texto)}</button>
+          ${audio ? botaoSom(audio, 'self-center') : ''}
+        </div>`;
+      corpo = `${cabecalho(ex)}
+        <div class="mt-6 grid grid-cols-2 gap-3 md:gap-6">
+          <div class="space-y-2.5">${ex.ordemEsq.map((i) => item('esq', i, ex.pares[i].a, ex.pares[i].audio)).join('')}</div>
+          <div class="space-y-2.5">${ex.ordemDir.map((i) => item('dir', i, ex.pares[i].b, ex.pares[i].audioB)).join('')}</div>
+        </div>
+        <p id="placarLigar" class="mt-5 text-center text-sm text-slate-400">0 de ${ex.pares.length} pares</p>`;
+    } else if (ex.tipo === 'redacao') {
+      corpo = `${cabecalho(ex)}
+        <p class="mt-2 text-sm text-slate-500">Significa “${App.escapar(ex.traducao)}”. Escreva sobre você, sua rotina ou o tema da lição.</p>
+        <textarea id="textoRedacao" rows="3" autocomplete="off" autocapitalize="sentences" spellcheck="false" lang="en"
+          placeholder="Escreva aqui sua frase em inglês…" class="campo mt-6 text-lg resize-none"></textarea>
+        <p class="mt-2 text-xs text-slate-400">Conferimos se você usou a expressão numa frase completa. Depois, compare com o exemplo da lição.</p>
+        <div id="modeloRedacao" class="hidden mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4"></div>
+        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+          <button id="btnVerificar" disabled class="flex-1 bg-navy-900 hover:bg-navy-800 disabled:opacity-40 text-white font-semibold py-3.5 rounded-xl transition">Verificar</button>
+          <button id="btnNaoSei" class="sm:w-40 border border-slate-200 hover:border-navy-900 text-slate-500 hover:text-navy-900 font-semibold py-3.5 rounded-xl transition">Ver exemplo</button>
+        </div>`;
     } else if (ex.tipo === 'flashcard') {
       corpo = `${cabecalho(ex)}
         <div class="mt-6 flip-cartao" id="cartaoFlash">
@@ -239,6 +276,8 @@
     if (ex.tipo === 'falar') prepararFala(ex);
     if (ex.tipo === 'digitar') prepararDigitar(ex);
     if (ex.tipo === 'flashcard') prepararFlashcard(ex);
+    if (ex.tipo === 'ligar') prepararLigar(ex);
+    if (ex.tipo === 'redacao') prepararRedacao(ex);
     window.scrollTo(0, 0);
   }
 
@@ -330,6 +369,85 @@
     }
     const extra = [r.certo && r.quase ? 'Atenção à grafia' : '', ex.traducao ? `“${ex.traducao}”` : ''].filter(Boolean).join(' · ');
     corrigir(r.certo, ex.depois || ex.respostas[0], ex.depois || ex.audio, extra);
+  }
+
+  // ---------- Ligar: toque de um lado e depois do outro ----------
+  function prepararLigar(ex) {
+    const raiz = el('licaoConteudo');
+    const sel = { esq: null, dir: null };
+    const errosPorPar = ex.pares.map(() => 0);
+    let feitos = 0;
+    let erros = 0;
+    const botao = (lado, i) => raiz.querySelector(`[data-${lado}="${i}"]`);
+    const marcar = (b, on) => { b.classList.toggle('!border-navy-900', on); b.classList.toggle('!bg-navy-900/5', on); b.classList.toggle('ring-2', on); b.classList.toggle('ring-navy-900/20', on); };
+
+    const tentar = () => {
+      if (sel.esq === null || sel.dir === null) return;
+      const be = botao('esq', sel.esq);
+      const bd = botao('dir', sel.dir);
+      // textos iguais também valem (ex.: duas falas "Yes, please.")
+      const certo = sel.esq === sel.dir || (ex.pares[sel.esq].b === ex.pares[sel.dir].b);
+      marcar(be, false); marcar(bd, false);
+      if (certo) {
+        [be, bd].forEach((b) => { b.disabled = true; b.classList.remove('hover:border-navy-600/50'); b.classList.add('!border-emerald-500', '!bg-emerald-50', 'text-emerald-800', 'anim-acerto'); });
+        soltarFaiscas(bd);
+        feitos++;
+        el('placarLigar').textContent = `${feitos} de ${ex.pares.length} pares${erros ? ` · ${erros} ${erros === 1 ? 'erro' : 'erros'}` : ''}`;
+      } else {
+        erros++;
+        errosPorPar[sel.esq]++;
+        [be, bd].forEach((b) => { b.classList.add('!border-red-400', '!bg-red-50', 'anim-erro'); setTimeout(() => b.classList.remove('!border-red-400', '!bg-red-50', 'anim-erro'), 650); });
+        el('placarLigar').textContent = `${feitos} de ${ex.pares.length} pares · ${erros} ${erros === 1 ? 'erro' : 'erros'}`;
+      }
+      sel.esq = sel.dir = null;
+      if (feitos === ex.pares.length) {
+        // cada par vai para a revisão; a atividade conta como certa com no máximo 1 erro
+        ex.pares.forEach((p, i) => p.ref && st.itens.push({ item: p.ref, certo: !errosPorPar[i] }));
+        const ok = erros <= 1;
+        corrigir(ok, '', null, erros ? `${erros} ${erros === 1 ? 'ligação errada' : 'ligações erradas'}${ok ? '' : ' (vale até 1 erro)'}` : 'Todos os pares de primeira!');
+      }
+    };
+    ['esq', 'dir'].forEach((lado) => raiz.querySelectorAll(`[data-${lado}]`).forEach((b) => b.addEventListener('click', () => {
+      if (st.respondida || b.disabled) return;
+      const i = Number(b.dataset[lado]);
+      if (sel[lado] !== null) marcar(botao(lado, sel[lado]), false);
+      if (sel[lado] === i) { sel[lado] = null; return; } // tocar de novo desmarca
+      sel[lado] = i;
+      marcar(b, true);
+      tentar();
+    })));
+  }
+
+  // ---------- Frase própria (produção escrita) ----------
+  function prepararRedacao(ex) {
+    const txt = el('textoRedacao');
+    const verificar = el('btnVerificar');
+    const mostrarModelo = () => {
+      if (!ex.modelo) return;
+      el('modeloRedacao').innerHTML = `<p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Exemplo da lição</p>
+        <p class="mt-1 flex items-center gap-2 font-medium text-navy-900">${App.escapar(ex.modelo)} ${botaoSom(ex.modelo)}</p>`;
+      el('modeloRedacao').classList.remove('hidden');
+      ligarSons(el('modeloRedacao'));
+    };
+    const responder = (pulou) => {
+      if (st.respondida) return;
+      txt.disabled = true; verificar.disabled = true; el('btnNaoSei').disabled = true;
+      const r = pulou ? { certo: false, motivo: 'Tente escrever na próxima: escrever fixa muito mais.' } : Atividades.conferirRedacao(txt.value, ex);
+      txt.classList.add(r.certo ? '!border-emerald-500' : '!border-red-400', r.certo ? '!bg-emerald-50' : '!bg-red-50', r.certo ? 'anim-acerto' : 'anim-erro');
+      if (r.certo) soltarFaiscas(txt);
+      mostrarModelo();
+      corrigir(r.certo, '', ex.modelo || null, r.certo ? 'Frase com a expressão certa' : r.motivo);
+    };
+    txt.addEventListener('input', () => { verificar.disabled = !txt.value.trim(); });
+    txt.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.shiftKey) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!st.respondida && txt.value.trim()) responder(false);
+      else if (st.respondida) el('btnContinuar').click();
+    });
+    verificar.addEventListener('click', () => responder(false));
+    el('btnNaoSei').addEventListener('click', () => responder(true));
+    setTimeout(() => txt.focus(), 60);
   }
 
   // ---------- Flashcard: lembrou ou não? ----------
@@ -526,7 +644,7 @@
       // no desafio, segue sozinho para não perder tempo
       const i = st.i;
       setTimeout(() => { if (st.modo === 'pratica' && st.i === i && st.respondida) el('btnContinuar').click(); }, certo ? 550 : 1300);
-    } else if (!document.activeElement?.matches('#inputResposta')) el('btnContinuar').focus();
+    } else if (!document.activeElement?.matches('#inputResposta, #textoRedacao')) el('btnContinuar').focus();
   }
 
   function esconderFeedback() { el('feedback').classList.add('hidden'); }
@@ -564,11 +682,11 @@
     let resp = null;
     let erro = null;
     if (!st.admin) {
-      const { data, error } = await sb.rpc('registrar_atividade', { p_nivel: st.n, p_licao: st.l, p_acertos: st.acertos, p_total: total });
+      const { data, error } = await sb.rpc('registrar_atividade', { p_nivel: st.n, p_licao: st.l, p_acertos: st.acertos, p_total: total, p_dispositivo: DISPOSITIVO.id });
       if (error) erro = error.message; else resp = data;
       App.limparPerfil();
       // guarda o que o aluno acertou e errou para a revisão inteligente
-      if (st.itens.length) sb.rpc('registrar_revisao', { p_modo: 'licao', p_itens: st.itens, p_acertos: 0, p_total: 0 }).then(() => {}, () => {});
+      if (st.itens.length) sb.rpc('registrar_revisao', { p_modo: 'licao', p_itens: st.itens, p_acertos: 0, p_total: 0, p_dispositivo: DISPOSITIVO.id }).then(() => {}, () => {});
     }
 
     const C = 2 * Math.PI * 54;
@@ -635,7 +753,7 @@
 
     let resp = null, erro = null;
     if (!st.admin && avaliadas) {
-      const { data, error } = await sb.rpc('registrar_revisao', { p_modo: st.modoRevisao, p_itens: st.itens.slice(0, 80), p_acertos: st.acertos, p_total: avaliadas });
+      const { data, error } = await sb.rpc('registrar_revisao', { p_modo: st.modoRevisao, p_itens: st.itens.slice(0, 80), p_acertos: st.acertos, p_total: avaliadas, p_dispositivo: DISPOSITIVO.id });
       if (error) erro = error.message; else resp = data;
       App.limparPerfil();
     }
@@ -648,8 +766,8 @@
     const texto = st.relampago ? `Você acertou ${st.acertos} em ${TEMPO_RELAMPAGO} segundos.${resp?.recorde_anterior != null && !recorde ? ` Seu recorde é ${resp.recorde_anterior}.` : ''}`
       : bom ? 'Os itens que você acertou voltam mais tarde, com intervalos cada vez maiores.' : 'O que você errou volta já na próxima revisão do dia até ficar fixado.';
     const erradas = st.erradas;
-    const respostaDe = (ex) => ex.depois || ex.verso || ex.resposta || ex.respostas?.[0] || ex.opcoes?.[ex.correta] || '';
-    const enunciadoDe = (ex) => ex.tipo === 'digitar' && ex.audio ? 'Ditado' : ex.tipo === 'flashcard' ? ex.frente : ex.pergunta;
+    const respostaDe = (ex) => ex.tipo === 'ligar' ? ex.pares.map((x) => `${x.a.replace(' …', '')} = ${x.b.replace('… ', '')}`).join(' · ') : ex.tipo === 'redacao' ? (ex.modelo || ex.alvo) : ex.depois || ex.verso || ex.resposta || ex.respostas?.[0] || ex.opcoes?.[ex.correta] || '';
+    const enunciadoDe = (ex) => ex.tipo === 'digitar' && ex.audio ? 'Ditado' : ex.tipo === 'flashcard' ? ex.frente : ex.tipo === 'ligar' ? 'Ligar' : ex.pergunta;
 
     el('licaoConteudo').innerHTML = `
       <div class="relative overflow-hidden bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8 md:p-10 text-center lesson-enter">
@@ -718,7 +836,7 @@
     st.modo = 'aprenda';
     el('licaoBarra').style.width = '0%';
     el('licaoContador').textContent = '';
-    const tipos = [...new Set(st.exercicios.map((ex) => ({ escolha: 'Escolha', ouvir: 'Escuta', dialogo: 'Diálogo', ordenar: 'Montar frase', digitar: ex.audio ? 'Ditado' : 'Escrita', flashcard: 'Flashcard', falar: 'Fala' }[ex.tipo])))];
+    const tipos = [...new Set(st.exercicios.map((ex) => ({ escolha: 'Escolha', ouvir: 'Escuta', dialogo: 'Diálogo', ordenar: 'Montar frase', digitar: ex.audio ? 'Ditado' : 'Escrita', flashcard: 'Flashcard', falar: 'Fala', ligar: 'Ligar', redacao: 'Frase própria' }[ex.tipo])))];
     el('licaoConteudo').innerHTML = `
       <div class="lesson-enter bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
         <div class="relative overflow-hidden bg-brand-hero text-white p-8 md:p-10">
@@ -803,12 +921,12 @@
       if (!p) { location.hash = '#/entrar'; return false; }
       if (p.papel === 'aluno' && !p.nivel_num) { location.hash = '#/prova'; return false; }
       if (rota === 'treino') {
-        if (!p.premium) { location.hash = '#/planos?motivo=revisao'; return false; }
+        if (!p.premium) { location.hash = '#/planos?motivo=assinatura'; return false; }
         return iniciarTreino(p, params);
       }
       {
         const l0 = Number(params.get('l'));
-        if (!App.licaoLivre(p, l0)) { location.hash = `#/planos?motivo=${l0 === 0 ? 'teste' : 'licao'}`; return false; }
+        if (!App.licaoLivre(p, l0)) { location.hash = '#/planos?motivo=assinatura'; return false; }
       }
       clearInterval(st.relogio);
       const admin = p.papel === 'admin';

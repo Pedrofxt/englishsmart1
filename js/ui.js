@@ -103,6 +103,8 @@ window.Icone = (() => {
     seta: '<path d="M13 7l5 5-5 5M6 12h12"/>',
     voltar: '<path d="M15 18l-6-6 6-6"/>',
     grafico: '<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',
+    celular: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+    computador: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
     cartao: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>',
     cookie: '<path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4-4 4 4 0 0 1-4-4 1 1 0 0 0-1-1Z"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="10" cy="15.5" r="1"/>',
     certificado: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 9h8M8 12h5"/><circle cx="17" cy="17" r="3"/><path d="M15.5 19.5L15 22l2-1 2 1-.5-2.5"/>',

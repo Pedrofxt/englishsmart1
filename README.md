@@ -1,6 +1,6 @@
 # English Smart — Curso de Inglês Inteligente
 
-Plataforma completa de inglês, do zero à fluência, com plano grátis e assinatura Premium pelo Mercado Pago, inspirada no modelo das plataformas usadas na rede
+Plataforma completa de inglês, do zero à fluência, com prova de nivelamento grátis e assinatura mensal pelo Mercado Pago, inspirada no modelo das plataformas usadas na rede
 estadual (prova de nivelamento, 16 níveis alinhados ao CEFR, metas semanais e certificados).
 Feita em HTML, Tailwind e JavaScript, com banco e login no **Supabase**.
 
@@ -41,25 +41,30 @@ https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/auth/smtp (Resend e 
 **Enquanto isso:** no Portal do professor, o botão **Senha** gera uma senha provisória para o aluno, sem e-mail.
 O aluno entra com ela e troca em *Meu perfil*.
 
-## Plano Premium (assinatura mensal pelo Mercado Pago)
+## Assinatura (R$ 29,99/mês pelo Mercado Pago)
 
-| | Grátis | Premium · R$ 29,99/mês |
-|---|---|---|
-| Prova de nivelamento | ✓ | ✓ |
-| 1ª lição de cada nível | ✓ | ✓ |
-| Lições 2, 3 e 4, teste do nível e certificados | | ✓ |
-| Revisão inteligente | | ✓ |
+Não há plano grátis. O caminho do aluno é:
+
+```
+Cria a conta (grátis) ──▶ Prova de nivelamento (grátis) ──▶ Vê o nível ──▶ Assina ──▶ Trilha liberada
+```
+
+- Sem assinatura ativa, a trilha, as lições, os testes, os certificados e a revisão ficam bloqueados. Quem tenta abrir
+  qualquer um deles (ou entra no site) vai para a página da assinatura, que mostra o **nível que a prova encontrou** e o
+  pagamento logo ao lado.
+- A trava também está no banco: sem assinatura, nenhuma lição, teste ou revisão é salva.
+- Certificados já emitidos e o perfil continuam acessíveis.
 
 **Formas de pagamento** (em `#/planos`, abas Cartão e Pix):
 - **Cartão de crédito:** assinatura com cobrança automática todo mês pelo Mercado Pago.
 - **Pix:** o site gera na hora o **QR Code** e o **Pix copia e cola** (válidos por 30 minutos, com contagem regressiva).
-  Assim que o banco confirma, o Premium é liberado sozinho por **30 dias**. Cada novo Pix soma 30 dias ao que falta,
+  Assim que o banco confirma, o acesso é liberado sozinho por **30 dias**. Cada novo Pix soma 30 dias ao que falta,
   e faltando 5 dias aparece na trilha o aviso "Renovar com Pix". (A renovação automática pela API do Mercado Pago é no
   cartão; por isso o Pix funciona como pacote de 30 dias.) Pix estornado retira os 30 dias.
 
-**Como funciona:** o aluno escolhe a forma de pagamento, paga e o Premium é liberado sozinho, sem recarregar a página. Ele cancela em **Meu plano** e continua com acesso até o fim do mês pago.
+**Como funciona:** o aluno escolhe a forma de pagamento, paga e a trilha é liberada sozinha, sem recarregar a página. Ele cancela em **Meu plano** e continua com acesso até o fim do mês pago.
 Excluir a conta também cancela a cobrança. O professor vê o plano de cada aluno, os assinantes e a receita estimada no
-portal, e pode liberar **Cortesia** (Premium grátis por X dias).
+portal, e pode liberar **Cortesia** (acesso sem cobrança por X dias).
 
 **O que já está pronto no seu Supabase:** tabelas `assinaturas` e `pagamentos`, trava no banco (sem assinatura, o banco
 recusa salvar as lições 2–4, testes e revisões) e a função do servidor **`mercadopago`** (em `supabase/functions/mercadopago`),
@@ -94,6 +99,21 @@ com o novo valor (o que é cobrado). Assinaturas antigas continuam com o valor a
 - Os Termos de Uso já têm a cláusula da assinatura (preço, renovação, cancelamento e os 7 dias de arrependimento do CDC)
   e a Política de Privacidade cita o Mercado Pago.
 
+## Limite de 4 aparelhos por conta
+Para impedir que uma assinatura seja compartilhada, cada conta fica conectada em no máximo **4 aparelhos**
+(cada navegador/celular recebe uma identificação própria). O 5º aparelho vê a tela **"Limite de 4 aparelhos atingido"**.
+
+| Regra | Por quê |
+|---|---|
+| Sair da conta **não** libera a vaga | Senão daria para revezar a senha com qualquer número de pessoas |
+| O aluno remove aparelhos em *Meu perfil* (ou na tela de limite), **até 3 a cada 30 dias** | Troca de celular sem virar rodízio |
+| Aparelho sem uso por **60 dias** sai sozinho | Quem trocou de aparelho não fica preso |
+| Apagar os dados do navegador não gasta vaga nova | O aparelho é reconhecido por um resumo do navegador e da tela |
+| Professor: botão **x/4** no portal desconecta todos os aparelhos do aluno | Para casos de suporte |
+
+A trava também está no banco: um aparelho fora da lista não consegue salvar lições, testes nem revisões. Os Termos
+dizem que a conta é pessoal e proíbem compartilhar a senha; a Política de Privacidade explica os dados do aparelho.
+
 ## Aviso de cookies (LGPD)
 Na primeira visita aparece um aviso com **Aceitar todos**, **Só essenciais** e **Personalizar**. A escolha fica guardada
 e pode ser mudada pelo link **Cookies** no rodapé ou pelo botão na Política de Privacidade (seção 5, que lista cada item
@@ -119,8 +139,16 @@ Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 4 lições ──▶ Test
 
 **64 lições** no total. Cada uma tem:
 - **Aprenda:** explicação de gramática em português, frases de exemplo, 6 palavras/expressões e um diálogo, tudo com áudio (normal e 🐢 devagar).
-- **Pratique:** cerca de 14 atividades com correção na hora: significado, tradução, ouvir e escolher,
-  completar frases, montar a frase, completar o diálogo e **falar** (reconhecimento de voz).
+- **Pratique:** de 17 a 18 atividades com correção na hora. Os tipos e a dificuldade mudam com o estágio:
+
+| Estágio | O que predomina |
+|---|---|
+| **A1–A2** | Escolher significado e tradução, **ligar palavras**, ouvir e escolher, completar frases, montar a frase, **ligar falas** do diálogo, primeiras escritas (escrever a palavra e ditado de palavra) |
+| **B1–B2** | Metade escrita: **escrever palavras**, **completar a gramática digitando**, **ditado de frase**, **frase própria** com a expressão da lição, além de ligar e montar |
+| **C1–C2** | Quase tudo sem opções: lacunas digitadas, 2 ditados, **ligar metades de frases**, 2 **frases próprias**, ligar falas e montar |
+
+  Toda lição termina com **falar** (reconhecimento de voz). Na **frase própria**, o site confere se a expressão foi
+  usada numa frase completa e mostra um exemplo da lição para comparar (não corrige a gramática livre).
 - **Resultado:** nota, XP ganho e o próximo passo. A lição conta como concluída com 60%.
 
 **Teste do nível:** 12 questões das 4 lições (mudam a cada tentativa). Com **70%**, o aluno ganha o
@@ -222,7 +250,8 @@ js/inicio.js          Página inicial
 js/entrar.js          Entrar, criar conta e "esqueci minha senha"
 js/prova.js           Prova de nivelamento
 js/curso.js           Trilha do aluno
-js/plano.js           Plano Premium: cartão ou Pix (QR Code), status, pagamentos e cancelamento
+js/dispositivos.js    Limite de 4 aparelhos (tela de bloqueio e "Meus aparelhos")
+js/plano.js           Assinatura: cartão ou Pix (QR Code), status, pagamentos e cancelamento
 js/cookies.js         Aviso e preferências de cookies (LGPD)
 js/revisao.js         Revisão inteligente (repetição espaçada e treinos)
 js/licao.js           Player das lições e do teste do nível

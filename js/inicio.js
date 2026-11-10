@@ -33,8 +33,9 @@ function desenharPlanos(p) {
   const botao = (href, texto, cls) => `<a href="${href}" class="mt-8 text-center font-semibold rounded-xl py-3.5 transition ${cls}">${texto}</a>`;
   const aluno = p?.papel === 'aluno';
   grade.innerHTML = Planos.cartoes({
-    acaoGratis: botao(p ? App.destino(p) : '#/cadastro', p ? 'Ir para minha área' : 'Começar grátis', 'border border-slate-200 hover:border-navy-900 text-navy-900'),
-    acaoPremium: botao(aluno || !p ? (p ? '#/planos' : '#/cadastro') : '#/admin', aluno && p.premium ? 'Ver meu plano' : p ? 'Assinar o Premium' : 'Criar conta e assinar', 'btn-shine font-display bg-brand-red hover:bg-brand-redDark text-white shadow-glow'),
+    acao: botao(!p ? '#/cadastro' : aluno ? (p.premium ? '#/curso' : App.destino(p)) : '#/admin',
+      !p ? 'Criar conta e fazer a prova grátis' : aluno && p.premium ? 'Ir para minha trilha' : aluno && !p.nivel_num ? 'Fazer a prova grátis' : aluno ? 'Assinar e começar' : 'Abrir o portal',
+      'btn-shine font-display bg-brand-red hover:bg-brand-redDark text-white shadow-glow'),
   });
   revelar(grade);
 }
