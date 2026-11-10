@@ -1,0 +1,261 @@
+// app.js — Troca de telas (pelo endereço #/...) e sessão do usuário
+
+const App = (() => {
+  const telas = {}; // nome → { iniciar(params) }
+  let perfilCache = null;
+
+  // ---------- Utilidades ----------
+  const escapar = (txt) => {
+    const div = document.createElement('div');
+    div.textContent = txt == null ? '' : String(txt);
+    return div.innerHTML;
+  };
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.remove('translate-y-24', 'opacity-0');
+    clearTimeout(toast.t);
+    toast.t = setTimeout(() => el.classList.add('translate-y-24', 'opacity-0'), 2800);
+  }
+
+  function carregando(sim) {
+    document.getElementById('telaCarregando').classList.toggle('hidden', !sim);
+  }
+
+  // ---------- Sessão ----------
+  async function usuario() {
+    const { data } = await sb.auth.getSession();
+    return data.session?.user || null;
+  }
+
+  // Quem está logado: { papel: 'admin' | 'aluno', nome, email, nivel, ... } ou null
+  async function perfil(forcar = false) {
+    if (perfilCache && !forcar) return perfilCache;
+    const user = await usuario();
+    if (!user) return (perfilCache = null);
+
+    const { data: ehAdmin, error: erroAdmin } = await sb.rpc('eh_admin');
+    if (erroAdmin) throw erroAdmin;
+    if (ehAdmin) {
+      perfilCache = { papel: 'admin', id: user.id, nome: 'Administrador', email: user.email, premium: true };
+      return perfilCache;
+    }
+
+    const [{ data, error }, { data: assinatura }] = await Promise.all([
+      sb.from('alunos').select('*').eq('id', user.id).maybeSingle(),
+      sb.from('assinaturas').select('*').eq('aluno_id', user.id).maybeSingle(),
+    ]);
+    if (error) throw error;
+    perfilCache = data ? { papel: 'aluno', ...data } : { papel: 'aluno', id: user.id, nome: user.email, email: user.email, semCadastro: true };
+    perfilCache.assinatura = assinatura || null;
+    perfilCache.premium = temPremium(assinatura);
+    return perfilCache;
+  }
+
+  const limparPerfil = () => { perfilCache = null; };
+
+  // Acesso Premium: mês pago (com tolerância) ou cortesia do professor
+  function temPremium(a) {
+    if (!a) return false;
+    const agora = Date.now();
+    return (a.pago_ate && new Date(a.pago_ate).getTime() > agora) || (a.cortesia_ate && new Date(a.cortesia_ate).getTime() > agora) || false;
+  }
+  // Grátis: prova de nivelamento e a 1ª lição de cada nível
+  const licaoLivre = (p, l) => p?.premium || l === 1;
+
+  // Progresso e certificados de um aluno (o banco só devolve os dele; o admin vê todos)
+  async function dadosDoAluno(id) {
+    const [prog, cert, ses] = await Promise.all([
+      sb.from('progresso').select('*').eq('aluno_id', id),
+      sb.from('certificados').select('*').eq('aluno_id', id),
+      sb.from('sessoes_revisao').select('*').eq('aluno_id', id),
+    ]);
+    if (prog.error) throw prog.error;
+    if (cert.error) throw cert.error;
+    return { progresso: prog.data || [], certificados: cert.data || [], sessoes: ses.error ? [] : ses.data || [] };
+  }
+
+  // Conta atividades e dias de estudo a partir do progresso (lições) e das sessões de revisão
+  function estatisticas(progresso, meta = 3, sessoes = []) {
+    const agora = Date.now();
+    const seteDias = progresso.filter((p) => agora - new Date(p.atualizada_em).getTime() <= 7 * 864e5);
+    const revisoesSemana = sessoes.filter((x) => agora - new Date(x.feita_em).getTime() <= 7 * 864e5).length;
+    const dias = new Set([...progresso.flatMap((p) => [p.concluida_em, p.atualizada_em]), ...sessoes.map((x) => x.feita_em)].map((d) => new Date(d).toDateString()));
+    let sequencia = 0;
+    const dia = new Date();
+    if (!dias.has(dia.toDateString())) dia.setDate(dia.getDate() - 1); // conta até ontem se hoje ainda não estudou
+    while (dias.has(dia.toDateString())) { sequencia++; dia.setDate(dia.getDate() - 1); }
+    const media = seteDias.length ? seteDias.reduce((s, p) => s + p.acertos / p.total, 0) / seteDias.length : 0;
+    const ultima = [...progresso.map((p) => p.atualizada_em), ...sessoes.map((x) => x.feita_em)].reduce((m, d) => Math.max(m, new Date(d).getTime()), 0);
+    return { semana: seteDias.length + revisoesSemana, meta, sequencia, media, ultima: ultima || null };
+  }
+
+  // Para onde cada pessoa vai depois de entrar
+  function destino(p) {
+    if (!p) return '#/entrar';
+    if (p.papel === 'admin') return '#/admin';
+    return p.nivel_num ? '#/curso' : '#/prova';
+  }
+
+  async function sair() {
+    await sb.auth.signOut().catch(() => {});
+    limparPerfil();
+    atualizarAvatares(null);
+    location.hash = '#/entrar';
+  }
+
+
+  // ---------- Avatar (canto superior direito) ----------
+  const CORES_AVATAR = ['#EB1F3B', '#00174F', '#023FA0', '#10B981', '#F59E0B', '#7C3AED', '#0EA5E9', '#DB2777'];
+  const ICONES_AVATAR = ['capelo', 'livro', 'globo', 'estrela', 'foguete', 'microfone', 'fone', 'cafe'];
+  const iniciaisDe = (nome) => String(nome || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
+
+  function avatarHtml(p, cls = 'w-10 h-10 text-sm') {
+    const av = p?.avatar || '';
+    const ini = escapar(iniciaisDe(p?.nome));
+    if (av.startsWith('https://')) {
+      return `<span class="${cls} rounded-full overflow-hidden bg-slate-200 grid place-items-center shrink-0">
+        <img src="${escapar(av)}" alt="" class="w-full h-full object-cover" onerror="this.parentElement.textContent='${ini}'" /></span>`;
+    }
+    if (av.startsWith('icone:') && ICONES_AVATAR.includes(av.slice(6))) {
+      return `<span class="${cls} rounded-full bg-navy-600 text-white grid place-items-center shrink-0">${Icone(av.slice(6), 'w-1/2 h-1/2')}</span>`;
+    }
+    const cor = /^cor:#[0-9a-f]{6}$/i.test(av) ? av.slice(4) : (p?.papel === 'admin' ? '#00174F' : '#EB1F3B');
+    return `<span class="${cls} rounded-full text-white font-bold grid place-items-center shrink-0" style="background:${cor}">${ini}</span>`;
+  }
+
+  function atualizarAvatares(p = perfilCache) {
+    document.querySelectorAll('[data-avatar]').forEach((b) => {
+      b.classList.toggle('hidden', !p);
+      if (!p) return;
+      b.innerHTML = avatarHtml(p, b.dataset.tamanho || 'w-10 h-10 text-sm');
+      b.title = `Conectado como ${p.nome}`;
+      b.setAttribute('aria-label', `Conta de ${p.nome}: abrir menu`);
+    });
+  }
+
+  function fecharMenuAvatar() { document.getElementById('menuAvatar')?.remove(); }
+
+  function abrirMenuAvatar(botao) {
+    const p = perfilCache;
+    if (!p) return;
+    if (document.getElementById('menuAvatar')) return fecharMenuAvatar();
+    const r = botao.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.id = 'menuAvatar';
+    menu.className = 'menu-avatar fixed z-[80] w-64 bg-white rounded-2xl shadow-card border border-slate-200 overflow-hidden text-slate-700';
+    menu.style.top = `${r.bottom + 8}px`;
+    menu.style.right = `${Math.max(12, window.innerWidth - r.right)}px`;
+    const item = (href, icone, texto) =>
+      `<a href="${href}" class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(icone, 'w-4 h-4 text-slate-400')}${texto}</a>`;
+    menu.innerHTML = `
+      <div class="flex items-center gap-3 p-4 border-b border-slate-100">
+        ${avatarHtml(p, 'w-11 h-11 text-sm')}
+        <div class="min-w-0"><p class="font-semibold text-navy-900 truncate">${escapar(p.nome)}</p><p class="text-xs text-slate-400 truncate">${escapar(p.email || '')}</p></div>
+      </div>
+      <div class="py-1">
+        ${item('#/perfil', 'usuario', 'Meu perfil')}
+        ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do professor') : item('#/curso', 'capelo', 'Minha trilha')}
+        ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
+        ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Meu plano · Premium' : 'Assinar o Premium') : ''}
+        ${item('#/termos', 'documento', 'Termos e privacidade')}
+      </div>
+      <button data-menu-sair class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-slate-100 transition">${Icone('sair', 'w-4 h-4')}Sair</button>`;
+    document.body.appendChild(menu);
+    menu.querySelector('[data-menu-sair]').addEventListener('click', () => { fecharMenuAvatar(); sair(); });
+    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', fecharMenuAvatar));
+  }
+
+  // ---------- Telas ----------
+  function registrar(nome, tela) { telas[nome] = tela; }
+
+  function mostrar(nome) {
+    document.querySelectorAll('[data-view]').forEach((v) => v.classList.toggle('hidden', v.dataset.view !== nome));
+  }
+
+  // '#/entrar' → entrar · '#/cadastro' → entrar (aba cadastro) · '#como-funciona' → início + rolar
+  let navegacaoAtual = 0;
+  async function navegar() {
+    const minha = ++navegacaoAtual; // se outra troca de tela começar, esta é descartada
+    const hash = location.hash || '#/';
+    if (!hash.startsWith('#/')) {
+      fecharMenuAvatar();
+      mostrar('inicio');
+      telas.inicio?.iniciar();
+      document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const [caminho, consulta] = hash.slice(2).split('?');
+    const rota = caminho || 'inicio';
+    const params = new URLSearchParams(consulta || '');
+    const APELIDOS = { cadastro: 'entrar', recuperar: 'entrar', redefinir: 'entrar', treino: 'licao' };
+    const nome = APELIDOS[rota] || rota;
+    const tela = telas[nome];
+    if (!tela) { location.hash = '#/'; return; }
+    Voz.parar();
+    Voz.pararGravacao(true); // desliga o microfone ao trocar de tela
+    fecharMenuAvatar();
+
+    try {
+      const continuar = await tela.iniciar({ rota, params });
+      if (minha !== navegacaoAtual) return; // chegou uma troca de tela mais nova
+      if (continuar === false) return;      // a tela redirecionou
+      atualizarAvatares();
+      mostrar(nome);
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('[English Smart] Erro ao abrir a tela', nome, err);
+      if (minha !== navegacaoAtual) return;
+      carregando(false);
+      mostrar('inicio');
+      toast(mensagemDeErro(err));
+    }
+  }
+
+  // Diferencia falta de internet de outros problemas (para não culpar a conexão à toa)
+  function ehErroDeRede(err) {
+    const m = String(err?.message || err || '');
+    return !navigator.onLine || /failed to fetch|networkerror|network request failed|load failed|fetch/i.test(m);
+  }
+  function mensagemDeErro(err) {
+    if (ehErroDeRede(err)) return 'Sem conexão com o servidor. Verifique sua internet e tente de novo.';
+    const m = String(err?.message || '');
+    if (/jwt|token|session|refresh/i.test(m)) return 'Sua sessão expirou. Entre novamente.';
+    return 'Algo deu errado ao abrir esta tela. Recarregue a página (F5) e tente de novo.';
+  }
+
+  function iniciar() {
+    document.getElementById('ano').textContent = new Date().getFullYear();
+    document.querySelectorAll('[data-sair]').forEach((b) => b.addEventListener('click', sair));
+    document.querySelectorAll('[data-rolar]').forEach((b) =>
+      b.addEventListener('click', () => document.getElementById(b.dataset.rolar)?.scrollIntoView({ behavior: 'smooth' }))
+    );
+    document.addEventListener('click', (e) => {
+      const botao = e.target.closest('[data-avatar]');
+      if (botao) { e.stopPropagation(); abrirMenuAvatar(botao); return; }
+      if (!e.target.closest('#menuAvatar')) fecharMenuAvatar();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenuAvatar(); });
+    window.addEventListener('resize', fecharMenuAvatar);
+    if (!sb) { mostrar('inicio'); return; } // biblioteca do Supabase não carregou: config.js já avisa na tela
+    // Link de "esqueci minha senha" aberto com o site publicado: o Supabase devolve #access_token=...&type=recovery
+    const hashInicial = location.hash;
+    const veioDoLink = /type=recovery/.test(hashInicial);
+    const linkComErro = /error_code=|error=access_denied/.test(hashInicial);
+    sb.auth.onAuthStateChange((evento) => {
+      if (evento === 'SIGNED_OUT') limparPerfil();
+      if (evento === 'PASSWORD_RECOVERY') { limparPerfil(); location.hash = '#/redefinir'; }
+    });
+    window.addEventListener('hashchange', navegar);
+    if (linkComErro) { location.hash = '#/recuperar?expirou=1'; return; }
+    if (veioDoLink) {
+      // espera o Supabase ler o link; se o evento não vier, confere a sessão
+      setTimeout(async () => { if (!location.hash.startsWith('#/redefinir')) location.hash = (await usuario()) ? '#/redefinir' : '#/recuperar?expirou=1'; }, 2500);
+      return;
+    }
+    navegar();
+  }
+
+  return { temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
+})();
