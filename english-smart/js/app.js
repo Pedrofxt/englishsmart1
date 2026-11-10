@@ -38,17 +38,31 @@ const App = (() => {
     const { data: ehAdmin, error: erroAdmin } = await sb.rpc('eh_admin');
     if (erroAdmin) throw erroAdmin;
     if (ehAdmin) {
-      perfilCache = { papel: 'admin', id: user.id, nome: 'Administrador', email: user.email };
+      perfilCache = { papel: 'admin', id: user.id, nome: 'Administrador', email: user.email, premium: true };
       return perfilCache;
     }
 
-    const { data, error } = await sb.from('alunos').select('*').eq('id', user.id).maybeSingle();
+    const [{ data, error }, { data: assinatura }] = await Promise.all([
+      sb.from('alunos').select('*').eq('id', user.id).maybeSingle(),
+      sb.from('assinaturas').select('*').eq('aluno_id', user.id).maybeSingle(),
+    ]);
     if (error) throw error;
     perfilCache = data ? { papel: 'aluno', ...data } : { papel: 'aluno', id: user.id, nome: user.email, email: user.email, semCadastro: true };
+    perfilCache.assinatura = assinatura || null;
+    perfilCache.premium = temPremium(assinatura);
     return perfilCache;
   }
 
   const limparPerfil = () => { perfilCache = null; };
+
+  // Acesso Premium: mês pago (com tolerância) ou cortesia do professor
+  function temPremium(a) {
+    if (!a) return false;
+    const agora = Date.now();
+    return (a.pago_ate && new Date(a.pago_ate).getTime() > agora) || (a.cortesia_ate && new Date(a.cortesia_ate).getTime() > agora) || false;
+  }
+  // Grátis: prova de nivelamento e a 1ª lição de cada nível
+  const licaoLivre = (p, l) => p?.premium || l === 1;
 
   // Progresso e certificados de um aluno (o banco só devolve os dele; o admin vê todos)
   async function dadosDoAluno(id) {
@@ -144,6 +158,7 @@ const App = (() => {
         ${item('#/perfil', 'usuario', 'Meu perfil')}
         ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do professor') : item('#/curso', 'capelo', 'Minha trilha')}
         ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
+        ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Meu plano · Premium' : 'Assinar o Premium') : ''}
         ${item('#/termos', 'documento', 'Termos e privacidade')}
       </div>
       <button data-menu-sair class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-slate-100 transition">${Icone('sair', 'w-4 h-4')}Sair</button>`;
@@ -242,5 +257,5 @@ const App = (() => {
     navegar();
   }
 
-  return { registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
+  return { temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
 })();

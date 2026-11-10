@@ -32,7 +32,17 @@
     return 'Atrasado';
   }
 
-  function montarLinhas(alunos, progresso, certificados, sessoes = []) {
+  // Plano de cada aluno
+  function planoDe(a) {
+    if (!a) return { nome: 'Grátis', cls: 'bg-slate-100 text-slate-500' };
+    const agora = Date.now();
+    if (a.status === 'ativa' && a.pago_ate && new Date(a.pago_ate) > agora) return { nome: 'Premium', cls: 'bg-amber-100 text-amber-800', pagante: true };
+    if (a.pago_ate && new Date(a.pago_ate) > agora) return { nome: 'Premium (cancelado)', cls: 'bg-amber-50 text-amber-700', ate: a.pago_ate };
+    if (a.cortesia_ate && new Date(a.cortesia_ate) > agora) return { nome: 'Cortesia', cls: 'bg-sky-100 text-sky-800', ate: a.cortesia_ate, cortesia: true };
+    return { nome: 'Grátis', cls: 'bg-slate-100 text-slate-500' };
+  }
+
+  function montarLinhas(alunos, progresso, certificados, sessoes = [], assinaturas = []) {
     return alunos.map((a) => {
       const prog = progresso.filter((p) => p.aluno_id === a.id);
       const est = App.estatisticas(prog, a.meta_semanal, sessoes.filter((x) => x.aluno_id === a.id));
@@ -42,6 +52,7 @@
         est,
         licoes,
         certs: certificados.filter((c) => c.aluno_id === a.id).length,
+        plano: planoDe(assinaturas.find((x) => x.aluno_id === a.id)),
         status: calcularStatus(a, est),
       };
     });
@@ -49,6 +60,11 @@
 
   function cartoes() {
     const contar = (s) => linhas.filter((l) => l.status === s).length;
+    const pagantes = linhas.filter((l) => l.plano.pagante).length;
+    el('cartoesPlano').innerHTML = `
+      <div class="bg-white rounded-2xl p-5 border border-slate-200"><p class="text-sm text-slate-500">Assinantes Premium</p><p id="numAssinantes" class="mt-1 font-display text-4xl font-extrabold text-amber-600">${pagantes}</p></div>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200"><p class="text-sm text-slate-500">Receita mensal estimada</p><p id="numReceita" class="mt-1 font-display text-4xl font-extrabold text-navy-900">${precoBR(pagantes * PLANO.preco)}</p></div>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200"><p class="text-sm text-slate-500">Conversão</p><p class="mt-1 font-display text-4xl font-extrabold text-navy-900">${linhas.length ? Math.round((pagantes / linhas.length) * 100) : 0}%</p><p class="text-[11px] text-slate-400">dos alunos são assinantes</p></div>`;
     const itens = [
       ['Total de alunos', linhas.length, 'text-navy-900', ''],
       ['Alto desempenho', contar('Alto desempenho'), STATUS['Alto desempenho'].numero, 'Alto desempenho'],
@@ -92,7 +108,7 @@
     el('resumo').textContent = `${lista.length} de ${linhas.length} aluno(s)`;
 
     if (!lista.length) {
-      tabela.innerHTML = `<tr><td colspan="7" class="px-6 py-14 text-center text-slate-400">${linhas.length ? 'Nenhum aluno com esses filtros.' : 'Nenhum aluno cadastrado ainda.'}</td></tr>`;
+      tabela.innerHTML = `<tr><td colspan="8" class="px-6 py-14 text-center text-slate-400">${linhas.length ? 'Nenhum aluno com esses filtros.' : 'Nenhum aluno cadastrado ainda.'}</td></tr>`;
       return;
     }
 
@@ -121,7 +137,9 @@
         </td>
         <td class="px-5 py-4 text-slate-500 text-xs">${relativo(a.est.ultima)}</td>
         <td class="px-5 py-4"><span class="inline-flex items-center gap-1.5 ${s.cor} text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full ${s.ponto}"></span>${a.status}</span></td>
+        <td class="px-5 py-4"><span data-plano="${a.id}" class="inline-block ${a.plano.cls} text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap" title="${a.plano.ate ? `até ${dataBR(a.plano.ate)}` : ''}">${a.plano.nome}</span></td>
         <td class="px-5 py-4 text-right whitespace-nowrap">
+          ${a.plano.pagante ? '' : `<button data-cortesia="${a.id}" data-nome="${App.escapar(a.nome)}" data-tem="${a.plano.cortesia ? 1 : ''}" class="inline-flex items-center gap-1.5 border border-slate-300 hover:border-navy-900 text-navy-900 text-xs font-semibold px-3 py-2 rounded-lg transition active:scale-95 mr-1" title="Liberar ou retirar o Premium sem cobrança">${Icone('estrela', 'w-3.5 h-3.5')}${a.plano.cortesia ? 'Tirar cortesia' : 'Cortesia'}</button>`}
           <button data-senha="${a.id}" data-nome="${App.escapar(a.nome)}" class="inline-flex items-center gap-1.5 border border-slate-300 hover:border-navy-900 text-navy-900 text-xs font-semibold px-3 py-2 rounded-lg transition active:scale-95 mr-1" title="Gerar uma senha provisória para quem esqueceu a senha">${Icone('chave', 'w-3.5 h-3.5')}Senha</button>
           ${a.nivel_num
             ? `<button data-liberar="${a.id}" data-nome="${App.escapar(a.nome)}" class="inline-flex items-center gap-1.5 border border-slate-300 hover:border-navy-900 text-navy-900 text-xs font-semibold px-3 py-2 rounded-lg transition active:scale-95 whitespace-nowrap" title="Prova feita em ${dataBR(a.prova_feita_em)}">↻ Nova prova</button>`
@@ -132,17 +150,19 @@
 
     tabela.querySelectorAll('[data-liberar]').forEach((b) => b.addEventListener('click', () => liberar(b)));
     tabela.querySelectorAll('[data-senha]').forEach((b) => b.addEventListener('click', () => senhaProvisoria(b)));
+    tabela.querySelectorAll('[data-cortesia]').forEach((b) => b.addEventListener('click', () => cortesia(b)));
   }
 
   async function carregar() {
-    const [al, pr, ce, se] = await Promise.all([
+    const [al, pr, ce, se, as] = await Promise.all([
       sb.from('alunos').select('*').order('criado_em', { ascending: false }),
       sb.from('progresso').select('*'),
       sb.from('certificados').select('*'),
       sb.from('sessoes_revisao').select('aluno_id, feita_em'),
+      sb.from('assinaturas').select('*'),
     ]);
     if (al.error || pr.error || ce.error) throw al.error || pr.error || ce.error;
-    linhas = montarLinhas(al.data, pr.data, ce.data, se.error ? [] : se.data);
+    linhas = montarLinhas(al.data, pr.data, ce.data, se.error ? [] : se.data, as.error ? [] : as.data);
     renderizar();
   }
 
@@ -159,6 +179,23 @@
     const { error } = await sb.rpc('liberar_nova_prova', { aluno_id: btn.dataset.liberar });
     if (error) { btn.disabled = false; return App.toast('Não foi possível liberar. Tente de novo.'); }
     App.toast(`Nova prova liberada para ${btn.dataset.nome}`);
+    atualizar();
+  }
+
+  // Premium de cortesia (bolsa, parceria, teste): 30 dias por padrão
+  async function cortesia(btn) {
+    const tirar = !!btn.dataset.tem;
+    let dias = 0;
+    if (!tirar) {
+      const r = prompt(`Liberar o Premium para ${btn.dataset.nome} sem cobrança.\nPor quantos dias?`, '30');
+      if (r === null) return;
+      dias = parseInt(r, 10);
+      if (!(dias > 0)) return App.toast('Informe um número de dias.');
+    } else if (!confirm(`Retirar a cortesia de ${btn.dataset.nome}? O aluno volta para o plano Grátis.`)) return;
+    btn.disabled = true;
+    const { error } = await sb.rpc('admin_cortesia', { p_aluno: btn.dataset.cortesia, p_dias: dias });
+    if (error) { btn.disabled = false; return App.toast('Não foi possível alterar o plano. Tente de novo.'); }
+    App.toast(tirar ? 'Cortesia retirada.' : `Premium liberado por ${dias} dias.`);
     atualizar();
   }
 

@@ -29,6 +29,7 @@
         <button data-rolar="como-funciona" class="hover:text-white transition">Como funciona</button>
         <button data-rolar="niveis" class="hover:text-white transition">Níveis</button>
         <button data-rolar="atividades" class="hover:text-white transition">Atividades</button>
+        <button data-rolar="planos" class="hover:text-white transition">Planos</button>
         <button data-rolar="faq" class="hover:text-white transition">Dúvidas</button>
         <a href="#/termos" class="hover:text-white transition">Termos</a>
       </nav>
@@ -47,6 +48,7 @@
         <button data-rolar="como-funciona" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Como funciona</button>
         <button data-rolar="niveis" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Níveis</button>
         <button data-rolar="atividades" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Atividades</button>
+        <button data-rolar="planos" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Planos</button>
         <button data-rolar="faq" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Dúvidas</button>
         <a href="#/termos" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Termos</a>
       </div>
@@ -211,6 +213,18 @@
     </div>
   </section>
 
+  <!-- Planos -->
+  <section id="planos" class="py-24 bg-slate-50 scroll-mt-20">
+    <div class="max-w-5xl mx-auto px-5">
+      <div class="reveal text-center max-w-2xl mx-auto">
+        <p class="text-brand-red font-semibold tracking-wide uppercase text-sm">Planos</p>
+        <h2 class="mt-3 text-4xl md:text-5xl font-extrabold text-navy-900">Comece grátis. Vá até a fluência.</h2>
+        <p class="mt-4 text-lg text-slate-500">Faça a prova de nivelamento e a primeira lição de cada nível sem pagar nada. Quando quiser o curso completo, assine o Premium.</p>
+      </div>
+      <div id="gradePlanos" class="mt-14"></div>
+    </div>
+  </section>
+
   <!-- Chamada final -->
   <section class="py-24 bg-slate-50">
     <div class="reveal max-w-4xl mx-auto px-5">
@@ -242,6 +256,10 @@
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Preciso de microfone?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
           <p class="mt-3 text-slate-500">Ajuda muito na prática de fala, que funciona melhor no Google Chrome ou no Edge. Sem microfone, você ouve a frase, repete em voz alta e segue a lição normalmente.</p>
+        </details>
+        <details class="reveal bg-slate-50 rounded-2xl p-6">
+          <summary class="flex justify-between items-center font-semibold text-navy-900">Como funciona a assinatura Premium?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
+          <p class="mt-3 text-slate-500">Custa R$ 29,99 por mês, cobrados automaticamente no cartão pelo Mercado Pago. Você cancela quando quiser em "Meu plano", sem multa, e continua com acesso até o fim do mês pago. Na primeira assinatura, você tem 7 dias para desistir com reembolso total.</p>
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Posso refazer a prova de nivelamento?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
@@ -514,6 +532,33 @@
 <!-- =====================================================================
      TELA: REVISÃO INTELIGENTE
      ===================================================================== -->
+<!-- =====================================================================
+     TELA: PLANOS (assinatura Premium pelo Mercado Pago)
+     ===================================================================== -->
+<div data-view="planos" class="hidden min-h-screen bg-slate-50">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-5xl mx-auto px-5 h-20 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <a id="planosVoltar" href="#/curso" class="shrink-0 w-9 h-9 grid place-items-center rounded-lg hover:bg-white/10 transition" title="Voltar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <a href="#/"><img src="img/logo.png" alt="English Smart" class="h-12 w-auto" /></a>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Planos</span>
+        <button data-avatar data-tamanho="w-10 h-10 text-sm" class="hidden shrink-0 rounded-full ring-2 ring-white/20 hover:ring-white/60 transition"></button>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-5xl mx-auto px-5 py-8 md:py-12">
+    <div class="fade-up text-center max-w-2xl mx-auto mb-10">
+      <h1 id="planosTitulo" class="text-3xl md:text-4xl font-extrabold text-navy-900">Escolha como estudar</h1>
+      <p id="planosSub" class="mt-2 text-slate-500">Comece grátis e assine o Premium quando quiser o curso completo.</p>
+    </div>
+    <div id="planosConteudo"></div>
+  </main>
+</div>
+
 <div data-view="revisao" class="hidden min-h-screen bg-slate-50">
   <header class="bg-navy-900 text-white">
     <div class="max-w-5xl mx-auto px-5 h-20 flex items-center justify-between gap-3">
@@ -606,6 +651,7 @@
 
   <main class="max-w-7xl mx-auto px-5 py-10">
     <div id="cartoesStatus" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+    <div id="cartoesPlano" class="mt-4 grid sm:grid-cols-3 gap-4"></div>
 
     <div class="mt-5 grid lg:grid-cols-3 gap-5">
       <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200">
@@ -652,6 +698,7 @@
               <th class="px-5 py-4 font-semibold">Últimos 7 dias</th>
               <th class="px-5 py-4 font-semibold">Última atividade</th>
               <th class="px-5 py-4 font-semibold">Status</th>
+              <th class="px-5 py-4 font-semibold">Plano</th>
               <th class="px-5 py-4 font-semibold text-right">Ação</th>
             </tr>
           </thead>
@@ -805,7 +852,7 @@
       <p>Estes Termos de Uso regulam o acesso e o uso da plataforma <b>English Smart — Curso de Inglês Inteligente</b> ("Plataforma"), mantida por <b data-resp-nome></b><span data-resp-doc></span> ("nós"). Ao criar uma conta ou usar a Plataforma, você ("usuário" ou "aluno") declara que leu, entendeu e concorda com estes Termos e com a nossa Política de Privacidade.</p>
 
       <h2>1. O que é a Plataforma</h2>
-      <p>A English Smart é um curso de inglês on-line composto por uma prova de nivelamento, uma trilha de 16 níveis com lições, atividades práticas, testes de nível e certificados de conclusão. O acesso é oferecido gratuitamente, sem cobrança de qualquer valor.</p>
+      <p>A English Smart é um curso de inglês on-line composto por uma prova de nivelamento, uma trilha de 16 níveis com lições, atividades práticas, testes de nível e certificados de conclusão. O acesso básico (prova de nivelamento e a primeira lição de cada nível) é gratuito. O conteúdo completo faz parte do <b>plano Premium</b>, contratado por assinatura mensal, conforme a cláusula 7.</p>
 
       <h2>2. Cadastro e conta</h2>
       <ul>
@@ -828,7 +875,7 @@
       </ul>
 
       <h2>5. Conteúdo e propriedade intelectual</h2>
-      <p>Os textos, lições, atividades, marca, logotipo e o layout da Plataforma pertencem aos seus titulares e são protegidos pela legislação de direitos autorais e de propriedade industrial. Você recebe uma licença pessoal, gratuita e não exclusiva para usá-los apenas para estudo próprio.</p>
+      <p>Os textos, lições, atividades, marca, logotipo e o layout da Plataforma pertencem aos seus titulares e são protegidos pela legislação de direitos autorais e de propriedade industrial. Você recebe uma licença pessoal, intransferível e não exclusiva para usá-los apenas para estudo próprio.</p>
 
       <h2>6. Prova de nivelamento, progresso e certificados</h2>
       <ul>
@@ -837,22 +884,34 @@
         <li>A correspondência dos níveis com o Quadro Europeu Comum de Referência (CEFR) é uma referência pedagógica.</li>
       </ul>
 
-      <h2>7. Recursos de áudio e voz</h2>
+      <h2>7. Plano Premium, pagamento e cancelamento</h2>
+      <ul>
+        <li><b>O que inclui:</b> todas as lições dos 16 níveis, os testes de nível, os certificados e a revisão inteligente.</li>
+        <li><b>Preço:</b> R$ 29,99 (vinte e nove reais e noventa e nove centavos) por mês, cobrados automaticamente a cada mês, a partir da contratação, até o cancelamento. Eventuais reajustes serão avisados com pelo menos 30 dias de antecedência, e você poderá cancelar antes que passem a valer.</li>
+        <li><b>Pagamento:</b> processado pelo <b>Mercado Pago</b>, de acordo com os termos dele. Nós não recebemos nem armazenamos o número do seu cartão.</li>
+        <li><b>Cancelamento:</b> a qualquer momento, sem multa, em <b>Meu plano → Cancelar assinatura</b> (ou na sua conta do Mercado Pago). Não haverá novas cobranças, e o acesso Premium continua até o fim do período já pago.</li>
+        <li><b>Direito de arrependimento:</b> na primeira contratação, você pode desistir em até 7 (sete) dias e receber o valor pago de volta integralmente, conforme o art. 49 do Código de Defesa do Consumidor. Basta cancelar e pedir o reembolso pelo e-mail de contato.</li>
+        <li><b>Falta de pagamento:</b> se uma cobrança não for aprovada, o acesso Premium é suspenso após 3 dias de tolerância. Seu progresso, nível e certificados já emitidos continuam guardados.</li>
+        <li><b>Excluir a conta</b> com uma assinatura ativa também cancela a assinatura.</li>
+        <li>A equipe pode liberar acesso Premium de cortesia, por tempo determinado, a critério dela.</li>
+      </ul>
+
+      <h2>8. Recursos de áudio e voz</h2>
       <p>A pronúncia das frases e o reconhecimento de fala usam recursos do próprio navegador. A disponibilidade e a qualidade desses recursos dependem do navegador e do dispositivo usados. Recomendamos o Google Chrome ou o Microsoft Edge.</p>
 
-      <h2>8. Disponibilidade</h2>
-      <p>Trabalhamos para manter a Plataforma no ar, mas ela pode passar por interrupções, manutenções ou falhas de terceiros (como provedores de internet e hospedagem). Como o serviço é gratuito, ele é oferecido "no estado em que se encontra", e podemos alterar, incluir ou remover funcionalidades e conteúdos a qualquer momento.</p>
+      <h2>9. Disponibilidade</h2>
+      <p>Trabalhamos para manter a Plataforma no ar, mas ela pode passar por interrupções, manutenções ou falhas de terceiros (como provedores de internet e hospedagem). Podemos alterar, incluir ou remover funcionalidades e conteúdos para melhorar o curso, preservando o que foi contratado no plano Premium durante o período pago.</p>
 
-      <h2>9. Responsabilidades</h2>
+      <h2>10. Responsabilidades</h2>
       <p>A Plataforma é uma ferramenta de apoio ao estudo e não garante um resultado específico de aprendizagem, aprovação em provas ou oportunidades profissionais. Na medida permitida pela lei, não nos responsabilizamos por danos indiretos decorrentes do uso ou da impossibilidade de uso da Plataforma.</p>
 
-      <h2>10. Suspensão e encerramento</h2>
+      <h2>11. Suspensão e encerramento</h2>
       <p>Você pode excluir sua conta a qualquer momento em <b>Meu perfil → Excluir conta</b>. Podemos suspender ou encerrar contas que violem estes Termos, mediante aviso quando possível.</p>
 
-      <h2>11. Alterações destes Termos</h2>
+      <h2>12. Alterações destes Termos</h2>
       <p>Estes Termos podem ser atualizados. A data da última atualização aparece no topo desta página. Mudanças relevantes serão comunicadas na Plataforma. Continuar usando a Plataforma depois das alterações significa concordar com a nova versão.</p>
 
-      <h2>12. Lei aplicável e contato</h2>
+      <h2>13. Lei aplicável e contato</h2>
       <p>Estes Termos são regidos pelas leis da República Federativa do Brasil, incluindo o Código de Defesa do Consumidor, quando aplicável. Dúvidas, sugestões ou reclamações podem ser enviadas para <b data-contato></b>.</p>
     </article>
 
@@ -868,6 +927,7 @@
       <ul>
         <li><b>Cadastro:</b> nome, e-mail e senha. A senha é guardada criptografada (em formato irreversível) e nem nós temos acesso a ela.</li>
         <li><b>Perfil (opcional):</b> telefone, cidade e foto de perfil ou avatar.</li>
+        <li><b>Assinatura Premium:</b> e-mail da sua conta no Mercado Pago, situação da assinatura, valores e datas das cobranças.</li>
       </ul>
       <h3>Dados gerados pelo uso</h3>
       <ul>
@@ -878,12 +938,13 @@
       <ul>
         <li>Endereço IP, tipo de navegador e data e hora dos acessos, registrados automaticamente pelos servidores, para segurança e funcionamento do serviço.</li>
       </ul>
-      <p>Não coletamos dados bancários, documentos de identidade nem gravações de voz.</p>
+      <p>Não recebemos o número do cartão nem dados bancários (o pagamento acontece inteiramente no Mercado Pago), e não coletamos documentos de identidade nem gravações de voz.</p>
 
       <h2>3. Para que usamos e com qual base legal</h2>
       <ul>
         <li><b>Criar e manter sua conta, liberar o curso, registrar seu progresso e emitir certificados</b> — execução do contrato (Termos de Uso), art. 7º, V da LGPD.</li>
         <li><b>Permitir que a equipe pedagógica acompanhe o desempenho dos alunos</b> (nível, atividades e status no portal do professor) — legítimo interesse, art. 7º, IX, sempre no limite do necessário.</li>
+        <li><b>Cobrar e gerenciar a assinatura Premium e guardar o histórico de pagamentos</b> — execução do contrato e cumprimento de obrigações legais, art. 7º, II e V.</li>
         <li><b>Exibir sua foto de perfil e os dados opcionais</b> — seu consentimento, art. 7º, I. Você pode remover a foto e apagar esses dados quando quiser.</li>
         <li><b>Segurança, prevenção a fraudes e cumprimento de obrigações legais</b> — arts. 7º, II e IX.</li>
       </ul>
@@ -892,6 +953,7 @@
       <h2>4. Com quem compartilhamos</h2>
       <ul>
         <li><b>Supabase</b> — provedor de banco de dados, autenticação e armazenamento das fotos. Os dados ficam em servidores localizados em São Paulo, Brasil.</li>
+        <li><b>Mercado Pago</b> — processa os pagamentos da assinatura. Para isso, recebe o e-mail informado e o identificador da sua conta na Plataforma; os dados de pagamento que você digita lá são tratados conforme a política de privacidade do Mercado Pago.</li>
         <li><b>Serviços que entregam partes do site</b> — Google Fonts (fontes), jsDelivr e Tailwind CSS (bibliotecas de código). Eles recebem dados técnicos da conexão, como o endereço IP, para entregar esses arquivos ao seu navegador.</li>
         <li><b>Recursos de voz do navegador</b> — ao usar o botão de microfone, o reconhecimento de fala é feito pelo seu navegador e, dependendo dele, o áudio pode ser processado pelo fornecedor do navegador (como Google ou Microsoft), de acordo com a política de privacidade desse fornecedor. A English Smart recebe apenas o texto reconhecido, usado na hora para corrigir o exercício, sem armazenar áudio nem transcrições.</li>
         <li><b>Autoridades</b> — somente quando houver obrigação legal ou ordem judicial.</li>
@@ -950,6 +1012,7 @@
 <script src="js/curso.js"></script>
 <script src="js/licao.js"></script>
 <script src="js/revisao.js"></script>
+<script src="js/plano.js"></script>
 <script src="js/certificado.js"></script>
 <script src="js/perfil.js"></script>
 <script src="js/termos.js"></script>

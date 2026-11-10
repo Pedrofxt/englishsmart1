@@ -155,6 +155,7 @@ const Revisao = (() => {
       if (!p) { location.hash = '#/entrar'; return false; }
       if (p.papel === 'aluno' && !p.nivel_num) { location.hash = '#/prova'; return false; }
       el('revisaoVoltar').href = p.papel === 'admin' ? '#/admin' : '#/curso';
+      if (!p.premium) { location.hash = '#/planos?motivo=revisao'; return false; }
       render(p, await dados(p));
     },
   });

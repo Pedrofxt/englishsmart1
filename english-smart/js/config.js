@@ -24,4 +24,8 @@ if (!window.supabase) {
 const RESPONSAVEL_NOME = 'Pedro de Farias Xavier Toledo';   // ex.: 'Fulano de Tal' ou a razão social, se tiver empresa
 const RESPONSAVEL_DOC = '';    // CPF ou CNPJ (opcional, mas recomendado)
 const CONTATO_EMAIL = 'pedro.farias.toledo@gmail.com';      // ex.: 'contato@seudominio.com.br'
-const VERSAO_TERMOS = '2026-11-09';
+const VERSAO_TERMOS = '2026-11-09.2';
+
+// Plano Premium (o valor cobrado de verdade fica na função do servidor: segredo PLANO_VALOR, padrão 29.99)
+const PLANO = { nome: 'Premium', preco: 29.99 };
+const precoBR = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });

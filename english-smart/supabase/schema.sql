@@ -532,3 +532,158 @@ revoke all on function public.registrar_revisao(text, jsonb, int, int) from publ
 revoke all on function public.admin_redefinir_senha(uuid)              from public, anon;
 grant execute on function public.registrar_revisao(text, jsonb, int, int) to authenticated;
 grant execute on function public.admin_redefinir_senha(uuid)              to authenticated;
+
+
+-- =====================================================================
+-- PLANO PREMIUM (assinatura mensal pelo Mercado Pago)
+-- Grátis: prova de nivelamento + 1ª lição de cada nível
+-- Premium: todas as lições, testes do nível, certificados e revisão inteligente
+-- =====================================================================
+
+create table if not exists public.assinaturas (
+  aluno_id         uuid primary key references public.alunos(id) on delete cascade,
+  mp_id            text unique,                                  -- id da assinatura (preapproval) no Mercado Pago
+  status           text not null default 'pendente' check (status in ('pendente', 'ativa', 'pausada', 'cancelada')),
+  valor            numeric(10, 2) not null default 29.99,
+  email_pagador    text,
+  proxima_cobranca timestamptz,
+  pago_ate         timestamptz,                                  -- acesso garantido até esta data
+  cortesia_ate     timestamptz,                                  -- acesso liberado pelo professor
+  criada_em        timestamptz not null default now(),
+  atualizada_em    timestamptz not null default now()
+);
+
+create table if not exists public.pagamentos (
+  id         text primary key,                                   -- id da cobrança (authorized_payment) no Mercado Pago
+  aluno_id   uuid not null references public.alunos(id) on delete cascade,
+  valor      numeric(10, 2) not null,
+  status     text not null,
+  pago_em    timestamptz,
+  criado_em  timestamptz not null default now()
+);
+create index if not exists pagamentos_aluno on public.pagamentos (aluno_id, criado_em);
+
+alter table public.assinaturas enable row level security;
+alter table public.pagamentos enable row level security;
+
+drop policy if exists "aluno vê a própria assinatura" on public.assinaturas;
+create policy "aluno vê a própria assinatura" on public.assinaturas
+  for select to authenticated using (aluno_id = (select auth.uid()) or (select public.eh_admin()));
+
+drop policy if exists "aluno vê os próprios pagamentos" on public.pagamentos;
+create policy "aluno vê os próprios pagamentos" on public.pagamentos
+  for select to authenticated using (aluno_id = (select auth.uid()) or (select public.eh_admin()));
+-- Ninguém grava pelo navegador: só a função do servidor (Mercado Pago) e o admin, via funções abaixo.
+
+-- O aluno tem acesso Premium agora?
+create or replace function public.eh_assinante(p_aluno uuid default null)
+returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select public.eh_admin() and p_aluno is null
+      or exists (
+        select 1 from public.assinaturas
+         where aluno_id = coalesce(p_aluno, auth.uid())
+           and (pago_ate > now() or cortesia_ate > now()));
+$$;
+
+-- Professor libera (ou retira) acesso Premium de cortesia: p_dias = 0 retira
+create or replace function public.admin_cortesia(p_aluno uuid, p_dias int)
+returns timestamptz
+language plpgsql security definer set search_path = ''
+as $$
+declare ate timestamptz := case when p_dias > 0 then now() + make_interval(days => least(p_dias, 3650)) else null end;
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito ao administrador.'; end if;
+  if not exists (select 1 from public.alunos where id = p_aluno) then raise exception 'Aluno não encontrado.'; end if;
+  insert into public.assinaturas (aluno_id, cortesia_ate) values (p_aluno, ate)
+    on conflict (aluno_id) do update set cortesia_ate = ate, atualizada_em = now();
+  return ate;
+end;
+$$;
+
+-- registrar_atividade com a trava do plano: lições 2 a 4 e teste do nível só para assinantes
+create or replace function public.registrar_atividade(p_nivel integer, p_licao integer, p_acertos integer, p_total integer)
+returns json
+language plpgsql security definer set search_path = ''
+as $function$
+declare
+  uid uuid := auth.uid();
+  aluno public.alunos;
+  ant public.progresso;
+  ganho int;
+  licoes_ok int;
+  subiu boolean := false;
+  concluiu boolean := false;
+  cert text := null;
+begin
+  if uid is null then raise exception 'Faça login para continuar.'; end if;
+  select * into aluno from public.alunos where id = uid;
+  if not found then raise exception 'Apenas alunos registram atividades.'; end if;
+  if aluno.nivel_num is null then raise exception 'Faça a prova de nivelamento primeiro.'; end if;
+  if p_nivel is null or p_nivel < 1 or p_nivel > aluno.nivel_num then raise exception 'Este nível ainda está bloqueado.'; end if;
+  if p_licao is null or p_licao < 0 or p_licao > 4 then raise exception 'Atividade inválida.'; end if;
+  if p_licao <> 1 and not public.eh_assinante(uid) then raise exception 'Conteúdo do plano Premium. Assine para continuar.'; end if;
+  if p_total is null or p_total < 1 or p_total > 60 or p_acertos is null or p_acertos < 0 or p_acertos > p_total then
+    raise exception 'Resultado inválido.';
+  end if;
+
+  if p_licao = 0 then
+    select count(*) into licoes_ok from public.progresso
+     where aluno_id = uid and nivel_num = p_nivel and licao between 1 and 4 and acertos >= total * 0.6;
+    if licoes_ok < 4 then raise exception 'Conclua as 4 lições do nível antes do teste.'; end if;
+  end if;
+
+  select * into ant from public.progresso where aluno_id = uid and nivel_num = p_nivel and licao = p_licao;
+  if not found then
+    insert into public.progresso (aluno_id, nivel_num, licao, acertos, total)
+    values (uid, p_nivel, p_licao, p_acertos, p_total);
+    ganho := p_acertos * 10;
+  else
+    ganho := greatest(0, p_acertos - ant.acertos) * 10;
+    update public.progresso
+       set acertos = greatest(ant.acertos, p_acertos), total = p_total,
+           tentativas = ant.tentativas + 1, atualizada_em = now()
+     where aluno_id = uid and nivel_num = p_nivel and licao = p_licao;
+  end if;
+  if p_licao = 0 and p_acertos >= p_total * 0.7 then ganho := ganho + 100; end if;
+
+  update public.alunos set xp = xp + ganho where id = uid;
+
+  if p_licao = 0 and p_nivel = aluno.nivel_num and p_acertos >= p_total * 0.7 then
+    insert into public.certificados (aluno_id, nivel_num) values (uid, p_nivel)
+      on conflict (aluno_id, nivel_num) do nothing;
+    select codigo into cert from public.certificados where aluno_id = uid and nivel_num = p_nivel;
+    if p_nivel < 16 then
+      update public.alunos set nivel_num = p_nivel + 1, nivel = public.nivel_cefr(p_nivel + 1) where id = uid;
+      subiu := true;
+    else
+      update public.alunos set concluiu_curso_em = coalesce(concluiu_curso_em, now()) where id = uid;
+      concluiu := true;
+    end if;
+  end if;
+
+  return json_build_object(
+    'xp_ganho', ganho,
+    'xp_total', (select xp from public.alunos where id = uid),
+    'subiu', subiu, 'concluiu_curso', concluiu,
+    'nivel_num', (select nivel_num from public.alunos where id = uid),
+    'certificado', cert);
+end;
+$function$;
+
+-- Revisão inteligente: só Premium (os itens da 1ª lição continuam sendo guardados no modo 'licao')
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('public.registrar_revisao(text,jsonb,int,int)'::regprocedure);
+  if position('plano Premium' in d) = 0 then
+    d := replace(d, '  if jsonb_typeof(p_itens)',
+      '  if p_modo <> ''licao'' and not public.eh_assinante(uid) then raise exception ''A revisão inteligente faz parte do plano Premium.''; end if;' || chr(10) || '  if jsonb_typeof(p_itens)');
+    execute d;
+  end if;
+end $$;
+
+revoke all on function public.eh_assinante(uuid)        from public, anon, authenticated; -- uso interno das outras funções
+revoke all on function public.admin_cortesia(uuid, int) from public, anon;
+grant execute on function public.admin_cortesia(uuid, int) to authenticated;

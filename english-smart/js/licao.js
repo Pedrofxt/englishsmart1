@@ -802,7 +802,14 @@
       const p = await App.perfil(true);
       if (!p) { location.hash = '#/entrar'; return false; }
       if (p.papel === 'aluno' && !p.nivel_num) { location.hash = '#/prova'; return false; }
-      if (rota === 'treino') return iniciarTreino(p, params);
+      if (rota === 'treino') {
+        if (!p.premium) { location.hash = '#/planos?motivo=revisao'; return false; }
+        return iniciarTreino(p, params);
+      }
+      {
+        const l0 = Number(params.get('l'));
+        if (!App.licaoLivre(p, l0)) { location.hash = `#/planos?motivo=${l0 === 0 ? 'teste' : 'licao'}`; return false; }
+      }
       clearInterval(st.relogio);
       const admin = p.papel === 'admin';
       const n = Number(params.get('n'));

@@ -22,9 +22,22 @@ App.registrar('inicio', {
         criarCelular?.classList.remove('hidden');
       }
       App.atualizarAvatares(p);
-    } catch { /* sem internet: a página inicial funciona mesmo assim */ }
+      desenharPlanos(p);
+    } catch { desenharPlanos(null); /* sem internet: a página inicial funciona mesmo assim */ }
   },
 });
+
+// Seção "Planos" da página inicial
+function desenharPlanos(p) {
+  const grade = document.getElementById('gradePlanos');
+  const botao = (href, texto, cls) => `<a href="${href}" class="mt-8 text-center font-semibold rounded-xl py-3.5 transition ${cls}">${texto}</a>`;
+  const aluno = p?.papel === 'aluno';
+  grade.innerHTML = Planos.cartoes({
+    acaoGratis: botao(p ? App.destino(p) : '#/cadastro', p ? 'Ir para minha área' : 'Começar grátis', 'border border-slate-200 hover:border-navy-900 text-navy-900'),
+    acaoPremium: botao(aluno || !p ? (p ? '#/planos' : '#/cadastro') : '#/admin', aluno && p.premium ? 'Ver meu plano' : p ? 'Assinar o Premium' : 'Criar conta e assinar', 'btn-shine font-display bg-brand-red hover:bg-brand-redDark text-white shadow-glow'),
+  });
+  revelar(grade);
+}
 
 // Cartão "Frase do dia" que digita sozinho
 (() => {

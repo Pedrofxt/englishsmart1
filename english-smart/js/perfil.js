@@ -159,10 +159,17 @@
 
   // ---------- Excluir conta ----------
   el('btnExcluirConta').addEventListener('click', async () => {
-    const confirmacao = prompt('Esta ação apaga para sempre sua conta, seu progresso e seus certificados.\n\nPara confirmar, digite EXCLUIR:');
+    const assin = (await App.perfil()).assinatura;
+    const ativa = assin?.status === 'ativa' && !!assin?.mp_id;
+    const confirmacao = prompt(`Esta ação apaga para sempre sua conta, seu progresso e seus certificados.${ativa ? '\nSua assinatura Premium também será cancelada no Mercado Pago.' : ''}\n\nPara confirmar, digite EXCLUIR:`);
     if ((confirmacao || '').trim().toUpperCase() !== 'EXCLUIR') return;
     App.carregando(true);
     try {
+      // para de cobrar antes de apagar a conta
+      if (ativa) {
+        try { await Planos.chamar('cancelar'); }
+        catch (err) { App.carregando(false); return App.toast(`Não foi possível cancelar a assinatura agora (${err.message}). Tente de novo ou cancele em "Meu plano".`); }
+      }
       await limparFotos().catch(() => {});
       const { error } = await sb.rpc('excluir_minha_conta');
       if (error) throw error;

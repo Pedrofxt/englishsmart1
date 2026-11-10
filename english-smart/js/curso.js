@@ -54,6 +54,14 @@
     const C = 2 * Math.PI * 26;
 
     el('painelResumo').innerHTML = `
+      ${!perfil.premium ? `
+        <a href="#/planos" id="faixaGratis" class="group col-span-2 lg:col-span-4 relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4 bg-brand-hero text-white rounded-2xl p-5">
+          <div class="absolute inset-0 bg-grid opacity-60"></div>
+          <span class="relative w-12 h-12 shrink-0 rounded-xl bg-brand-red grid place-items-center">${Icone('estrela', 'w-6 h-6')}</span>
+          <span class="relative flex-1"><span class="block font-display font-bold">Você está no plano Grátis</span>
+            <span class="block text-sm text-white/70">A 1ª lição de cada nível é liberada. Com o ${PLANO.nome} você faz as 4 lições, o teste, ganha os certificados e usa a revisão inteligente.</span></span>
+          <span class="relative shrink-0 text-center font-semibold bg-brand-red group-hover:bg-brand-redDark rounded-xl px-5 py-2.5 transition">${precoBR(PLANO.preco)}/mês</span>
+        </a>` : ''}
       <div class="bg-white rounded-2xl p-5 border border-slate-200 col-span-2 lg:col-span-1">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nível atual</p>
         <p class="mt-1 font-display text-3xl font-extrabold text-navy-900">${n}<span class="text-base text-slate-400"> de 16</span></p>
@@ -91,13 +99,13 @@
         const hoje = (dados.memoria || []).filter((r) => new Date(r.proxima).getTime() <= Date.now()).length;
         const erros = (dados.memoria || []).filter((r) => r.caixa === 0 && r.erros > 0).length;
         return `
-        <a href="#/revisao" id="cartaoRevisao" class="group col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-white rounded-2xl p-5 border-2 ${hoje ? 'border-brand-red/30' : 'border-slate-200'} hover:border-navy-900 transition">
+        <a href="${perfil.premium ? '#/revisao' : '#/planos?motivo=revisao'}" id="cartaoRevisao" class="group col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-white rounded-2xl p-5 border-2 ${hoje ? 'border-brand-red/30' : 'border-slate-200'} hover:border-navy-900 transition">
           <span class="w-12 h-12 shrink-0 rounded-xl bg-navy-900 text-white grid place-items-center">${Icone('brilho', 'w-6 h-6')}</span>
           <span class="flex-1 min-w-0">
             <span class="block font-display font-bold text-navy-900">Revisão inteligente</span>
             <span class="block text-sm text-slate-500">${hoje ? `<b class="text-brand-red">${hoje} ${hoje === 1 ? 'item' : 'itens'} para revisar hoje</b>` : 'Nada vencido hoje.'}${erros ? ` · ${erros} ${erros === 1 ? 'erro' : 'erros'} para fixar` : ''} · ditado, escrita, flashcards e desafio de 60 segundos.</span>
           </span>
-          <span class="shrink-0 text-center font-semibold ${hoje ? 'bg-brand-red text-white' : 'border border-slate-200 text-navy-900'} rounded-xl px-5 py-2.5 transition group-hover:-translate-y-0.5">${hoje ? 'Revisar agora' : 'Abrir revisão'}</span>
+          <span class="shrink-0 text-center font-semibold ${!perfil.premium ? 'border-2 border-amber-300 text-amber-800' : hoje ? 'bg-brand-red text-white' : 'border border-slate-200 text-navy-900'} rounded-xl px-5 py-2.5 transition group-hover:-translate-y-0.5">${!perfil.premium ? 'Premium' : hoje ? 'Revisar agora' : 'Abrir revisão'}</span>
         </a>`;
       })() : ''}`;
 
@@ -121,7 +129,7 @@
     const feitas = licoesFeitas(n);
     const cert = temCertificado(n);
     const testeReg = registro(n, 0);
-    const testeLiberado = admin || (aberto && feitas === 4);
+    const testeLiberado = admin || (aberto && (feitas === 4 || (!perfil.premium && licaoOk(registro(n, 1)))));
 
     const cartaoLicao = (l, i) => {
       const num = i + 1;
@@ -131,19 +139,22 @@
         : ok ? `<span class="text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">Concluída · ${pct(r)}%</span>`
         : `<span class="text-[11px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">${pct(r)}% · refaça</span>`;
       const resumo = l.g.split(/(?<=\.)\s/)[0];
+      const pago = aberto && !App.licaoLivre(perfil, num); // lição do plano Premium
       return `
         <article class="reveal group relative bg-white rounded-2xl border border-slate-200 p-6 flex flex-col ${aberto ? 'hover:-translate-y-1 hover:shadow-card' : 'opacity-60'} transition duration-300" style="transition-delay:${i * 60}ms">
           <div class="flex items-start justify-between gap-3">
             <span class="w-11 h-11 rounded-xl ${ok ? 'bg-emerald-500' : 'bg-navy-900'} text-white grid place-items-center font-display font-bold">${ok ? Icone('check', 'w-5 h-5') : num}</span>
-            ${chip}
+            ${pago ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">${Icone('estrela', 'w-3 h-3')}Premium</span>` : chip}
           </div>
-          <p class="mt-4 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Lição ${num}</p>
+          <p class="mt-4 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Lição ${num}${!pago && !perfil.premium && num === 1 && aberto ? ' · grátis' : ''}</p>
           <h3 class="text-lg font-bold text-navy-900">${App.escapar(l.t)}</h3>
           <p class="mt-1 text-sm text-slate-500 flex-1">${App.escapar(resumo)}</p>
           <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
             <span class="inline-flex items-center gap-3"><span class="inline-flex items-center gap-1">${Icone('livro', 'w-3.5 h-3.5')}Gramática</span><span class="inline-flex items-center gap-1">${Icone('som', 'w-3.5 h-3.5')}Áudio</span><span class="inline-flex items-center gap-1">${Icone('microfone', 'w-3.5 h-3.5')}Fala</span></span>
           </div>
-          ${aberto
+          ${pago
+            ? `<a href="#/planos?motivo=licao" data-premium class="mt-4 inline-flex items-center justify-center gap-1.5 font-semibold rounded-xl py-2.5 border-2 border-amber-300 text-amber-800 hover:bg-amber-50 transition">${Icone('cadeado', 'w-4 h-4')}Desbloquear com o Premium</a>`
+            : aberto
             ? `<a href="#/licao?n=${n}&l=${num}" class="mt-4 text-center font-semibold rounded-xl py-2.5 transition ${ok ? 'border border-slate-200 text-navy-900 hover:border-navy-900' : 'bg-brand-red hover:bg-brand-redDark text-white'}">${r ? (ok ? 'Revisar' : 'Tentar de novo') : 'Começar'}</a>`
             : `<span class="mt-4 inline-flex items-center justify-center gap-1.5 text-sm text-slate-400 py-2.5">${Icone('cadeado', 'w-4 h-4')}Bloqueada</span>`}
         </article>`;
@@ -156,6 +167,13 @@
           <span class="w-14 h-14 shrink-0 rounded-2xl bg-emerald-500 text-white grid place-items-center">${Icone('trofeu', 'w-7 h-7')}</span>
           <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste aprovado${testeReg ? ` com ${pct(testeReg)}%` : ''}!</p><p class="text-sm text-slate-500">Você concluiu o nível ${n}. Parabéns!</p></div>
           <a href="#/certificado?n=${n}" class="text-center font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Ver certificado</a>
+        </div>`;
+    } else if (testeLiberado && !perfil.premium) {
+      blocoTeste = `
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+          <span class="w-14 h-14 shrink-0 rounded-2xl bg-amber-400 text-white grid place-items-center">${Icone('estrela', 'w-7 h-7')}</span>
+          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n} · Premium</p><p class="text-sm text-slate-500">O teste, o certificado e a subida de nível fazem parte do plano Premium (${precoBR(PLANO.preco)}/mês).</p></div>
+          <a href="#/planos?motivo=teste" class="btn-shine text-center font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">Assinar o Premium</a>
         </div>`;
     } else if (testeLiberado) {
       blocoTeste = `

@@ -1,6 +1,6 @@
 # English Smart — Curso de Inglês Inteligente
 
-Plataforma completa de inglês, do zero à fluência, inspirada no modelo das plataformas usadas na rede
+Plataforma completa de inglês, do zero à fluência, com plano grátis e assinatura Premium pelo Mercado Pago, inspirada no modelo das plataformas usadas na rede
 estadual (prova de nivelamento, 16 níveis alinhados ao CEFR, metas semanais e certificados).
 Feita em HTML, Tailwind e JavaScript, com banco e login no **Supabase**.
 
@@ -40,6 +40,49 @@ https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/auth/smtp (Resend e 
 
 **Enquanto isso:** no Portal do professor, o botão **Senha** gera uma senha provisória para o aluno, sem e-mail.
 O aluno entra com ela e troca em *Meu perfil*.
+
+## Plano Premium (assinatura mensal pelo Mercado Pago)
+
+| | Grátis | Premium · R$ 29,99/mês |
+|---|---|---|
+| Prova de nivelamento | ✓ | ✓ |
+| 1ª lição de cada nível | ✓ | ✓ |
+| Lições 2, 3 e 4, teste do nível e certificados | | ✓ |
+| Revisão inteligente | | ✓ |
+
+**Como funciona:** o aluno clica em **Assinar** (`#/planos`), paga no Mercado Pago com cobrança automática todo mês e o
+Premium é liberado sozinho, sem recarregar a página. Ele cancela em **Meu plano** e continua com acesso até o fim do mês pago.
+Excluir a conta também cancela a cobrança. O professor vê o plano de cada aluno, os assinantes e a receita estimada no
+portal, e pode liberar **Cortesia** (Premium grátis por X dias).
+
+**O que já está pronto no seu Supabase:** tabelas `assinaturas` e `pagamentos`, trava no banco (sem assinatura, o banco
+recusa salvar as lições 2–4, testes e revisões) e a função do servidor **`mercadopago`** (em `supabase/functions/mercadopago`),
+que cria a assinatura, recebe os avisos do Mercado Pago e cancela.
+
+### Para começar a cobrar (3 passos, uns 10 minutos)
+1. **Pegue suas credenciais no Mercado Pago.** Entre em https://www.mercadopago.com.br/developers/panel/app, crie uma aplicação
+   (produto: *Assinaturas*) e copie o **Access Token** de produção (começa com `APP_USR-`). Para testar antes, use as
+   credenciais de teste e contas de teste do próprio painel.
+2. **Cole o Access Token no Supabase** como segredo `MP_ACCESS_TOKEN`:
+   https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/functions/secrets
+3. **Ligue os avisos de pagamento (webhook).** No painel da aplicação do Mercado Pago, em **Webhooks → Configurar
+   notificações**, cole a URL abaixo, marque o evento **Planos e assinaturas** e salve:
+   ```
+   https://wfxqxvlcrqbwvcvqslzi.supabase.co/functions/v1/mercadopago
+   ```
+   O Mercado Pago mostra uma **assinatura secreta**: salve-a no Supabase como segredo `MP_WEBHOOK_SECRET` (mesma página do passo 2).
+
+Pronto. Para mudar o preço: altere `PLANO.preco` em `js/config.js` (o que aparece na tela) e crie o segredo `PLANO_VALOR`
+com o novo valor (o que é cobrado). Assinaturas antigas continuam com o valor antigo.
+
+**Observações**
+- Use o e-mail da conta do Mercado Pago do aluno no campo da assinatura (o Mercado Pago costuma recusar quando é diferente).
+  Você não consegue assinar com a sua própria conta de vendedor.
+- Com o site aberto pelo arquivo, o Mercado Pago abre em outra aba e o site confere o pagamento sozinho. Com o site
+  publicado (https), o aluno volta direto para a página do plano.
+- O conteúdo das lições fica no navegador; a trava real está no banco: sem assinatura não há progresso, teste, certificado nem revisão.
+- Os Termos de Uso já têm a cláusula da assinatura (preço, renovação, cancelamento e os 7 dias de arrependimento do CDC)
+  e a Política de Privacidade cita o Mercado Pago.
 
 ## A trilha
 
@@ -161,6 +204,7 @@ js/inicio.js          Página inicial
 js/entrar.js          Entrar, criar conta e "esqueci minha senha"
 js/prova.js           Prova de nivelamento
 js/curso.js           Trilha do aluno
+js/plano.js           Plano Premium: assinar, status, pagamentos e cancelamento
 js/revisao.js         Revisão inteligente (repetição espaçada e treinos)
 js/licao.js           Player das lições e do teste do nível
 js/certificado.js     Certificado
@@ -168,4 +212,5 @@ js/perfil.js          Meu perfil (dados, foto, senha, excluir conta)
 js/termos.js          Termos de Uso e Política de Privacidade
 js/admin.js           Portal do professor
 supabase/schema.sql   Estrutura completa do banco (já aplicada no seu projeto)
+supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (já publicada)
 ```
