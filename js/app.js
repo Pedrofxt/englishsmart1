@@ -160,7 +160,7 @@ const App = (() => {
     const ini = escapar(iniciaisDe(p?.nome));
     if (av.startsWith('https://')) {
       return `<span class="${cls} rounded-full overflow-hidden bg-slate-200 grid place-items-center shrink-0">
-        <img src="${escapar(av)}" alt="" class="w-full h-full object-cover" onerror="this.parentElement.textContent='${ini}'" /></span>`;
+        <img src="${escapar(av)}" alt="" referrerpolicy="no-referrer" class="w-full h-full object-cover" onerror="const p=this.parentElement;p.style.background='#00174F';p.style.color='#fff';p.style.fontWeight='700';p.textContent='${ini}'" /></span>`;
     }
     if (av.startsWith('icone:') && ICONES_AVATAR.includes(av.slice(6))) {
       return `<span class="${cls} rounded-full bg-navy-600 text-white grid place-items-center shrink-0">${Icone(av.slice(6), 'w-1/2 h-1/2')}</span>`;
@@ -298,6 +298,38 @@ const App = (() => {
 
   let instalar = null; // evento de instalação do app (Android/Chrome)
 
+  async function concluirLoginSocial(hashInicial) {
+    carregando(true);
+    try {
+      const { data } = await sb.auth.getSession(); // espera o Supabase ler os dados do link
+      history.replaceState(null, '', location.pathname); // tira ?social= e os dados do endereço
+      const erro = new URLSearchParams(hashInicial.replace(/^#\/?/, '')).get('error_description');
+      if (!data?.session) {
+        gravarLocal('es_social', '');
+        toast(erro && !/denied|cancel/i.test(erro) ? `Não foi possível entrar com o Google: ${erro.replace(/\+/g, ' ')}` : 'Login com o Google cancelado.');
+        location.hash = '#/entrar';
+        return;
+      }
+      // registra o aceite dos Termos (o botão do Google mostra o aviso de aceite)
+      const meta = data.session.user.user_metadata || {};
+      if (!meta.aceitou_termos_em) {
+        await sb.auth.updateUser({ data: { aceitou_termos_em: new Date().toISOString(), versao_termos: VERSAO_TERMOS, aceite_via: 'google' } }).catch(() => {});
+      }
+      gravarLocal('es_social', '');
+      limparPerfil();
+      const p = await perfil(true);
+      const primeiroNome = String(p?.nome || meta.full_name || '').split(' ')[0];
+      location.hash = destino(p);
+      if (primeiroNome) setTimeout(() => toast(`Olá, ${primeiroNome}! Você entrou com o Google.`), 500);
+    } catch (e) {
+      console.error(e);
+      toast('Não foi possível concluir o login com o Google. Tente de novo.');
+      location.hash = '#/entrar';
+    } finally {
+      carregando(false);
+    }
+  }
+
   function iniciar() {
     document.getElementById('ano').textContent = new Date().getFullYear();
     document.querySelectorAll('[data-sair]').forEach((b) => b.addEventListener('click', sair));
@@ -337,6 +369,11 @@ const App = (() => {
       if (evento === 'SIGNED_OUT') limparPerfil();
       if (evento === 'PASSWORD_RECOVERY') { limparPerfil(); location.hash = '#/redefinir'; }
     });
+    // Volta do login com o Google: o Supabase devolve #access_token=... (ou #error=...) com ?social=google
+    if (new URLSearchParams(location.search).get('social')) {
+      concluirLoginSocial(hashInicial).finally(() => window.addEventListener('hashchange', navegar));
+      return;
+    }
     window.addEventListener('hashchange', navegar);
     if (linkComErro) { location.hash = '#/recuperar?expirou=1'; return; }
     if (veioDoLink) {

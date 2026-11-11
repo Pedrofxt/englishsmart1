@@ -36,6 +36,47 @@
   })();
   const semCaptcha = (form) => Captcha.ativo && !Captcha.token(form);
 
+  // ---------- Login com o Google ----------
+  // O botão só aparece quando o Google está ligado no Supabase (Authentication → Providers → Google)
+  let googleLigado = null;
+  async function googleDisponivel() {
+    if (googleLigado !== null) return googleLigado;
+    try {
+      const salvo = sessionStorage.getItem('es_google');
+      if (salvo) return (googleLigado = salvo === '1');
+    } catch {}
+    try {
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } });
+      googleLigado = !!(await r.json())?.external?.google;
+    } catch { googleLigado = false; }
+    try { sessionStorage.setItem('es_google', googleLigado ? '1' : '0'); } catch {}
+    return googleLigado;
+  }
+  async function mostrarGoogle() {
+    const ok = await googleDisponivel();
+    document.querySelectorAll('[data-social]').forEach((b) => b.classList.toggle('hidden', !ok));
+  }
+  document.querySelectorAll('[data-google]').forEach((btn) => btn.addEventListener('click', async () => {
+    const form = btn.closest('form');
+    limparMensagem(form);
+    if (btn.dataset.google === 'cadastro' && !document.getElementById('cadAceite').checked) {
+      return mensagem(form, 'Para criar a conta, marque que aceita os Termos de Uso e a Política de Privacidade (lá embaixo).');
+    }
+    if (!/^https?:$/.test(location.protocol)) return mensagem(form, 'O login com o Google funciona no site publicado (https://).');
+    const texto = btn.innerHTML;
+    setLoading(btn, true);
+    App.gravarLocal('es_social', 'google');
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${location.origin}${location.pathname}?social=google`, queryParams: { prompt: 'select_account' } },
+    });
+    if (error) {
+      setLoading(btn, false, texto);
+      App.gravarLocal('es_social', '');
+      mensagem(form, traduzir(error));
+    }
+  }));
+
   function mensagem(form, texto, tipo = 'erro') {
     const el = form.querySelector('[data-msg]');
     const estilos = {
@@ -80,6 +121,7 @@
     formCadastro.classList.toggle('hidden', !cadastro);
     formRecuperar.classList.toggle('hidden', !recuperar);
     Captcha.montar(cadastro ? formCadastro : recuperar ? formRecuperar : formEntrar);
+    mostrarGoogle();
     document.getElementById('abasEntrar').classList.toggle('hidden', recuperar);
     abaEntrar.className = `text-center py-2.5 rounded-xl text-sm font-semibold transition ${cadastro ? INATIVA : ATIVA}`;
     abaCadastro.className = `text-center py-2.5 rounded-xl text-sm font-semibold transition ${cadastro ? ATIVA : INATIVA}`;

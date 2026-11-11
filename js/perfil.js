@@ -129,6 +129,20 @@
   });
 
   // ---------- Senha ----------
+  // Quem criou a conta com o Google ainda não tem senha: a mesma área serve para criar uma
+  let temSenha = true;
+  async function ajustarSenha() {
+    const { data } = await sb.auth.getUser();
+    const u = data?.user;
+    const provedores = u?.app_metadata?.providers || (u?.app_metadata?.provider ? [u.app_metadata.provider] : []);
+    const google = provedores.includes('google');
+    temSenha = !google || provedores.includes('email');
+    el('senhaTitulo').textContent = temSenha ? 'Alterar senha' : 'Senha (opcional)';
+    el('senhaSub').textContent = google
+      ? (temSenha ? 'Você entra com o Google ou com e-mail e senha. Use pelo menos 6 caracteres.' : 'Você entra com o Google. Se quiser, defina uma senha para entrar também com e-mail (pelo menos 6 caracteres).')
+      : 'Use pelo menos 6 caracteres.';
+    el('btnSenha').textContent = temSenha ? 'Alterar senha' : 'Salvar senha';
+  }
   el('formSenha').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = el('formSenha');
@@ -149,11 +163,11 @@
           : 'Não foi possível alterar a senha.');
       }
       form.reset();
-      mensagem(form, 'Senha alterada com sucesso.', 'ok');
+      mensagem(form, temSenha ? 'Senha alterada com sucesso.' : 'Senha salva! Agora você também pode entrar com e-mail e senha.', 'ok');
     } catch (err) {
       mensagem(form, err.message);
     } finally {
-      setLoading(btn, false, 'Alterar senha');
+      setLoading(btn, false, temSenha ? 'Alterar senha' : 'Salvar senha');
     }
   });
 
@@ -258,6 +272,7 @@
       limpar(el('formDados'));
       limpar(el('formSenha'));
       el('formSenha').reset();
+      ajustarSenha();
       desenharAvatar();
       if (admin) return;
       el('pfNome').value = p.nome;

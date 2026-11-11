@@ -1147,3 +1147,31 @@ revoke all on function public.comprar_item(text) from public, anon;
 revoke all on function public.usar_moldura(text) from public, anon;
 grant execute on function public.comprar_item(text) to authenticated;
 grant execute on function public.usar_moldura(text) to authenticated;
+
+-- =====================================================================
+-- Login com o Google: nome e foto vêm de full_name/name e avatar_url/picture
+-- =====================================================================
+create or replace function public.criar_aluno()
+returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_meta jsonb := coalesce(new.raw_user_meta_data, '{}'::jsonb);
+  v_foto text := coalesce(nullif(v_meta ->> 'avatar_url', ''), nullif(v_meta ->> 'picture', ''));
+begin
+  if not exists (select 1 from public.admins where email = lower(new.email)) then
+    insert into public.alunos (id, nome, email, avatar)
+    values (new.id,
+            left(coalesce(nullif(trim(v_meta ->> 'nome'), ''), nullif(trim(v_meta ->> 'full_name'), ''),
+                          nullif(trim(v_meta ->> 'name'), ''), split_part(new.email, '@', 1)), 80),
+            lower(new.email),
+            case when v_foto ~ '^https://[a-z0-9.-]+\.googleusercontent\.com/' and char_length(v_foto) <= 300 then v_foto end)
+    on conflict (id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.criar_aluno() from public, anon, authenticated;
+-- atualizar_perfil também aceita manter a foto do Google já gravada:
+--   or (av ~ '^https://[a-z0-9.-]+\.googleusercontent\.com/' and char_length(av) <= 300
+--       and av = (select a.avatar from public.alunos a where a.id = uid))

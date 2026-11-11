@@ -537,6 +537,7 @@
     let c = null;
     let erroFuncao = '';
     try { c = await Planos.chamar('configuracao'); } catch (err) { erroFuncao = err.message; }
+    try { const r = await fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } }); c = { ...(c || {}), google: !!(await r.json())?.external?.google }; } catch {}
     const marcados = new Set((App.lerLocal('es_checklist') || '').split(',').filter(Boolean));
     const evento = c?.ultimo_evento;
     const itens = [
@@ -546,6 +547,7 @@
       { auto: true, ok: !!c?.resend, titulo: 'E-mails de lembrete (Resend)', texto: 'Segredo RESEND_API_KEY (grátis até 3.000 e-mails/mês em resend.com). Opcional: EMAIL_REMETENTE com seu domínio verificado.', link: 'https://resend.com/api-keys' },
       { auto: true, ok: !!RESPONSAVEL_NOME && !!CONTATO_EMAIL, titulo: 'Responsável nos Termos', texto: 'Nome e e-mail de contato em js/config.js. CPF/CNPJ não é obrigatório.' },
       { auto: true, ok: !!TURNSTILE_SITE_KEY, opcional: true, titulo: 'CAPTCHA no cadastro (Turnstile)', texto: 'Opcional. Crie um widget grátis no Cloudflare Turnstile, cole a Site Key em js/config.js e a Secret Key em Supabase → Attack Protection.', link: painelSupabase('auth/protection') },
+      { auto: true, ok: !!c?.google, opcional: true, titulo: 'Login com o Google', texto: 'Opcional. Crie o cliente OAuth no Google Cloud e ligue o Google em Supabase → Authentication → Providers (passo a passo no README). O botão aparece sozinho no site.', link: painelSupabase('auth/providers') },
       { id: 'pix', titulo: 'Chave Pix na conta do Mercado Pago', texto: 'Sem chave Pix cadastrada, o QR Code não é gerado. No app do Mercado Pago: Seu perfil → Minhas chaves Pix. Pode ser CPF, e-mail ou celular (não precisa de CNPJ).' },
       { id: 'url', titulo: 'Endereço do site no Supabase', texto: `Authentication → URL Configuration: Site URL = ${App.escapar(SITE_URL)} e adicione ${App.escapar(SITE_URL)}/** nas Redirect URLs (links de e-mail e recuperação de senha).`, link: painelSupabase('auth/url-configuration') },
       { id: 'vazadas', titulo: 'Bloquear senhas vazadas', texto: 'Authentication → Attack Protection → ligue "Prevent use of leaked passwords" (exige plano Pro do Supabase; no plano grátis, pule este item).', link: painelSupabase('auth/protection') },

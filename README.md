@@ -132,6 +132,31 @@ Cada aluno tem um link (`#/cadastro?ref=CÓDIGO`) em *Minha assinatura* e em *Me
 Quando o amigo cria a conta pelo link (até 7 dias) e faz o **primeiro pagamento aprovado**, quem indicou ganha
 **+30 dias** sozinho. Sem limite de indicações; não vale indicar a si mesmo.
 
+## Login com o Google
+O site já tem os botões **"Continuar com o Google"** (Entrar) e **"Criar conta com o Google"** (Cadastro). Eles só
+aparecem depois que o Google é ligado no Supabase, então nada quebra enquanto isso. O aluno que entra com o Google
+já chega com nome e foto da conta Google, faz a prova de nivelamento e segue as mesmas regras (assinatura, 4 aparelhos).
+Se ele já tinha conta com o mesmo e-mail, o Supabase junta as duas: o progresso continua o mesmo.
+
+**Como ligar (uns 10 minutos, grátis, sem CNPJ):**
+1. Entre em https://console.cloud.google.com com a sua conta Google e crie um projeto (ex.: "English Smart").
+2. Vá em **Google Auth Platform → Branding** (https://console.cloud.google.com/auth/branding) → *Get started*:
+   nome do app `English Smart`, seu e-mail de suporte, público **External**, e-mail de contato. Em *Branding*, coloque
+   o domínio `englishsmart.app.br`, o link da política `https://englishsmart.app.br/#/termos?aba=privacidade` e dos
+   termos `https://englishsmart.app.br/#/termos` (o logo é opcional; com logo o Google pede verificação, que leva alguns dias).
+3. Em **Audience**, clique em **Publish app** (sem isso, só e-mails de teste conseguem entrar).
+4. Em **Clients** (https://console.cloud.google.com/auth/clients/create): tipo **Web application**.
+   - *Authorized JavaScript origins*: `https://englishsmart.app.br`
+   - *Authorized redirect URIs*: `https://wfxqxvlcrqbwvcvqslzi.supabase.co/auth/v1/callback`
+   - Clique em *Create* e copie o **Client ID** e o **Client Secret**.
+5. No Supabase: https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/auth/providers → **Google** → ligue,
+   cole o Client ID e o Client Secret e salve.
+6. Em https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/auth/url-configuration confira:
+   Site URL `https://englishsmart.app.br` e, em Redirect URLs, `https://englishsmart.app.br/**`.
+
+Pronto: recarregue a tela de Entrar e o botão aparece. Quem entrou com o Google pode, se quiser, definir uma senha em
+*Meu perfil* para entrar também com e-mail. O aceite dos Termos fica registrado na conta (o botão mostra o aviso).
+
 ## Limite de 4 aparelhos por conta
 Para impedir que uma assinatura seja compartilhada, cada conta fica conectada em no máximo **4 aparelhos**
 (cada navegador/celular recebe uma identificação própria). O 5º aparelho vê a tela **"Limite de 4 aparelhos atingido"**.
@@ -326,7 +351,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261111a` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261111b` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 

@@ -29,9 +29,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <!-- Visual: Tailwind já compilado (sem montar o CSS no navegador) -->
-  <link rel="stylesheet" href="css/tailwind.css?v=20261111a" />
-  <link rel="stylesheet" href="css/brand.css?v=20261111a" />
-  <link rel="stylesheet" href="css/escuro.css?v=20261111a" />
+  <link rel="stylesheet" href="css/tailwind.css?v=20261111b" />
+  <link rel="stylesheet" href="css/brand.css?v=20261111b" />
+  <link rel="stylesheet" href="css/escuro.css?v=20261111b" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Course","name":"English Smart — Curso de Inglês Inteligente","description":"Curso de inglês online em 16 níveis (A1 a C2) com prova de nivelamento grátis.","provider":{"@type":"Organization","name":"English Smart","url":"https://englishsmart.app.br"},"inLanguage":"pt-BR","offers":{"@type":"Offer","price":"29.99","priceCurrency":"BRL","category":"Subscription"}}</script>
 </head>
@@ -364,7 +364,11 @@
         <form id="formEntrar" class="mt-8 space-y-5" novalidate>
           <div>
             <h1 class="text-3xl font-extrabold text-navy-900">Bem-vindo de volta</h1>
-            <p class="mt-2 text-slate-500">Entre com seu e-mail e senha.</p>
+            <p class="mt-2 text-slate-500">Entre com sua conta do Google ou com e-mail e senha.</p>
+          </div>
+          <div data-social="entrar" class="hidden space-y-5">
+            <button type="button" data-google="entrar" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-navy-600 hover:bg-slate-50 text-navy-900 font-semibold py-3.5 rounded-2xl transition"><svg class="w-5 h-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Continuar com o Google</span></button>
+            <div class="flex items-center gap-3 text-xs font-semibold uppercase tracking-widest text-slate-400"><span class="h-px flex-1 bg-slate-200"></span>ou com e-mail<span class="h-px flex-1 bg-slate-200"></span></div>
           </div>
           <div>
             <label for="entrarEmail" class="block text-sm font-medium text-slate-600 mb-1.5">E-mail</label>
@@ -380,6 +384,7 @@
           </div>
           <div data-msg class="hidden" role="alert"></div>
           <button type="submit" class="btn-shine w-full bg-navy-900 hover:bg-navy-800 disabled:opacity-70 text-white font-display font-semibold py-4 rounded-2xl transition hover:-translate-y-0.5">Entrar</button>
+          <p data-social="entrar" class="hidden text-xs text-center text-slate-500">Ao continuar com o Google pela primeira vez, você cria sua conta e aceita os <a href="#/termos" target="_blank" class="font-semibold underline">Termos de Uso</a> e a <a href="#/termos?aba=privacidade" target="_blank" class="font-semibold underline">Política de Privacidade</a>.</p>
         </form>
 
         <!-- Esqueci minha senha -->
@@ -428,6 +433,10 @@
           <div>
             <h1 class="text-3xl font-extrabold text-navy-900">Crie sua conta</h1>
             <p class="mt-2 text-slate-500">Depois você já faz a prova de nivelamento.</p>
+          </div>
+          <div data-social="cadastro" class="hidden space-y-5">
+            <button type="button" data-google="cadastro" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-navy-600 hover:bg-slate-50 text-navy-900 font-semibold py-3.5 rounded-2xl transition"><svg class="w-5 h-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Criar conta com o Google</span></button>
+            <div class="flex items-center gap-3 text-xs font-semibold uppercase tracking-widest text-slate-400"><span class="h-px flex-1 bg-slate-200"></span>ou com e-mail<span class="h-px flex-1 bg-slate-200"></span></div>
           </div>
           <div>
             <label for="cadNome" class="block text-sm font-medium text-slate-600 mb-1.5">Nome completo</label>
@@ -900,8 +909,8 @@
 
       <form id="formSenha" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 space-y-5" novalidate>
         <div>
-          <h2 class="text-xl font-bold text-navy-900">Alterar senha</h2>
-          <p class="text-sm text-slate-500">Use pelo menos 6 caracteres.</p>
+          <h2 id="senhaTitulo" class="text-xl font-bold text-navy-900">Alterar senha</h2>
+          <p id="senhaSub" class="text-sm text-slate-500">Use pelo menos 6 caracteres.</p>
         </div>
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
@@ -914,7 +923,7 @@
           </div>
         </div>
         <div data-msg class="hidden" role="alert"></div>
-        <button type="submit" class="bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl px-6 py-3 transition">Alterar senha</button>
+        <button id="btnSenha" type="submit" class="bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl px-6 py-3 transition">Alterar senha</button>
       </form>
 
       <section data-so-aluno id="perfilMedalhas" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24"></section>
@@ -973,7 +982,7 @@
 
   <main class="max-w-4xl mx-auto px-5 py-10">
     <h1 class="text-3xl md:text-4xl font-extrabold text-navy-900">Termos e privacidade</h1>
-    <p class="mt-2 text-slate-500">Última atualização: 10 de novembro de 2026</p>
+    <p class="mt-2 text-slate-500">Última atualização: 11 de novembro de 2026</p>
 
     <div class="mt-8 inline-grid grid-cols-2 bg-slate-200/70 p-1 rounded-2xl" role="tablist">
       <a id="abaTermos" href="#/termos" class="text-center px-5 py-2.5 rounded-xl text-sm font-semibold transition">Termos de Uso</a>
@@ -1065,6 +1074,7 @@
       <h3>Dados que você informa</h3>
       <ul>
         <li><b>Cadastro:</b> nome, e-mail e senha. A senha é guardada criptografada (em formato irreversível) e nem nós temos acesso a ela.</li>
+        <li><b>Login com o Google (se você escolher):</b> recebemos do Google apenas o seu nome, e-mail e foto de perfil, para criar e identificar a sua conta. Não temos acesso à sua senha do Google, aos seus e-mails nem a outros dados da sua conta Google.</li>
         <li><b>Perfil (opcional):</b> telefone, cidade e foto de perfil ou avatar.</li>
         <li><b>Aparelhos conectados:</b> um identificador aleatório de cada aparelho, o nome do navegador e do sistema (por exemplo, "Chrome no Windows"), um resumo técnico do navegador e da tela (para reconhecer o mesmo aparelho) e as datas de conexão e de último acesso. Servem para aplicar o limite de 4 aparelhos por conta.</li>
         <li><b>Assinatura:</b> e-mail da sua conta no Mercado Pago, situação da assinatura, plano, valores, cupons usados e datas das cobranças.</li>
@@ -1096,6 +1106,7 @@
       <h2>4. Com quem compartilhamos</h2>
       <ul>
         <li><b>Supabase</b> — provedor de banco de dados, autenticação e armazenamento das fotos. Os dados ficam em servidores localizados em São Paulo, Brasil.</li>
+        <li><b>Google</b> (se você entrar com o Google) — confirma a sua identidade e nos envia nome, e-mail e foto de perfil, conforme a política de privacidade do Google.</li>
         <li><b>Mercado Pago</b> — processa os pagamentos da assinatura. Para isso, recebe o e-mail informado e o identificador da sua conta na Plataforma; os dados de pagamento que você digita lá são tratados conforme a política de privacidade do Mercado Pago.</li>
         <li><b>Resend</b> — envia os e-mails de aviso de vencimento do acesso. Recebe seu nome e e-mail apenas para esse envio.</li>
         <li><b>Cloudflare Turnstile</b> (se ativado) — verificação "não sou um robô" no cadastro e no login, que recebe dados técnicos do navegador para prevenir fraudes.</li>
@@ -1151,28 +1162,28 @@
 <!-- Aviso flutuante -->
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-24 opacity-0 transition duration-300 bg-navy-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-card z-[70]"></div>
 
-<script src="js/config.js?v=20261111a"></script>
-<script src="js/curriculo.js?v=20261111a"></script>
-<script src="js/voz.js?v=20261111a"></script>
-<script src="js/atividades.js?v=20261111a"></script>
-<script src="js/ui.js?v=20261111a"></script>
-<script src="js/som.js?v=20261111a"></script>
-<script src="js/cookies.js?v=20261111a"></script>
-<script src="js/app.js?v=20261111a"></script>
-<script src="js/inicio.js?v=20261111a"></script>
-<script src="js/entrar.js?v=20261111a"></script>
-<script src="js/prova.js?v=20261111a"></script>
-<script src="js/curso.js?v=20261111a"></script>
-<script src="js/licao.js?v=20261111a"></script>
-<script src="js/revisao.js?v=20261111a"></script>
-<script src="js/plano.js?v=20261111a"></script>
-<script src="js/loja.js?v=20261111a"></script>
-<script src="js/verificar.js?v=20261111a"></script>
-<script src="js/dispositivos.js?v=20261111a"></script>
-<script src="js/certificado.js?v=20261111a"></script>
-<script src="js/perfil.js?v=20261111a"></script>
-<script src="js/termos.js?v=20261111a"></script>
-<script src="js/admin.js?v=20261111a"></script>
+<script src="js/config.js?v=20261111b"></script>
+<script src="js/curriculo.js?v=20261111b"></script>
+<script src="js/voz.js?v=20261111b"></script>
+<script src="js/atividades.js?v=20261111b"></script>
+<script src="js/ui.js?v=20261111b"></script>
+<script src="js/som.js?v=20261111b"></script>
+<script src="js/cookies.js?v=20261111b"></script>
+<script src="js/app.js?v=20261111b"></script>
+<script src="js/inicio.js?v=20261111b"></script>
+<script src="js/entrar.js?v=20261111b"></script>
+<script src="js/prova.js?v=20261111b"></script>
+<script src="js/curso.js?v=20261111b"></script>
+<script src="js/licao.js?v=20261111b"></script>
+<script src="js/revisao.js?v=20261111b"></script>
+<script src="js/plano.js?v=20261111b"></script>
+<script src="js/loja.js?v=20261111b"></script>
+<script src="js/verificar.js?v=20261111b"></script>
+<script src="js/dispositivos.js?v=20261111b"></script>
+<script src="js/certificado.js?v=20261111b"></script>
+<script src="js/perfil.js?v=20261111b"></script>
+<script src="js/termos.js?v=20261111b"></script>
+<script src="js/admin.js?v=20261111b"></script>
 <script>App.iniciar(); Cookies.iniciar();</script>
 </body>
 </html>
