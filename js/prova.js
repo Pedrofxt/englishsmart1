@@ -225,7 +225,7 @@
 
     mostrarSecao('provaResultado');
     const caixa = el('provaResultado').firstElementChild;
-    if (comemorar) confete(caixa);
+    if (comemorar) { confete(caixa); Som.tocar('nivel'); }
 
     setTimeout(() => caixa.querySelectorAll('[data-largura]').forEach((b) => { b.style.width = b.dataset.largura; }), 500);
     const cont = caixa.querySelector('[data-contar]');

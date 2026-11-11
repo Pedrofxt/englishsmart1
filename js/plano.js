@@ -328,6 +328,7 @@ const Planos = (() => {
     el('btnCopiarPix').addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(d.qr_code); } catch { el('copiaCola').select(); document.execCommand?.('copy'); }
       el('btnCopiarPix').textContent = 'Copiado!';
+      Som.tocar('pop');
       setTimeout(() => el('btnCopiarPix') && (el('btnCopiarPix').textContent = 'Copiar'), 2000);
     });
 
@@ -417,6 +418,7 @@ const Planos = (() => {
       if (boasVindas) {
         raiz.insertAdjacentHTML('afterbegin', `<div id="bemVindoPremium" class="anim-pop mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-5 py-4 font-semibold">Pagamento confirmado! Sua trilha está liberada. <a href="#/curso" class="underline underline-offset-2">Começar agora →</a></div>`);
         soltarConfete(raiz.querySelector('section'));
+        Som.tocar('conclusao');
       }
       revelar(raiz);
       return;

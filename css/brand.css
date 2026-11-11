@@ -239,3 +239,88 @@ html.escuro .palavra-falta { color: #fca5a5; background: rgba(239,68,68,.18); }
 .aba-admin[aria-selected="true"] { background: #00174F; color: #fff; }
 html.escuro .aba-admin:hover { color: #fff; background: #1e293b; }
 html.escuro .aba-admin[aria-selected="true"] { background: #1d3a8a; }
+
+/* ---------- Contraste (WCAG AA) nos dois modos ---------- */
+/* Fundos coloridos com texto branco: tons um pouco mais escuros para o texto ficar legível */
+.bg-brand-red { background-color: #D91A34; }
+.text-brand-red { color: #D91A34; }
+.bg-emerald-500, .bg-emerald-600 { background-color: #047857; }
+.hover\:bg-emerald-700:hover { background-color: #065f46; }
+.bg-sky-500 { background-color: #075985; }
+.bg-amber-500 { background-color: #B45309; }
+.bg-\[\#32BCAD\] { background-color: #0F766E; }
+.hover\:bg-\[\#2aa598\]:hover { background-color: #115E59; }
+.bg-\[\#25D366\] { background-color: #0F7A43; }
+.hover\:bg-\[\#1fb857\]:hover { background-color: #0B6637; }
+/* Textos brancos translúcidos sobre o azul-marinho */
+.text-white\/35, .text-white\/40 { color: rgba(255, 255, 255, 0.66); }
+.text-white\/50 { color: rgba(255, 255, 255, 0.72); }
+.text-white\/60 { color: rgba(255, 255, 255, 0.78); }
+.text-amber-600 { color: #B45309; }
+.text-emerald-600 { color: #047857; }
+.text-sky-600 { color: #0369A1; }
+.text-slate-400 { color: #64748b; }
+html.escuro .text-amber-600 { color: #fcd34d; }
+html.escuro .text-emerald-600 { color: #6ee7b7; }
+html.escuro .text-sky-600 { color: #7dd3fc; }
+.text-slate-500, .text-slate-400 { color: #56657b; }
+.bg-brand-redSoft.text-brand-red, .bg-brand-redSoft .text-brand-red { color: #B3122A; }
+:is(.bg-brand-hero, .bg-navy-900, .bg-navy-950) .text-brand-red { color: #FF6B7D; }
+html.escuro .text-slate-500 { color: #a3b1c6; }
+html.escuro .text-slate-400 { color: #94a3b8; }
+:is(.bg-brand-hero, .bg-navy-900, .bg-navy-950) .bg-brand-redSoft.text-brand-red { color: #B3122A; }
+html.escuro .bg-brand-redSoft.text-brand-red { color: #ff6b7d; }
+
+/* ---------- Animações extras ---------- */
+/* Troca de tela */
+.tela-entra { animation: telaEntra .38s cubic-bezier(.2,.8,.2,1); }
+@keyframes telaEntra { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* Itens que entram em sequência (cartões do painel, listas) */
+.em-sequencia > * { animation: itemEntra .5s cubic-bezier(.2,.8,.2,1) both; }
+.em-sequencia > *:nth-child(2) { animation-delay: .05s } .em-sequencia > *:nth-child(3) { animation-delay: .1s }
+.em-sequencia > *:nth-child(4) { animation-delay: .15s } .em-sequencia > *:nth-child(5) { animation-delay: .2s }
+.em-sequencia > *:nth-child(6) { animation-delay: .25s } .em-sequencia > *:nth-child(7) { animation-delay: .3s }
+.em-sequencia > *:nth-child(8) { animation-delay: .35s } .em-sequencia > *:nth-child(n+9) { animation-delay: .4s }
+@keyframes itemEntra { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+/* Botões: leve afundada ao tocar */
+button:not(:disabled):not([class*="translate"]):active, a.btn-shine:not([class*="translate"]):active, .opcao:not(:disabled):active { transform: scale(.97); }
+/* Onda do clique */
+.onda { position: absolute; border-radius: 9999px; background: currentColor; opacity: .18; transform: scale(0); animation: onda .65s ease-out; pointer-events: none; }
+@keyframes onda { to { transform: scale(1); opacity: 0; } }
+/* "+10 XP" subindo */
+.texto-flutuante { position: absolute; z-index: 95; transform: translate(-50%, 0); font: 800 18px Poppins, sans-serif; pointer-events: none; text-shadow: 0 2px 8px rgba(0,0,0,.15); animation: flutuar 1.1s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes flutuar { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.8); } 20% { opacity: 1; transform: translate(-50%, -8px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -60px) scale(1); } }
+/* Moedas voando */
+.moeda-voando { position: absolute; z-index: 95; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 9999px; background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b 60%, #b45309); box-shadow: 0 0 0 2px #fcd34d inset; pointer-events: none; animation: moedaVoa 1.2s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes moedaVoa { 0% { opacity: 0; transform: translate(0,0) scale(.4); } 15% { opacity: 1; } 60% { transform: translate(var(--dx), var(--dy)) scale(1) rotateY(360deg); opacity: 1; } 100% { transform: translate(calc(var(--dx) * 1.1), calc(var(--dy) + 80px)) scale(.6) rotateY(720deg); opacity: 0; } }
+/* Chama da sequência tremulando */
+.chama-viva { display: inline-block; transform-origin: 50% 90%; animation: chama 1.2s ease-in-out infinite; }
+@keyframes chama { 0%, 100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.12) rotate(3deg); } }
+/* Barras de progresso crescendo */
+.barra-cresce { transform-origin: left; animation: barraCresce 1s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes barraCresce { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* Brilho passando nas barras de progresso das lições */
+.barra-brilho { position: relative; overflow: hidden; }
+.barra-brilho::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transform: translateX(-100%); animation: brilhoBarra 2.2s ease-in-out infinite; }
+@keyframes brilhoBarra { 60%, 100% { transform: translateX(100%); } }
+/* Ícone que balança para chamar atenção (revisão do dia, medalha) */
+.balanca { animation: balanca 2.8s ease-in-out infinite; transform-origin: 50% 0; }
+@keyframes balanca { 0%, 86%, 100% { transform: rotate(0); } 89% { transform: rotate(-12deg); } 93% { transform: rotate(10deg); } 97% { transform: rotate(-6deg); } }
+/* Pulsar suave (botão principal da trilha) */
+.pulsar { animation: pulsar 2.4s ease-in-out infinite; }
+@keyframes pulsar { 0%, 100% { box-shadow: 0 0 0 0 rgba(217,26,52,.45); } 50% { box-shadow: 0 0 0 10px rgba(217,26,52,0); } }
+/* Toast com quique */
+#toast:not(.opacity-0) { animation: toastQuica .45s cubic-bezier(.2,1.6,.4,1); }
+@keyframes toastQuica { from { transform: translate(-50%, 30px) scale(.9); } to { transform: translate(-50%, 0) scale(1); } }
+/* Cartões que levantam ao passar o mouse */
+.levanta { transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; }
+.levanta:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -18px rgba(0,23,79,.35); }
+/* Selo que gira ao aparecer (nível, troféu) */
+.gira-entra { animation: giraEntra .8s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes giraEntra { from { transform: scale(.3) rotate(-180deg); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Treme o painel de erro de leve */
+.anim-erro-suave { animation: shake .4s; }
+@media (prefers-reduced-motion: reduce) {
+  .tela-entra, .em-sequencia > *, .chama-viva, .barra-cresce, .barra-brilho::after, .balanca, .pulsar, #toast:not(.opacity-0), .gira-entra { animation: none !important; }
+  .levanta:hover { transform: none; }
+}

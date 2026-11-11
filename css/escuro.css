@@ -1,45 +1,216 @@
-/* escuro.css — Modo escuro (classe .escuro no <html>, ligada pelo botão de lua). O certificado fica sempre claro. */
+/* escuro.css — Modo escuro (classe .escuro no <html>, ligada pelo botão de lua). Gerado; o certificado fica sempre claro. */
 html.escuro { color-scheme: dark; }
-html.escuro body { background-color:#020617; color:#cbd5e1; }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-white, html.escuro #menuAvatar .bg-white, html.escuro #avisoCookies .bg-white, html.escuro #modalSenha .bg-white { background-color:#0f172a }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-slate-50, html.escuro #menuAvatar .bg-slate-50, html.escuro #avisoCookies .bg-slate-50, html.escuro #modalSenha .bg-slate-50 { background-color:#020617 }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-slate-100, html.escuro #menuAvatar .bg-slate-100, html.escuro #avisoCookies .bg-slate-100, html.escuro #modalSenha .bg-slate-100 { background-color:#1e293b }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-slate-200, html.escuro #menuAvatar .bg-slate-200, html.escuro #avisoCookies .bg-slate-200, html.escuro #modalSenha .bg-slate-200 { background-color:#334155 }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-slate-200\/70, html.escuro #menuAvatar .bg-slate-200\/70, html.escuro #avisoCookies .bg-slate-200\/70, html.escuro #modalSenha .bg-slate-200\/70 { background-color:rgba(51,65,85,.7) }
-html.escuro [data-view]:not([data-view="certificado"]) .hover\:bg-slate-50:hover, html.escuro [data-view]:not([data-view="certificado"]) .hover\:bg-slate-100:hover, html.escuro #menuAvatar .hover\:bg-slate-50:hover, html.escuro #menuAvatar .hover\:bg-slate-100:hover, html.escuro #avisoCookies .hover\:bg-slate-50:hover, html.escuro #avisoCookies .hover\:bg-slate-100:hover, html.escuro #modalSenha .hover\:bg-slate-50:hover, html.escuro #modalSenha .hover\:bg-slate-100:hover { background-color:#1e293b }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-emerald-50, html.escuro #menuAvatar .bg-emerald-50, html.escuro #avisoCookies .bg-emerald-50, html.escuro #modalSenha .bg-emerald-50 { background-color:rgba(16,185,129,.12) }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-amber-50, html.escuro #menuAvatar .bg-amber-50, html.escuro #avisoCookies .bg-amber-50, html.escuro #modalSenha .bg-amber-50 { background-color:rgba(245,158,11,.12) }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-red-50, html.escuro [data-view]:not([data-view="certificado"]) .hover\:bg-red-50:hover, html.escuro #menuAvatar .bg-red-50, html.escuro #menuAvatar .hover\:bg-red-50:hover, html.escuro #avisoCookies .bg-red-50, html.escuro #avisoCookies .hover\:bg-red-50:hover, html.escuro #modalSenha .bg-red-50, html.escuro #modalSenha .hover\:bg-red-50:hover { background-color:rgba(239,68,68,.12) }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-sky-50, html.escuro #menuAvatar .bg-sky-50, html.escuro #avisoCookies .bg-sky-50, html.escuro #modalSenha .bg-sky-50 { background-color:rgba(14,165,233,.12) }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-brand-redSoft, html.escuro #menuAvatar .bg-brand-redSoft, html.escuro #avisoCookies .bg-brand-redSoft, html.escuro #modalSenha .bg-brand-redSoft { background-color:rgba(235,31,59,.15) }
-html.escuro [data-view]:not([data-view="certificado"]) .text-navy-900, html.escuro [data-view]:not([data-view="certificado"]) .text-navy-800, html.escuro #menuAvatar .text-navy-900, html.escuro #menuAvatar .text-navy-800, html.escuro #avisoCookies .text-navy-900, html.escuro #avisoCookies .text-navy-800, html.escuro #modalSenha .text-navy-900, html.escuro #modalSenha .text-navy-800 { color:#f1f5f9 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-navy-600, html.escuro [data-view]:not([data-view="certificado"]) .text-navy-700, html.escuro #menuAvatar .text-navy-600, html.escuro #menuAvatar .text-navy-700, html.escuro #avisoCookies .text-navy-600, html.escuro #avisoCookies .text-navy-700, html.escuro #modalSenha .text-navy-600, html.escuro #modalSenha .text-navy-700 { color:#93c5fd }
-html.escuro [data-view]:not([data-view="certificado"]) .text-slate-700, html.escuro [data-view]:not([data-view="certificado"]) .text-slate-800, html.escuro #menuAvatar .text-slate-700, html.escuro #menuAvatar .text-slate-800, html.escuro #avisoCookies .text-slate-700, html.escuro #avisoCookies .text-slate-800, html.escuro #modalSenha .text-slate-700, html.escuro #modalSenha .text-slate-800 { color:#e2e8f0 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-slate-600, html.escuro #menuAvatar .text-slate-600, html.escuro #avisoCookies .text-slate-600, html.escuro #modalSenha .text-slate-600 { color:#cbd5e1 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-slate-500, html.escuro #menuAvatar .text-slate-500, html.escuro #avisoCookies .text-slate-500, html.escuro #modalSenha .text-slate-500 { color:#94a3b8 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-slate-400, html.escuro #menuAvatar .text-slate-400, html.escuro #avisoCookies .text-slate-400, html.escuro #modalSenha .text-slate-400 { color:#7c8ba1 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-emerald-800, html.escuro [data-view]:not([data-view="certificado"]) .text-emerald-700, html.escuro #menuAvatar .text-emerald-800, html.escuro #menuAvatar .text-emerald-700, html.escuro #avisoCookies .text-emerald-800, html.escuro #avisoCookies .text-emerald-700, html.escuro #modalSenha .text-emerald-800, html.escuro #modalSenha .text-emerald-700 { color:#6ee7b7 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-amber-800, html.escuro [data-view]:not([data-view="certificado"]) .text-amber-900, html.escuro [data-view]:not([data-view="certificado"]) .text-amber-700, html.escuro #menuAvatar .text-amber-800, html.escuro #menuAvatar .text-amber-900, html.escuro #menuAvatar .text-amber-700, html.escuro #avisoCookies .text-amber-800, html.escuro #avisoCookies .text-amber-900, html.escuro #avisoCookies .text-amber-700, html.escuro #modalSenha .text-amber-800, html.escuro #modalSenha .text-amber-900, html.escuro #modalSenha .text-amber-700 { color:#fcd34d }
-html.escuro [data-view]:not([data-view="certificado"]) .text-red-800, html.escuro [data-view]:not([data-view="certificado"]) .text-red-700, html.escuro #menuAvatar .text-red-800, html.escuro #menuAvatar .text-red-700, html.escuro #avisoCookies .text-red-800, html.escuro #avisoCookies .text-red-700, html.escuro #modalSenha .text-red-800, html.escuro #modalSenha .text-red-700 { color:#fca5a5 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-slate-100, html.escuro #menuAvatar .text-slate-100, html.escuro #avisoCookies .text-slate-100, html.escuro #modalSenha .text-slate-100 { color:#1e293b }
-html.escuro [data-view]:not([data-view="certificado"]) .border-slate-100, html.escuro [data-view]:not([data-view="certificado"]) .border-slate-200, html.escuro [data-view]:not([data-view="certificado"]) .border-slate-300, html.escuro [data-view]:not([data-view="certificado"]) .divide-slate-100 > * + *, html.escuro [data-view]:not([data-view="certificado"]) .divide-y > * + *, html.escuro #menuAvatar .border-slate-100, html.escuro #menuAvatar .border-slate-200, html.escuro #menuAvatar .border-slate-300, html.escuro #menuAvatar .divide-slate-100 > * + *, html.escuro #menuAvatar .divide-y > * + *, html.escuro #avisoCookies .border-slate-100, html.escuro #avisoCookies .border-slate-200, html.escuro #avisoCookies .border-slate-300, html.escuro #avisoCookies .divide-slate-100 > * + *, html.escuro #avisoCookies .divide-y > * + *, html.escuro #modalSenha .border-slate-100, html.escuro #modalSenha .border-slate-200, html.escuro #modalSenha .border-slate-300, html.escuro #modalSenha .divide-slate-100 > * + *, html.escuro #modalSenha .divide-y > * + * { border-color:#1e293b }
-html.escuro [data-view]:not([data-view="certificado"]) .border-emerald-200, html.escuro [data-view]:not([data-view="certificado"]) .border-emerald-300, html.escuro #menuAvatar .border-emerald-200, html.escuro #menuAvatar .border-emerald-300, html.escuro #avisoCookies .border-emerald-200, html.escuro #avisoCookies .border-emerald-300, html.escuro #modalSenha .border-emerald-200, html.escuro #modalSenha .border-emerald-300 { border-color:rgba(16,185,129,.35) }
-html.escuro [data-view]:not([data-view="certificado"]) .border-amber-200, html.escuro [data-view]:not([data-view="certificado"]) .border-amber-300, html.escuro #menuAvatar .border-amber-200, html.escuro #menuAvatar .border-amber-300, html.escuro #avisoCookies .border-amber-200, html.escuro #avisoCookies .border-amber-300, html.escuro #modalSenha .border-amber-200, html.escuro #modalSenha .border-amber-300 { border-color:rgba(245,158,11,.35) }
-html.escuro [data-view]:not([data-view="certificado"]) .border-red-200, html.escuro #menuAvatar .border-red-200, html.escuro #avisoCookies .border-red-200, html.escuro #modalSenha .border-red-200 { border-color:rgba(239,68,68,.35) }
-html.escuro [data-view]:not([data-view="certificado"]) .ring-slate-200, html.escuro #menuAvatar .ring-slate-200, html.escuro #avisoCookies .ring-slate-200, html.escuro #modalSenha .ring-slate-200 { --tw-ring-color:#334155 }
-html.escuro [data-view]:not([data-view="certificado"]) .campo, html.escuro #menuAvatar .campo, html.escuro #avisoCookies .campo, html.escuro #modalSenha .campo { background-color:#0b1222;border-color:#334155;color:#f1f5f9 }
-html.escuro [data-view]:not([data-view="certificado"]) .campo:focus, html.escuro #menuAvatar .campo:focus, html.escuro #avisoCookies .campo:focus, html.escuro #modalSenha .campo:focus { background-color:#0b1222 }
-html.escuro [data-view]:not([data-view="certificado"]) .opcao, html.escuro #menuAvatar .opcao, html.escuro #avisoCookies .opcao, html.escuro #modalSenha .opcao { background-color:#0f172a;border-color:#334155;color:#f1f5f9 }
-html.escuro [data-view]:not([data-view="certificado"]) .hover\:border-navy-900:hover, html.escuro [data-view]:not([data-view="certificado"]) .hover\:border-navy-600:hover, html.escuro #menuAvatar .hover\:border-navy-900:hover, html.escuro #menuAvatar .hover\:border-navy-600:hover, html.escuro #avisoCookies .hover\:border-navy-900:hover, html.escuro #avisoCookies .hover\:border-navy-600:hover, html.escuro #modalSenha .hover\:border-navy-900:hover, html.escuro #modalSenha .hover\:border-navy-600:hover { border-color:#93c5fd }
-html.escuro [data-view]:not([data-view="certificado"]) .hover\:text-navy-900:hover, html.escuro #menuAvatar .hover\:text-navy-900:hover, html.escuro #avisoCookies .hover\:text-navy-900:hover, html.escuro #modalSenha .hover\:text-navy-900:hover { color:#fff }
-html.escuro [data-view]:not([data-view="certificado"]) .shadow-card, html.escuro #menuAvatar .shadow-card, html.escuro #avisoCookies .shadow-card, html.escuro #modalSenha .shadow-card { --tw-shadow:0 30px 80px -20px rgba(0,0,0,.7) }
-html.escuro [data-view]:not([data-view="certificado"]) details.bg-slate-50, html.escuro #menuAvatar details.bg-slate-50, html.escuro #avisoCookies details.bg-slate-50, html.escuro #modalSenha details.bg-slate-50 { background-color:#0f172a }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-navy-900.text-white, html.escuro [data-view]:not([data-view="certificado"]) .bg-navy-900, html.escuro #menuAvatar .bg-navy-900.text-white, html.escuro #menuAvatar .bg-navy-900, html.escuro #avisoCookies .bg-navy-900.text-white, html.escuro #avisoCookies .bg-navy-900, html.escuro #modalSenha .bg-navy-900.text-white, html.escuro #modalSenha .bg-navy-900 { background-color:#1d3a8a }
-html.escuro [data-view]:not([data-view="certificado"]) .hover\:bg-navy-800:hover, html.escuro #menuAvatar .hover\:bg-navy-800:hover, html.escuro #avisoCookies .hover\:bg-navy-800:hover, html.escuro #modalSenha .hover\:bg-navy-800:hover { background-color:#2547a8 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-navy-900.bg-white, html.escuro [data-view]:not([data-view="certificado"]) .bg-white.text-navy-900, html.escuro #menuAvatar .text-navy-900.bg-white, html.escuro #menuAvatar .bg-white.text-navy-900, html.escuro #avisoCookies .text-navy-900.bg-white, html.escuro #avisoCookies .bg-white.text-navy-900, html.escuro #modalSenha .text-navy-900.bg-white, html.escuro #modalSenha .bg-white.text-navy-900 { background-color:#f1f5f9;color:#00174F }
-html.escuro [data-view]:not([data-view="certificado"]) .bg-white.text-slate-800 .text-navy-900, html.escuro #menuAvatar .bg-white.text-slate-800 .text-navy-900, html.escuro #avisoCookies .bg-white.text-slate-800 .text-navy-900, html.escuro #modalSenha .bg-white.text-slate-800 .text-navy-900 { color:#f1f5f9 }
-html.escuro [data-view]:not([data-view="certificado"]) .text-white, html.escuro #menuAvatar .text-white, html.escuro #avisoCookies .text-white, html.escuro #modalSenha .text-white { color:#fff }
-html.escuro header.bg-navy-900, html.escuro header.bg-navy-900\/90, html.escuro footer { background-color:#000B2B !important; }
-html.escuro [data-view] .bg-brand-hero { background: radial-gradient(circle at 80% 20%, #01205c 0, #000B2B 60%, #000614 100%); }
-html.escuro ::selection { background:#EB1F3B; color:#fff; }
+html.escuro body, html.escuro body.bg-white { background-color: #020617; color: #cbd5e1; }
+html.escuro ::selection { background: #EB1F3B; color: #fff; }
+html.escuro .bg-white { background-color: #0f172a }
+html.escuro .\!bg-white { background-color: #0f172a !important }
+html.escuro .bg-slate-50,
+html.escuro .hover\:bg-slate-50:hover,
+html.escuro .hover\:bg-slate-50\/80:hover { background-color: #0b1222 }
+html.escuro .\!bg-slate-50 { background-color: #0b1222 !important }
+html.escuro .bg-slate-100,
+html.escuro .hover\:bg-slate-100:hover,
+html.escuro .bg-slate-200\/70 { background-color: #1e293b }
+html.escuro .bg-slate-200,
+html.escuro .hover\:bg-slate-200:hover { background-color: #334155 }
+html.escuro .disabled\:bg-slate-200:disabled { background-color: #334155 !important }
+html.escuro .bg-slate-300 { background-color: #475569 }
+html.escuro .bg-navy-900\/\[\.03\],
+html.escuro .bg-navy-600\/10,
+html.escuro .hover\:bg-navy-600\/10:hover { background-color: rgba(147,197,253,.08) }
+html.escuro .bg-emerald-50,
+html.escuro .hover\:bg-emerald-50:hover { background-color: rgba(16,185,129,.14) }
+html.escuro .\!bg-emerald-50 { background-color: rgba(16,185,129,.14) !important }
+html.escuro .bg-emerald-100,
+html.escuro .hover\:bg-emerald-100:hover { background-color: rgba(16,185,129,.22) }
+html.escuro .border-emerald-100,
+html.escuro .border-emerald-200,
+html.escuro .border-emerald-300 { border-color: rgba(16,185,129,.4) }
+html.escuro .bg-amber-50,
+html.escuro .hover\:bg-amber-50:hover { background-color: rgba(245,158,11,.14) }
+html.escuro .\!bg-amber-50 { background-color: rgba(245,158,11,.14) !important }
+html.escuro .bg-amber-100,
+html.escuro .hover\:bg-amber-100:hover { background-color: rgba(245,158,11,.22) }
+html.escuro .border-amber-100,
+html.escuro .border-amber-200,
+html.escuro .border-amber-300 { border-color: rgba(245,158,11,.4) }
+html.escuro .bg-red-50,
+html.escuro .hover\:bg-red-50:hover { background-color: rgba(239,68,68,.14) }
+html.escuro .\!bg-red-50 { background-color: rgba(239,68,68,.14) !important }
+html.escuro .bg-red-100,
+html.escuro .hover\:bg-red-100:hover { background-color: rgba(239,68,68,.22) }
+html.escuro .border-red-100,
+html.escuro .border-red-200,
+html.escuro .border-red-300 { border-color: rgba(239,68,68,.4) }
+html.escuro .bg-sky-50,
+html.escuro .hover\:bg-sky-50:hover { background-color: rgba(14,165,233,.14) }
+html.escuro .\!bg-sky-50 { background-color: rgba(14,165,233,.14) !important }
+html.escuro .bg-sky-100,
+html.escuro .hover\:bg-sky-100:hover { background-color: rgba(14,165,233,.22) }
+html.escuro .border-sky-100,
+html.escuro .border-sky-200,
+html.escuro .border-sky-300 { border-color: rgba(14,165,233,.4) }
+html.escuro .bg-teal-50,
+html.escuro .hover\:bg-teal-50:hover { background-color: rgba(20,184,166,.14) }
+html.escuro .\!bg-teal-50 { background-color: rgba(20,184,166,.14) !important }
+html.escuro .bg-teal-100,
+html.escuro .hover\:bg-teal-100:hover { background-color: rgba(20,184,166,.22) }
+html.escuro .border-teal-100,
+html.escuro .border-teal-200,
+html.escuro .border-teal-300 { border-color: rgba(20,184,166,.4) }
+html.escuro .bg-violet-50,
+html.escuro .hover\:bg-violet-50:hover { background-color: rgba(139,92,246,.14) }
+html.escuro .\!bg-violet-50 { background-color: rgba(139,92,246,.14) !important }
+html.escuro .bg-violet-100,
+html.escuro .hover\:bg-violet-100:hover { background-color: rgba(139,92,246,.22) }
+html.escuro .border-violet-100,
+html.escuro .border-violet-200,
+html.escuro .border-violet-300 { border-color: rgba(139,92,246,.4) }
+html.escuro .bg-fuchsia-50,
+html.escuro .hover\:bg-fuchsia-50:hover { background-color: rgba(217,70,239,.14) }
+html.escuro .\!bg-fuchsia-50 { background-color: rgba(217,70,239,.14) !important }
+html.escuro .bg-fuchsia-100,
+html.escuro .hover\:bg-fuchsia-100:hover { background-color: rgba(217,70,239,.22) }
+html.escuro .border-fuchsia-100,
+html.escuro .border-fuchsia-200,
+html.escuro .border-fuchsia-300 { border-color: rgba(217,70,239,.4) }
+html.escuro .bg-cyan-50,
+html.escuro .hover\:bg-cyan-50:hover { background-color: rgba(6,182,212,.14) }
+html.escuro .\!bg-cyan-50 { background-color: rgba(6,182,212,.14) !important }
+html.escuro .bg-cyan-100,
+html.escuro .hover\:bg-cyan-100:hover { background-color: rgba(6,182,212,.22) }
+html.escuro .border-cyan-100,
+html.escuro .border-cyan-200,
+html.escuro .border-cyan-300 { border-color: rgba(6,182,212,.4) }
+html.escuro .bg-orange-50,
+html.escuro .hover\:bg-orange-50:hover { background-color: rgba(249,115,22,.14) }
+html.escuro .\!bg-orange-50 { background-color: rgba(249,115,22,.14) !important }
+html.escuro .bg-orange-100,
+html.escuro .hover\:bg-orange-100:hover { background-color: rgba(249,115,22,.22) }
+html.escuro .border-orange-100,
+html.escuro .border-orange-200,
+html.escuro .border-orange-300 { border-color: rgba(249,115,22,.4) }
+html.escuro .text-emerald-600,
+html.escuro .text-emerald-700,
+html.escuro .text-emerald-800,
+html.escuro .text-emerald-900,
+html.escuro .hover\:text-emerald-600:hover,
+html.escuro .hover\:text-emerald-700:hover { color: #6ee7b7 }
+html.escuro .text-amber-600,
+html.escuro .text-amber-700,
+html.escuro .text-amber-800,
+html.escuro .text-amber-900,
+html.escuro .hover\:text-amber-600:hover,
+html.escuro .hover\:text-amber-700:hover { color: #fcd34d }
+html.escuro .text-red-600,
+html.escuro .text-red-700,
+html.escuro .text-red-800,
+html.escuro .text-red-900,
+html.escuro .hover\:text-red-600:hover,
+html.escuro .hover\:text-red-700:hover { color: #fca5a5 }
+html.escuro .text-sky-600,
+html.escuro .text-sky-700,
+html.escuro .text-sky-800,
+html.escuro .text-sky-900,
+html.escuro .hover\:text-sky-600:hover,
+html.escuro .hover\:text-sky-700:hover { color: #7dd3fc }
+html.escuro .text-teal-600,
+html.escuro .text-teal-700,
+html.escuro .text-teal-800,
+html.escuro .text-teal-900,
+html.escuro .hover\:text-teal-600:hover,
+html.escuro .hover\:text-teal-700:hover { color: #5eead4 }
+html.escuro .text-violet-600,
+html.escuro .text-violet-700,
+html.escuro .text-violet-800,
+html.escuro .text-violet-900,
+html.escuro .hover\:text-violet-600:hover,
+html.escuro .hover\:text-violet-700:hover { color: #c4b5fd }
+html.escuro .text-fuchsia-600,
+html.escuro .text-fuchsia-700,
+html.escuro .text-fuchsia-800,
+html.escuro .text-fuchsia-900,
+html.escuro .hover\:text-fuchsia-600:hover,
+html.escuro .hover\:text-fuchsia-700:hover { color: #f0abfc }
+html.escuro .text-cyan-600,
+html.escuro .text-cyan-700,
+html.escuro .text-cyan-800,
+html.escuro .text-cyan-900,
+html.escuro .hover\:text-cyan-600:hover,
+html.escuro .hover\:text-cyan-700:hover { color: #67e8f9 }
+html.escuro .text-orange-600,
+html.escuro .text-orange-700,
+html.escuro .text-orange-800,
+html.escuro .text-orange-900,
+html.escuro .hover\:text-orange-600:hover,
+html.escuro .hover\:text-orange-700:hover { color: #fdba74 }
+html.escuro .text-navy-900,
+html.escuro .text-navy-800,
+html.escuro .hover\:text-navy-900:hover,
+html.escuro .text-slate-900 { color: #f1f5f9 }
+html.escuro .text-navy-600,
+html.escuro .text-navy-700 { color: #93c5fd }
+html.escuro .text-slate-800,
+html.escuro .text-slate-700 { color: #e2e8f0 }
+html.escuro .text-slate-600 { color: #cbd5e1 }
+html.escuro .text-slate-500,
+html.escuro .\!text-slate-500 { color: #a3b1c6 !important }
+html.escuro .text-slate-400,
+html.escuro .disabled\:text-slate-400:disabled { color: #94a3b8 }
+html.escuro .text-slate-300,
+html.escuro .disabled\:text-slate-300:disabled { color: #64748b }
+html.escuro .text-slate-100 { color: #3b4a63 }
+html.escuro .text-brand-red,
+html.escuro .hover\:text-brand-red:hover,
+html.escuro .group-hover\:text-brand-red { color: #ff6b7d }
+html.escuro .group:hover .group-hover\:text-brand-red { color: #ff6b7d }
+html.escuro .group:hover .group-hover\:text-brand-redSoft { color: rgba(255,107,125,.35) }
+html.escuro .border-slate-100,
+html.escuro .border-slate-200,
+html.escuro .divide-slate-100 > * + *,
+html.escuro .divide-y > * + * { border-color: #1e293b }
+html.escuro .border-slate-300,
+html.escuro .hover\:border-slate-300:hover { border-color: #334155 }
+html.escuro .hover\:border-navy-900:hover,
+html.escuro .hover\:border-navy-600:hover,
+html.escuro .group:hover .group-hover\:border-navy-900,
+html.escuro .border-navy-900,
+html.escuro .\!border-navy-900,
+html.escuro .focus\:border-navy-600:focus { border-color: #93c5fd !important }
+html.escuro .ring-slate-200 { --tw-ring-color: #334155 } html.escuro .ring-white { --tw-ring-color: #0f172a }
+html.escuro .bg-brand-redSoft { background-color: rgba(255,107,125,.16) }
+html.escuro .shadow-card { --tw-shadow: 0 30px 80px -20px rgba(0,0,0,.75); --tw-shadow-colored: 0 30px 80px -20px rgba(0,0,0,.75) }
+html.escuro .shadow-sm, html.escuro .shadow { --tw-shadow: 0 1px 3px rgba(0,0,0,.6) }
+html.escuro :is(.bg-amber-300, .bg-amber-400, .bg-slate-300, .bg-orange-300, .bg-white.text-navy-900.hover\:bg-slate-100, .\!bg-amber-400) { color: #00174F }
+html.escuro :is(.bg-amber-300, .bg-amber-400, .bg-slate-300, .bg-orange-300, .bg-white.text-navy-900.hover\:bg-slate-100, .\!bg-amber-400) :is(.text-navy-900, .text-navy-800, .text-slate-500, .text-slate-600, .text-slate-400) { color: #00174F }
+html.escuro .bg-white.text-navy-900.hover\:bg-slate-100 { background-color: #f1f5f9 } html.escuro .bg-white.text-navy-900.hover\:bg-slate-100:hover { background-color: #e2e8f0 }
+html.escuro :is(.bg-white.shadow, .bg-white.shadow-sm, .bg-white.shadow-lg).text-navy-900 { background-color: #334155; color: #fff }
+html.escuro :is(.bg-white.shadow, .bg-white.shadow-sm, .bg-white.shadow-lg).text-navy-900 :is(.text-slate-400, .text-slate-500) { color: #cbd5e1 }
+html.escuro :is(.bg-white.shadow, .bg-white.shadow-sm, .bg-white.shadow-lg).text-navy-900 .bg-navy-900 { background-color: #0f172a }
+html.escuro .campo { background-color: #0b1222; border-color: #334155; color: #f1f5f9; }
+html.escuro .campo::placeholder { color: #7c8ba1; }
+html.escuro .campo:focus { border-color: #60a5fa; box-shadow: 0 0 0 4px rgba(96,165,250,.2); background-color: #0b1222; }
+html.escuro .campo:disabled { color: #94a3b8; }
+html.escuro select, html.escuro input[type="search"], html.escuro input[type="number"], html.escuro input[type="date"] { background-color: #0b1222; color: #f1f5f9; border-color: #334155; }
+html.escuro select option { background-color: #0f172a; color: #f1f5f9; }
+html.escuro .opcao { background-color: #0f172a; border-color: #334155; color: #f1f5f9; }
+html.escuro .opcao:hover { border-color: #93c5fd; }
+html.escuro .spinner-escuro { border-color: rgba(255,255,255,.18); border-top-color: #fff; }
+html.escuro .texto-legal h2, html.escuro .texto-legal h3 { color: #f1f5f9; }
+html.escuro .texto-legal p, html.escuro .texto-legal li { color: #cbd5e1; }
+html.escuro .texto-legal code { color: #fcd34d; background: rgba(245,158,11,.12); border-radius: 4px; padding: 0 3px; }
+html.escuro .texto-legal b, html.escuro .texto-legal strong { color: #f1f5f9; }
+html.escuro .aba-admin { color: #a3b1c6; }
+html.escuro .bg-brand-hero { background: radial-gradient(circle at 80% 20%, #01205c 0, #000B2B 60%, #000614 100%); }
+html.escuro header.bg-navy-900, html.escuro footer, html.escuro .bg-navy-950 { background-color: #000B2B; }
 html.escuro circle[stroke="#F1F5F9"] { stroke: #1e293b; }
+html.escuro #toast { background-color: #f1f5f9; color: #00174F; }
+html.escuro .moldura { --anel: #0f172a; }
+html.escuro .bg-white\/5 { background-color: rgba(255,255,255,.06) }
+html.escuro .certificado, html.escuro .certificado .bg-white { background-color: #fff; }
+html.escuro .certificado .text-navy-900 { color: #00174F; }
+html.escuro .certificado .text-slate-600 { color: #475569; }
+html.escuro .certificado .text-slate-500 { color: #64748b; }
+html.escuro .certificado .text-slate-400 { color: #94a3b8; }
+html.escuro .certificado .text-brand-red { color: #D91A34; }
+html.escuro [data-view="certificado"] { background-color: #0b1222; }

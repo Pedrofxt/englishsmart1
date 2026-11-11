@@ -147,7 +147,9 @@ const App = (() => {
 
 
   // ---------- Avatar (canto superior direito) ----------
-  const CORES_AVATAR = ['#EB1F3B', '#00174F', '#023FA0', '#10B981', '#F59E0B', '#7C3AED', '#0EA5E9', '#DB2777'];
+  const CORES_AVATAR = ['#D91A34', '#00174F', '#023FA0', '#047857', '#B45309', '#7C3AED', '#0369A1', '#BE185D'];
+  // cores antigas, mais claras, trocadas por tons com contraste para as iniciais brancas
+  const COR_ANTIGA = { '#eb1f3b': '#D91A34', '#10b981': '#047857', '#f59e0b': '#B45309', '#0ea5e9': '#0369A1', '#db2777': '#BE185D' };
   const ICONES_AVATAR = ['capelo', 'livro', 'globo', 'estrela', 'foguete', 'microfone', 'fone', 'cafe'];
   const iniciaisDe = (nome) => String(nome || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
 
@@ -163,7 +165,8 @@ const App = (() => {
     if (av.startsWith('icone:') && ICONES_AVATAR.includes(av.slice(6))) {
       return `<span class="${cls} rounded-full bg-navy-600 text-white grid place-items-center shrink-0">${Icone(av.slice(6), 'w-1/2 h-1/2')}</span>`;
     }
-    const cor = /^cor:#[0-9a-f]{6}$/i.test(av) ? av.slice(4) : (p?.papel === 'admin' ? '#00174F' : '#EB1F3B');
+    const cor0 = /^cor:#[0-9a-f]{6}$/i.test(av) ? av.slice(4) : (p?.papel === 'admin' ? '#00174F' : '#D91A34');
+    const cor = COR_ANTIGA[cor0.toLowerCase()] || cor0;
     return `<span class="${cls} rounded-full text-white font-bold grid place-items-center shrink-0" style="background:${cor}">${ini}</span>`;
   }
 
@@ -203,20 +206,29 @@ const App = (() => {
         ${p.papel === 'aluno' && p.nivel_num ? item('#/loja', 'loja', 'Loja de moedas') : ''}
         ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
         ${item('#/termos', 'documento', 'Termos e privacidade')}
+        <button data-menu-som class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Som.ligado() ? 'som' : 'mudo', 'w-4 h-4 text-slate-400')}${Som.ligado() ? 'Desligar sons' : 'Ligar sons'}</button>
         <button data-menu-tema class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Tema.escuro() ? 'sol' : 'lua', 'w-4 h-4 text-slate-400')}${Tema.escuro() ? 'Modo claro' : 'Modo escuro'}</button>
       </div>
       <button data-menu-sair class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-slate-100 transition">${Icone('sair', 'w-4 h-4')}Sair</button>`;
     document.body.appendChild(menu);
     menu.querySelector('[data-menu-sair]').addEventListener('click', () => { fecharMenuAvatar(); sair(); });
     menu.querySelector('[data-menu-tema]').addEventListener('click', () => { fecharMenuAvatar(); Tema.alternar(); });
+    menu.querySelector('[data-menu-som]').addEventListener('click', () => { fecharMenuAvatar(); Som.alternar(); });
+    Som.tocar('abrir');
     menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', fecharMenuAvatar));
   }
 
   // ---------- Telas ----------
   function registrar(nome, tela) { telas[nome] = tela; }
 
+  let telaAtual = '';
   function mostrar(nome) {
-    document.querySelectorAll('[data-view]').forEach((v) => v.classList.toggle('hidden', v.dataset.view !== nome));
+    document.querySelectorAll('[data-view]').forEach((v) => {
+      const ver = v.dataset.view === nome;
+      v.classList.toggle('hidden', !ver);
+      if (ver && nome !== telaAtual) { v.classList.remove('tela-entra'); void v.offsetWidth; v.classList.add('tela-entra'); }
+    });
+    telaAtual = nome;
   }
 
   // '#/entrar' → entrar · '#/cadastro' → entrar (aba cadastro) · '#como-funciona' → início + rolar

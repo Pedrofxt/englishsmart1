@@ -123,6 +123,7 @@ window.Icone = (() => {
     lista: '<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
     envelope: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     lupa: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+    mudo: '<path d="M11 5L6 9H3v6h3l5 4V5zM16 9l5 6M21 9l-5 6"/>',
   };
   return (nome, cls = 'w-5 h-5') =>
     `<svg class="${cls}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">${P[nome] || ''}</svg>`;
@@ -171,3 +172,74 @@ window.Tema = (() => {
   aplicar(salvo === 'escuro');
   return { escuro, alternar, aplicar };
 })();
+
+// ---------- Animações extras ----------
+const SEM_MOVIMENTO = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Número que sobe até o valor (XP, moedas, porcentagens)
+window.contar = (el, alvo, { dur = 900, formato = (n) => n.toLocaleString('pt-BR') } = {}) => {
+  if (!el) return;
+  alvo = Number(alvo) || 0;
+  if (SEM_MOVIMENTO() || alvo === 0) { el.textContent = formato(alvo); return; }
+  const inicio = performance.now();
+  const passo = (t) => {
+    const p = Math.min((t - inicio) / dur, 1);
+    el.textContent = formato(Math.round(alvo * (1 - Math.pow(1 - p, 3))));
+    if (p < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
+};
+// Liga contadores marcados com data-contar="123" dentro de uma área recém-desenhada
+window.animarNumeros = (raiz = document) => raiz.querySelectorAll('[data-contar]').forEach((el) => {
+  if (el.dataset.contou) return;
+  el.dataset.contou = '1';
+  contar(el, el.dataset.contar);
+});
+
+// Texto que sobe e some (ex.: "+10 XP" ao acertar)
+window.flutuar = (alvo, texto, cor = '#059669') => {
+  if (!alvo || SEM_MOVIMENTO()) return;
+  const r = alvo.getBoundingClientRect();
+  const t = document.createElement('span');
+  t.className = 'texto-flutuante';
+  t.textContent = texto;
+  t.style.left = `${r.left + r.width / 2}px`;
+  t.style.top = `${r.top + window.scrollY}px`;
+  t.style.color = cor;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1100);
+};
+
+// Moedas voando de um ponto (compra na loja, medalha)
+window.chuvaDeMoedas = (alvo, qtd = 10) => {
+  if (!alvo || SEM_MOVIMENTO()) return;
+  const r = alvo.getBoundingClientRect();
+  for (let i = 0; i < qtd; i++) {
+    const m = document.createElement('span');
+    m.className = 'moeda-voando';
+    m.style.left = `${r.left + r.width / 2}px`;
+    m.style.top = `${r.top + window.scrollY + r.height / 2}px`;
+    m.style.setProperty('--dx', `${(Math.random() - 0.5) * 220}px`);
+    m.style.setProperty('--dy', `${-60 - Math.random() * 140}px`);
+    m.style.animationDelay = `${i * 0.03}s`;
+    document.body.appendChild(m);
+    setTimeout(() => m.remove(), 1300);
+  }
+};
+
+// Onda ao clicar nos botões principais
+document.addEventListener('pointerdown', (e) => {
+  const b = e.target.closest('.btn-shine, .opcao, [data-onda]');
+  if (!b || b.disabled || SEM_MOVIMENTO()) return;
+  const r = b.getBoundingClientRect();
+  const o = document.createElement('span');
+  const tam = Math.max(r.width, r.height) * 1.2;
+  o.className = 'onda';
+  o.style.width = o.style.height = `${tam}px`;
+  o.style.left = `${e.clientX - r.left - tam / 2}px`;
+  o.style.top = `${e.clientY - r.top - tam / 2}px`;
+  if (getComputedStyle(b).position === 'static') b.style.position = 'relative';
+  b.style.overflow = 'hidden';
+  b.appendChild(o);
+  setTimeout(() => o.remove(), 650);
+}, { passive: true });

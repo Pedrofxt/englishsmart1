@@ -126,6 +126,7 @@ function desenharPlanos(p) {
 
   function resultado(certo, correta) {
     if (certo) acertos++;
+    Som.tocar(certo ? 'acerto' : 'erro');
     const r = document.createElement('div');
     r.className = `anim-sobe mt-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl px-5 py-4 ${certo ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`;
     r.innerHTML = `<span class="flex-1 font-semibold">${certo ? 'Isso mesmo!' : `Quase! A resposta é: <b>${App.escapar(correta)}</b>`}</span>
@@ -146,6 +147,8 @@ function desenharPlanos(p) {
             <button id="previewDeNovo" class="font-semibold border border-slate-200 hover:border-navy-900 text-navy-900 rounded-xl px-6 py-3.5 transition">Fazer de novo</button>
           </div>
         </div>`;
+      Som.tocar(acertos === ATIVIDADES.length ? 'conclusao' : 'sucesso');
+      if (acertos === ATIVIDADES.length) soltarConfete(caixa);
       document.getElementById('previewDeNovo').addEventListener('click', () => { i = 0; acertos = 0; desenhar(); });
       return;
     }
@@ -162,6 +165,7 @@ function desenharPlanos(p) {
         if (b.disabled) return;
         b.disabled = true; b.classList.add('opacity-30');
         escolhidas.push(a.palavras[b.dataset.w]);
+        Som.tocar('pop');
         montada.innerHTML = escolhidas.map((w) => `<span class="font-semibold text-white bg-navy-900 rounded-xl px-4 py-2">${App.escapar(w)}</span>`).join('');
         conferirBtn.disabled = escolhidas.length !== a.palavras.length;
       }));

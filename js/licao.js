@@ -144,6 +144,7 @@
   }
   function atualizarCronometro() {
     const resta = Math.max(0, Math.ceil((st.fimEm - Date.now()) / 1000));
+    if (resta <= 5 && resta > 0 && resta !== st.ultimoTique && st.modo === 'pratica') { st.ultimoTique = resta; Som.tocar('tique'); }
     el('licaoBarra').style.width = `${(resta / TEMPO_RELAMPAGO) * 100}%`;
     el('licaoBarra').classList.toggle('!bg-amber-400', resta <= 10);
     el('licaoContador').innerHTML = `<span class="inline-flex items-center gap-1 font-semibold ${resta <= 10 ? 'text-amber-300' : ''}">${Icone('relogio', 'w-4 h-4')}0:${String(resta).padStart(2, '0')}</span> · ${st.acertos} acertos`;
@@ -318,7 +319,7 @@
       }));
       el('areaPalavras').querySelectorAll('[data-por]').forEach((b) => b.addEventListener('click', () => {
         if (st.respondida) return;
-        st.montagem.push(Number(b.dataset.por)); desenhar();
+        st.montagem.push(Number(b.dataset.por)); Som.tocar('pop'); desenhar();
       }));
     };
     desenhar();
@@ -391,10 +392,12 @@
       if (certo) {
         [be, bd].forEach((b) => { b.disabled = true; b.classList.remove('hover:border-navy-600/50'); b.classList.add('!border-emerald-500', '!bg-emerald-50', 'text-emerald-800', 'anim-acerto'); });
         soltarFaiscas(bd);
+        Som.tocar('pop');
         feitos++;
         el('placarLigar').textContent = `${feitos} de ${ex.pares.length} pares${erros ? ` · ${erros} ${erros === 1 ? 'erro' : 'erros'}` : ''}`;
       } else {
         erros++;
+        Som.tocar('erro');
         errosPorPar[sel.esq]++;
         [be, bd].forEach((b) => { b.classList.add('!border-red-400', '!bg-red-50', 'anim-erro'); setTimeout(() => b.classList.remove('!border-red-400', '!bg-red-50', 'anim-erro'), 650); });
         el('placarLigar').textContent = `${feitos} de ${ex.pares.length} pares · ${erros} ${erros === 1 ? 'erro' : 'erros'}`;
@@ -453,6 +456,7 @@
   // ---------- Flashcard: lembrou ou não? ----------
   function prepararFlashcard(ex) {
     el('btnVirar').addEventListener('click', () => {
+      Som.tocar('virar');
       el('cartaoFlash').classList.add('virado');
       el('acoesFlash').innerHTML = `
         <p class="text-center text-sm text-slate-500 mb-3">Você lembrou da resposta?</p>
@@ -657,6 +661,11 @@
       + (st.falarDepois ? ` <button id="btnOuvirFrase" class="ml-1 inline-flex items-center gap-1 font-semibold underline underline-offset-2">${Icone('som', 'w-4 h-4')}Ouvir a frase</button>` : '');
     el('btnOuvirFrase')?.addEventListener('click', () => Voz.falar(st.falarDepois));
     el('feedbackTexto').className = `text-sm ${ok ? 'text-emerald-800' : 'text-red-800'}`;
+    if (certo === true) {
+      Som.tocar(st.seguidas >= 3 && st.seguidas % 3 === 0 ? 'sequencia' : 'acerto');
+      setTimeout(() => flutuar(el('feedbackIcone'), st.revisao ? '+5 XP' : '+10 XP'), 120);
+    } else if (certo === false) Som.tocar('erro');
+    else Som.tocar('pop');
     el('btnContinuar').className = `btn-shine shrink-0 px-8 py-3.5 rounded-xl font-display font-semibold text-white transition ${ok ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`;
     el('btnContinuar').textContent = st.i === st.exercicios.length - 1 ? 'Ver resultado' : 'Continuar';
     fb.classList.remove('hidden');
@@ -754,6 +763,8 @@
       if (anel) anel.style.strokeDashoffset = C * (1 - porcentagem / 100);
     }, 60));
     if (passou) soltarConfete(el('licaoConteudo').firstElementChild);
+    Som.tocar(subiu ? 'nivel' : passou ? 'conclusao' : 'quase');
+    contar(el('licaoConteudo').querySelector('.font-display.text-4xl'), porcentagem, { formato: (n) => `${n}%`, dur: 1200 });
     el('btnRefazer')?.addEventListener('click', () => iniciarSessao());
     window.scrollTo(0, 0);
   }
@@ -831,6 +842,7 @@
       if (anel) anel.style.strokeDashoffset = C * (1 - (st.relampago ? Math.min(1, st.acertos / 20) : porcentagem / 100));
     }, 60));
     if (bom || recorde) soltarConfete(el('licaoConteudo').firstElementChild);
+    Som.tocar(recorde ? 'nivel' : bom ? 'conclusao' : 'sucesso');
     el('btnRefazerErros')?.addEventListener('click', () => {
       st.exercicios = Atividades.embaralhar(erradas);
       st.relampago = false;

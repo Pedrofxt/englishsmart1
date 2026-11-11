@@ -13,7 +13,7 @@ const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY, {
 if (!window.supabase) {
   document.addEventListener('DOMContentLoaded', () => {
     const aviso = document.createElement('div');
-    aviso.style.cssText = 'position:fixed;inset:auto 16px 16px 16px;z-index:9999;background:#EB1F3B;color:#fff;padding:14px 18px;border-radius:12px;font:600 14px Inter,sans-serif;text-align:center';
+    aviso.style.cssText = 'position:fixed;inset:auto 16px 16px 16px;z-index:9999;background:#D91A34;color:#fff;padding:14px 18px;border-radius:12px;font:600 14px Inter,sans-serif;text-align:center';
     aviso.textContent = 'Não foi possível carregar os componentes do site. Verifique a internet ou desative o bloqueador de anúncios e recarregue (F5).';
     document.body.appendChild(aviso);
   });

@@ -247,8 +247,20 @@ O saldo e as compras são conferidos no banco (função `comprar_item`), então 
 - **Termos de Uso e Política de Privacidade** (`#/termos`): aba no topo da página inicial e no rodapé. O cadastro exige o aceite,
   que fica registrado com data e versão.
 
+## Sons, animações e contraste
+- **Efeitos sonoros** gerados pelo próprio navegador (nada para baixar): acerto, erro, sequência de 3 acertos, ligar e
+  montar frases, virar flashcard, contagem final do desafio relâmpago, lição concluída, subir de nível, compra na loja,
+  medalha e pagamento confirmado. Botão de alto-falante no topo da página inicial e das lições, e "Ligar/Desligar sons"
+  no menu do avatar (a escolha fica no navegador).
+- **Animações:** troca de tela suave, cartões que entram em sequência, números que sobem (XP, moedas, nota),
+  "+10 XP" subindo ao acertar, onda ao tocar nos botões, chama da sequência tremulando, barras de progresso com brilho,
+  moedas voando na compra e confete na mini lição da página inicial. Quem ativa "reduzir movimento" no aparelho não vê animações.
+- **Contraste:** todas as telas foram conferidas por um teste automático nos modos claro e escuro (padrão WCAG AA:
+  4,5:1 para texto normal). Por isso o vermelho, o verde, o azul e o laranja de fundo ficaram um tom mais escuros
+  (texto branco legível) e os textos cinza ficaram um pouco mais fortes.
+
 ## Modo escuro e app no celular
-- **Modo escuro:** botão de lua no topo da página inicial e no menu do avatar. A escolha fica no navegador.
+- **Modo escuro:** botão de lua no topo da página inicial e no menu do avatar, em todas as telas (inclusive portal, loja, lições, termos e aviso de cookies). O certificado continua claro para imprimir. A escolha fica no navegador.
 - **App instalável (PWA):** no site publicado, o Chrome do Android oferece "Instalar app" (botão no rodapé); no iPhone,
   Compartilhar → *Adicionar à Tela de Início*. O app abre direto na trilha, com o ícone do English Smart.
 
@@ -314,7 +326,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261110a` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261111a` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 
@@ -329,7 +341,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 index.html            Todas as telas
 css/brand.css         Identidade visual, animações e impressão do certificado
 css/tailwind.css      Visual pronto (gerado de tailwind.config.js + css/tailwind-entrada.css)
-css/escuro.css        Modo escuro
+css/escuro.css        Modo escuro (todas as telas)
 img/                  Logo, ícones do app e imagem de compartilhamento (compartilhar.png)
 manifest.webmanifest  App instalável (nome, ícones, cores)
 sw.js                 Service worker do app instalável
@@ -337,6 +349,7 @@ js/config.js          Conexão com o Supabase, preços, SITE_URL e TURNSTILE_SIT
 js/curriculo.js       16 níveis × 4 lições + 3 trilhas extras (conteúdo do curso)
 js/atividades.js      Gera as atividades das lições, do teste e da revisão; corrige respostas digitadas
 js/voz.js             Áudio (voz do navegador) e reconhecimento de fala
+js/som.js             Efeitos sonoros (Web Audio)
 js/app.js             Troca de telas, sessão e estatísticas
 js/inicio.js          Página inicial
 js/entrar.js          Entrar, criar conta e "esqueci minha senha"

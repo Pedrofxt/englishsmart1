@@ -74,6 +74,7 @@ const Loja = (() => {
     t.innerHTML = `<span class="w-11 h-11 rounded-xl bg-amber-400 text-navy-900 grid place-items-center">${Icone(m.icone, 'w-6 h-6')}</span>
       <span><span class="block text-[11px] font-semibold uppercase tracking-widest text-amber-300">Nova medalha</span><span class="block font-display font-bold">${App.escapar(m.nome)}</span></span>`;
     document.body.appendChild(t);
+    Som.tocar('medalha');
     setTimeout(() => t.remove(), 3000);
   }
 
@@ -83,7 +84,7 @@ const Loja = (() => {
       <div class="flex items-center justify-between gap-3"><h2 class="font-display text-lg font-bold text-navy-900">Medalhas</h2><span id="totalMedalhas" class="text-sm font-semibold text-slate-400">${tem.size} de ${MEDALHAS.length}</span></div>
       <ul class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
         ${MEDALHAS.map((m) => `
-          <li data-medalha="${m.id}" class="rounded-2xl border p-3 text-center ${tem.has(m.id) ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white opacity-60'}" title="${App.escapar(m.desc)}">
+          <li data-medalha="${m.id}" class="rounded-2xl border p-3 text-center ${tem.has(m.id) ? 'border-amber-200 bg-amber-50' : 'border-dashed border-slate-300 bg-slate-50'}" title="${App.escapar(m.desc)}">
             <span class="w-11 h-11 mx-auto rounded-xl grid place-items-center ${tem.has(m.id) ? 'bg-amber-400 text-navy-900' : 'bg-slate-100 text-slate-400'}">${Icone(tem.has(m.id) ? m.icone : 'cadeado', 'w-5 h-5')}</span>
             <p class="mt-2 text-sm font-semibold text-navy-900 leading-tight">${App.escapar(m.nome)}</p>
             <p class="text-[11px] text-slate-500 leading-tight mt-0.5">${App.escapar(m.desc)}</p>
@@ -138,7 +139,7 @@ const Loja = (() => {
       <section class="reveal relative overflow-hidden bg-brand-hero text-white rounded-[2rem] p-8 md:p-10">
         <div class="absolute inset-0 bg-grid opacity-60"></div>
         <div class="relative flex flex-col md:flex-row md:items-center gap-6">
-          <span class="w-16 h-16 shrink-0 rounded-2xl bg-amber-400 text-navy-900 grid place-items-center shadow-glow">${Icone('moeda', 'w-9 h-9')}</span>
+          <span class="gira-entra w-16 h-16 shrink-0 rounded-2xl bg-amber-400 text-navy-900 grid place-items-center shadow-glow">${Icone('moeda', 'w-9 h-9')}</span>
           <div class="flex-1">
             <p class="text-xs font-semibold uppercase tracking-widest text-white/50">Loja de moedas</p>
             <h1 class="mt-1 text-3xl md:text-4xl font-extrabold"><span id="saldoMoedas">${saldo.toLocaleString('pt-BR')}</span> moedas</h1>
@@ -149,13 +150,13 @@ const Loja = (() => {
       </section>
 
       <h2 class="reveal mt-10 font-display text-lg font-bold text-navy-900">Itens</h2>
-      <div id="gradeLoja" class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div id="gradeLoja" class="em-sequencia mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         ${ITENS.map((it) => {
           const temMoldura = it.tipo === 'moldura' && minhas.has(it.id);
           const usando = temMoldura && p.moldura === it.id;
           const bloqueado = it.id === 'dias7' && !pixOuCortesia;
           return `
-          <article data-item="${it.id}" class="reveal bg-white rounded-2xl border ${usando ? 'border-amber-300 ring-2 ring-amber-200' : 'border-slate-200'} p-5 flex flex-col">
+          <article data-item="${it.id}" class="levanta bg-white rounded-2xl border ${usando ? 'border-amber-300 ring-2 ring-amber-200' : 'border-slate-200'} p-5 flex flex-col">
             <div class="flex items-center gap-3">
               ${it.tipo === 'moldura'
                 ? `<span class="w-12 h-12 rounded-full bg-slate-200 moldura ${it.id.replace('_', '-')}"></span>`
@@ -200,6 +201,8 @@ const Loja = (() => {
     setLoading(btn, true);
     const { error } = await sb.rpc('comprar_item', { p_item: it.id });
     if (error) { setLoading(btn, false, texto); App.toast(error.message || App.mensagemDeErro(error)); return; }
+    Som.tocar('moeda');
+    chuvaDeMoedas(btn, 12);
     App.toast(it.id === 'protetor' ? 'Sequência protegida!' : it.id === 'dias7' ? '+7 dias somados ao seu acesso!' : `${it.nome} comprada e já está no seu perfil!`);
     App.limparPerfil();
     const novo = await App.perfil(true);
