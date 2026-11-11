@@ -4,8 +4,10 @@
 //   { acao: 'criar', email?, voltar? }  → cria a assinatura no Mercado Pago e devolve o link de pagamento
 //   { acao: 'sincronizar' }             → consulta o Mercado Pago e atualiza o acesso do aluno
 //   { acao: 'cancelar' }                → cancela a renovação (o acesso continua até o fim do mês pago)
-//   { acao: 'pix', email? }             → gera um Pix (QR Code + copia e cola) que libera 30 dias de acesso
+//   { acao: 'criar', plano: 'mensal' | 'anual' } → cartão: cobra todo mês ou todo ano
+//   { acao: 'pix', email?, plano?, cupom? }       → gera um Pix que libera 30 dias (mensal) ou 365 dias (anual)
 //   { acao: 'pix_status', id }          → confere se o Pix foi pago
+//   { acao: 'configuracao' }            → (só admin) o que já está configurado para cobrar
 //
 // Avisos do Mercado Pago (webhook): subscription_preapproval, subscription_authorized_payment e payment (Pix).
 // Nunca confiamos no conteúdo do aviso: sempre buscamos os dados direto na API do Mercado Pago.
@@ -14,6 +16,7 @@
 //   MP_ACCESS_TOKEN    Access Token da sua aplicação no Mercado Pago (obrigatório)
 //   MP_WEBHOOK_SECRET  Assinatura secreta dos webhooks (recomendado)
 //   PLANO_VALOR        opcional, padrão 29.99
+//   PLANO_ANUAL_VALOR  opcional, padrão 299.90
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
@@ -42,12 +45,18 @@ async function mp(caminho: string, init: RequestInit = {}) {
   return corpo;
 }
 
+const PLANOS: Record<string, { valor: number; meses: number; dias: number; nome: string }> = {
+  mensal: { valor: VALOR, meses: 1, dias: 30, nome: 'mensal' },
+  anual: { valor: Number(Deno.env.get('PLANO_ANUAL_VALOR') || '299.90'), meses: 12, dias: 365, nome: 'anual' },
+};
+const planoDe = (p: unknown) => PLANOS[String(p)] ? String(p) : 'mensal';
 const DIAS_PIX = Number(Deno.env.get('PIX_DIAS') || '30');
 const MINUTOS_PIX = 30; // validade do QR Code
+const TOLERANCIA = 3 * 864e5; // 3 dias depois do vencimento ainda com acesso
 const URL_FUNCAO = `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercadopago`;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUS: Record<string, string> = { authorized: 'ativa', paused: 'pausada', cancelled: 'cancelada', pending: 'pendente' };
-const maisUmMes = (d: string | Date) => { const x = new Date(d); x.setMonth(x.getMonth() + 1); x.setDate(x.getDate() + 3); return x; }; // +3 dias de tolerância
+const maisUmMes = (d: string | Date, meses = 1) => { const x = new Date(d); x.setMonth(x.getMonth() + meses); x.setDate(x.getDate() + 3); return x; }; // +3 dias de tolerância
 const maior = (a?: string | null, b?: Date | null) => (!a ? b : !b ? new Date(a) : new Date(Math.max(new Date(a).getTime(), b.getTime())));
 
 // Grava no banco o estado de uma assinatura (preapproval) vinda da API do Mercado Pago
@@ -59,8 +68,9 @@ async function aplicarAssinatura(pre: any) {
   if (atual?.mp_id && atual.mp_id !== pre.id && pre.status !== 'authorized') return atual;
 
   let pagoAte: Date | null = null;
+  const meses = Number(pre.auto_recurring?.frequency || 1);
   const ultima = pre.summarized?.last_charged_date;
-  if (ultima) pagoAte = maisUmMes(ultima);
+  if (ultima) pagoAte = maisUmMes(ultima, meses);
   else if (pre.status === 'authorized') { pagoAte = new Date(); pagoAte.setDate(pagoAte.getDate() + 2); } // cartão aprovado, 1ª cobrança a caminho
 
   const linha = {
@@ -72,6 +82,7 @@ async function aplicarAssinatura(pre: any) {
     proxima_cobranca: pre.next_payment_date || null,
     pago_ate: maior(atual?.pago_ate, pagoAte)?.toISOString() ?? null,
     ultimo_metodo: pre.status === 'authorized' ? 'cartao' : atual?.ultimo_metodo ?? null,
+    plano: meses >= 12 ? 'anual' : 'mensal',
     atualizada_em: new Date().toISOString(),
   };
   const { data, error } = await db.from('assinaturas').upsert(linha, { onConflict: 'aluno_id' }).select().single();
@@ -95,9 +106,39 @@ async function aplicarCobranca(cob: any) {
   await aplicarAssinatura(pre);
   if (aprovado) {
     const { data: atual } = await db.from('assinaturas').select('pago_ate').eq('aluno_id', aluno).maybeSingle();
-    const ate = maior(atual?.pago_ate, maisUmMes(cob.debit_date || cob.date_created || new Date()));
+    const ate = maior(atual?.pago_ate, maisUmMes(cob.debit_date || cob.date_created || new Date(), Number(pre.auto_recurring?.frequency || 1)));
     await db.from('assinaturas').update({ pago_ate: ate?.toISOString(), atualizada_em: new Date().toISOString() }).eq('aluno_id', aluno);
+    await bonusIndicacao(aluno);
   }
+}
+
+// Indique um amigo: no 1º pagamento aprovado do indicado, quem indicou ganha 30 dias de acesso
+async function bonusIndicacao(indicado: string) {
+  const { data: a } = await db.from('alunos').select('id, indicado_por').eq('id', indicado).maybeSingle();
+  if (!a?.indicado_por) return;
+  const { data: quem } = await db.from('alunos').select('id').eq('codigo_indicacao', a.indicado_por).maybeSingle();
+  if (!quem || quem.id === indicado) return;
+  const { data: inserido } = await db.from('indicacoes_bonus').upsert({ indicado, indicador: quem.id, dias: 30 }, { onConflict: 'indicado', ignoreDuplicates: true }).select('indicado');
+  if (!inserido?.length) return; // bônus já concedido
+  const { data: s } = await db.from('assinaturas').select('*').eq('aluno_id', quem.id).maybeSingle();
+  // mesma regra do Pix: soma aos dias que faltam; quem está sem acesso ganha 30 dias a partir de hoje (+ tolerância)
+  const atual = s?.pago_ate ? new Date(s.pago_ate).getTime() : 0;
+  const novo = atual > Date.now() ? atual + 30 * 864e5 : Date.now() + 30 * 864e5 + TOLERANCIA;
+  await db.from('assinaturas').upsert({
+    aluno_id: quem.id, pago_ate: new Date(novo).toISOString(),
+    status: s?.status || 'pendente', valor: s?.valor ?? VALOR, atualizada_em: new Date().toISOString(),
+  }, { onConflict: 'aluno_id' });
+}
+
+// Cupom válido → % de desconto (só para Pix)
+async function descontoDoCupom(codigo: string) {
+  const c = String(codigo || '').trim().toUpperCase();
+  if (!/^[A-Z0-9]{3,20}$/.test(c)) return null;
+  const { data } = await db.from('cupons').select('*').eq('codigo', c).maybeSingle();
+  if (!data || !data.ativo) return null;
+  if (data.valido_ate && new Date(data.valido_ate).getTime() < Date.now()) return null;
+  if (data.usos_max && data.usos >= data.usos_max) return null;
+  return { codigo: c, desconto: Number(data.desconto) };
 }
 
 // ---------- PIX ----------
@@ -111,7 +152,7 @@ const STATUS_PIX: Record<string, string> = {
   cancelled: 'expirado', rejected: 'recusado', refunded: 'estornado', charged_back: 'estornado',
 };
 
-// Aplica um pagamento Pix vindo da API: aprovado → +30 dias; estornado → tira os 30 dias
+// Aplica um pagamento Pix vindo da API: aprovado → +30 dias (+3 de tolerância); estornado → tira os 30 dias
 async function aplicarPix(pay: any) {
   const ref = String(pay.external_reference || '');
   if (!ref.startsWith('pix:')) return null;
@@ -120,16 +161,23 @@ async function aplicarPix(pay: any) {
   const id = String(pay.id);
   const status = STATUS_PIX[pay.status] || 'pendente';
   const dias = Number(pay.metadata?.dias || DIAS_PIX);
+  const plano = planoDe(pay.metadata?.plano);
   // garante a linha do pagamento (sem sobrescrever)
   await db.from('pagamentos').upsert({ id, aluno_id: aluno, valor: pay.transaction_amount ?? VALOR, status: 'pendente', metodo: 'pix', dias }, { onConflict: 'id', ignoreDuplicates: true });
 
+  // pago_ate guarda o vencimento + 3 dias de tolerância (igual ao cartão)
   const ajustarAcesso = async (sinal: 1 | -1) => {
     const { data: a } = await db.from('assinaturas').select('*').eq('aluno_id', aluno).maybeSingle();
-    const agora = Date.now();
-    const base = sinal > 0 ? Math.max(agora, a?.pago_ate ? new Date(a.pago_ate).getTime() : 0) : (a?.pago_ate ? new Date(a.pago_ate).getTime() : agora);
-    const novo = new Date(base + sinal * dias * 864e5).toISOString();
+    const atual = a?.pago_ate ? new Date(a.pago_ate).getTime() : 0;
+    let novo: string;
+    if (sinal > 0) {
+      const vencimento = atual ? atual - TOLERANCIA : 0;          // renovou antes de vencer: soma aos dias que faltam
+      novo = new Date(Math.max(Date.now(), vencimento) + dias * 864e5 + TOLERANCIA).toISOString();
+    } else {
+      novo = new Date((atual || Date.now()) - dias * 864e5).toISOString();
+    }
     await db.from('assinaturas').upsert({
-      aluno_id: aluno, pago_ate: novo, ultimo_metodo: sinal > 0 ? 'pix' : a?.ultimo_metodo ?? null,
+      aluno_id: aluno, pago_ate: novo, ultimo_metodo: sinal > 0 ? 'pix' : a?.ultimo_metodo ?? null, plano: sinal > 0 ? plano : a?.plano ?? 'mensal',
       status: a?.status || 'pendente', valor: a?.valor ?? VALOR, atualizada_em: new Date().toISOString(),
     }, { onConflict: 'aluno_id' });
   };
@@ -139,7 +187,15 @@ async function aplicarPix(pay: any) {
     const { data: virou } = await db.from('pagamentos')
       .update({ status: 'aprovado', pago_em: pay.date_approved || new Date().toISOString(), qr_code: null, qr_base64: null })
       .eq('id', id).neq('status', 'aprovado').neq('status', 'estornado').select('id');
-    if (virou?.length) await ajustarAcesso(1);
+    if (virou?.length) {
+      await ajustarAcesso(1);
+      const cupom = pay.metadata?.cupom;
+      if (cupom) {
+        const { data: c } = await db.from('cupons').select('usos').eq('codigo', cupom).maybeSingle();
+        if (c) await db.from('cupons').update({ usos: (c.usos || 0) + 1 }).eq('codigo', cupom);
+      }
+      await bonusIndicacao(aluno);
+    }
   } else if (status === 'estornado') {
     const { data: virou } = await db.from('pagamentos').update({ status: 'estornado' }).eq('id', id).eq('status', 'aprovado').select('id');
     if (virou?.length) await ajustarAcesso(-1);
@@ -171,6 +227,7 @@ async function webhook(req: Request, url: URL, corpo: any) {
   if (!id) return json({ ok: true, ignorado: 'sem id' });
   if (!(await assinaturaValida(req, id))) return json({ erro: 'assinatura inválida' }, 401);
   if (!TOKEN) return json({ ok: true, ignorado: 'MP_ACCESS_TOKEN não configurado' });
+  await db.from('mp_eventos').insert({ tipo: String(tipo || 'desconhecido').slice(0, 60) });
   try {
     if (tipo === 'subscription_preapproval' || tipo === 'preapproval') await aplicarAssinatura(await mp(`/preapproval/${id}`));
     else if (tipo === 'subscription_authorized_payment' || tipo === 'authorized_payment') await aplicarCobranca(await mp(`/authorized_payments/${id}`));
@@ -187,6 +244,18 @@ async function acaoDoAluno(req: Request, corpo: any) {
   const { data: u } = await db.auth.getUser(jwt);
   const user = u?.user;
   if (!user) return json({ erro: 'Entre na sua conta para assinar.' }, 401);
+
+  // Checagem de configuração (portal do professor)
+  if (corpo.acao === 'configuracao') {
+    const { data: adm } = await db.from('admins').select('email').eq('email', String(user.email || '').toLowerCase()).maybeSingle();
+    if (!adm) return json({ erro: 'Acesso restrito ao administrador.' }, 403);
+    const { data: ev } = await db.from('mp_eventos').select('tipo, recebido_em').order('recebido_em', { ascending: false }).limit(1);
+    return json({
+      mp_token: !!TOKEN, mp_teste: TOKEN.startsWith('TEST-'), webhook_secret: !!SEGREDO_WEBHOOK,
+      resend: !!Deno.env.get('RESEND_API_KEY'), ultimo_evento: ev?.[0] || null,
+      valores: { mensal: PLANOS.mensal.valor, anual: PLANOS.anual.valor },
+    });
+  }
   const { data: aluno } = await db.from('alunos').select('id, nome, email').eq('id', user.id).maybeSingle();
   if (!aluno) return json({ erro: 'Apenas alunos podem assinar.' }, 403);
   if (!TOKEN) return json({ erro: 'Pagamentos ainda não configurados. Avise o responsável pela plataforma.' }, 503);
@@ -197,21 +266,22 @@ async function acaoDoAluno(req: Request, corpo: any) {
     const email = String(corpo.email || user.email || '').trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ erro: 'Informe um e-mail válido.' }, 400);
     const voltar = /^https:\/\//.test(corpo.voltar || '') ? corpo.voltar : 'https://www.mercadopago.com.br';
+    const pl = PLANOS[planoDe(corpo.plano)];
     // assinatura pendente antiga: cancela para não ficar duplicada
     if (atual?.mp_id && atual.status === 'pendente') await mp(`/preapproval/${atual.mp_id}`, { method: 'PUT', body: JSON.stringify({ status: 'cancelled' }) }).catch(() => {});
     const pre = await mp('/preapproval', {
       method: 'POST',
       body: JSON.stringify({
-        reason: 'Assinatura English Smart (mensal)',
+        reason: `Assinatura English Smart (${pl.nome})`,
         external_reference: user.id,
         payer_email: email,
         back_url: voltar,
         status: 'pending',
-        auto_recurring: { frequency: 1, frequency_type: 'months', transaction_amount: VALOR, currency_id: 'BRL' },
+        auto_recurring: { frequency: pl.meses, frequency_type: 'months', transaction_amount: pl.valor, currency_id: 'BRL' },
       }),
     });
     await db.from('assinaturas').upsert({
-      aluno_id: user.id, mp_id: pre.id, status: 'pendente', valor: VALOR, email_pagador: email,
+      aluno_id: user.id, mp_id: pre.id, status: 'pendente', valor: pl.valor, email_pagador: email, plano: pl.nome,
       atualizada_em: new Date().toISOString(),
     }, { onConflict: 'aluno_id' });
     return json({ link: pre.init_point || pre.sandbox_init_point, id: pre.id });
@@ -220,33 +290,38 @@ async function acaoDoAluno(req: Request, corpo: any) {
   if (corpo.acao === 'pix') {
     const email = String(corpo.email || user.email || '').trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ erro: 'Informe um e-mail válido.' }, 400);
-    // reaproveita um QR Code ainda válido (evita gerar vários)
+    const pl = PLANOS[planoDe(corpo.plano)];
+    const cupom = corpo.cupom ? await descontoDoCupom(corpo.cupom) : null;
+    if (corpo.cupom && !cupom) return json({ erro: 'Cupom inválido ou expirado.' }, 400);
+    const valor = Math.max(1, Math.round(pl.valor * (1 - (cupom?.desconto || 0) / 100) * 100) / 100);
+    // reaproveita um QR Code ainda válido do mesmo plano e valor (evita gerar vários)
     const { data: pendentes } = await db.from('pagamentos').select('*').eq('aluno_id', user.id).eq('metodo', 'pix').eq('status', 'pendente');
-    const valido = (pendentes || []).find((x: any) => x.qr_code && x.expira_em && new Date(x.expira_em).getTime() - Date.now() > 5 * 60e3);
-    if (valido) return json({ id: valido.id, qr_code: valido.qr_code, qr_base64: valido.qr_base64, link: valido.link, expira_em: valido.expira_em, valor: Number(valido.valor), dias: valido.dias });
+    const valido = (pendentes || []).find((x: any) => x.qr_code && x.expira_em && new Date(x.expira_em).getTime() - Date.now() > 5 * 60e3
+      && (x.plano || 'mensal') === pl.nome && Number(x.valor) === valor);
+    if (valido) return json({ id: valido.id, qr_code: valido.qr_code, qr_base64: valido.qr_base64, link: valido.link, expira_em: valido.expira_em, valor: Number(valido.valor), dias: valido.dias, plano: valido.plano || 'mensal', desconto: cupom?.desconto || 0 });
 
     const expira = new Date(Date.now() + MINUTOS_PIX * 60e3);
     const pay = await mp('/v1/payments', {
       method: 'POST',
       headers: { 'X-Idempotency-Key': crypto.randomUUID() },
       body: JSON.stringify({
-        transaction_amount: VALOR,
-        description: `Assinatura English Smart - ${DIAS_PIX} dias`,
+        transaction_amount: valor,
+        description: `Assinatura English Smart - ${pl.dias} dias${cupom ? ` (cupom ${cupom.codigo})` : ''}`,
         payment_method_id: 'pix',
         payer: { email, first_name: String(aluno.nome || '').split(' ')[0] || undefined },
         external_reference: `pix:${user.id}`,
         notification_url: URL_FUNCAO,
         date_of_expiration: dataMP(expira),
-        metadata: { dias: DIAS_PIX },
+        metadata: { dias: pl.dias, plano: pl.nome, cupom: cupom?.codigo || null },
       }),
     });
     const t = pay.point_of_interaction?.transaction_data || {};
     if (!t.qr_code) return json({ erro: 'O Mercado Pago não gerou o QR Code. Confira se a sua conta tem uma chave Pix cadastrada.' }, 502);
     await db.from('pagamentos').upsert({
-      id: String(pay.id), aluno_id: user.id, valor: pay.transaction_amount ?? VALOR, status: 'pendente', metodo: 'pix', dias: DIAS_PIX,
+      id: String(pay.id), aluno_id: user.id, valor: pay.transaction_amount ?? valor, status: 'pendente', metodo: 'pix', dias: pl.dias, plano: pl.nome, cupom: cupom?.codigo || null,
       qr_code: t.qr_code, qr_base64: t.qr_code_base64, link: t.ticket_url || null, expira_em: expira.toISOString(),
     }, { onConflict: 'id' });
-    return json({ id: String(pay.id), qr_code: t.qr_code, qr_base64: t.qr_code_base64, link: t.ticket_url || null, expira_em: expira.toISOString(), valor: VALOR, dias: DIAS_PIX });
+    return json({ id: String(pay.id), qr_code: t.qr_code, qr_base64: t.qr_code_base64, link: t.ticket_url || null, expira_em: expira.toISOString(), valor, dias: pl.dias, plano: pl.nome, desconto: cupom?.desconto || 0 });
   }
 
   if (corpo.acao === 'pix_status') {

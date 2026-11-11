@@ -5,8 +5,15 @@ const Planos = (() => {
   const el = (id) => document.getElementById(id);
   const data = (d) => (d ? new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—');
   let espera = null;
+  let planoEscolhido = 'mensal';
+  let cupomAtual = null; // { codigo, desconto }
+  const precoPlano = (pl = planoEscolhido) => (pl === 'anual' ? PLANO_ANUAL.preco : PLANO.preco);
+  const ECONOMIA_ANUAL = PLANO.preco * 12 - PLANO_ANUAL.preco;
+  const comCupom = (v) => (cupomAtual ? Math.max(1, Math.round(v * (1 - cupomAtual.desconto / 100) * 100) / 100) : v);
+  const textoBotaoPix = () => `${ICONE_PIX}Gerar QR Code Pix · ${precoBR(comCupom(precoPlano()))}`;
+  const textoBotaoCartao = () => (planoEscolhido === 'anual' ? `Assinar por ${precoBR(PLANO_ANUAL.preco)}/ano` : `Assinar por ${precoBR(PLANO.preco)}/mês`);
 
-  const RECURSOS = ['Todas as 64 lições dos 16 níveis, do A1 ao C2', 'Teste de cada nível e certificados', 'Revisão inteligente: ditado, escrita, flashcards e desafio', 'Metas, XP, sequência e acompanhamento', 'Cartão (renova sozinho) ou Pix', 'Cancele quando quiser, sem multa'];
+  const RECURSOS = ['Todas as 64 lições dos 16 níveis, do A1 ao C2, + 3 trilhas extras', 'Teste de cada nível e certificados', 'Revisão inteligente: ditado, escrita, flashcards e desafio', 'Metas, XP, sequência e acompanhamento', 'Cartão (renova sozinho) ou Pix', 'Cancele quando quiser, sem multa'];
   const GRATIS = 'Criar a conta e fazer a prova de nivelamento é grátis.';
 
   const item = (t, cor) => `<li class="flex gap-3"><span class="${cor} mt-0.5 shrink-0">${Icone('check', 'w-5 h-5')}</span><span>${t}</span></li>`;
@@ -25,7 +32,8 @@ const Planos = (() => {
           <p class="mt-1 text-white/60 text-sm">Do primeiro "Hello" à fluência</p>
           <p class="mt-6 font-display font-extrabold"><span class="text-2xl align-top">R$</span> <span class="text-6xl">${reais}</span><span class="text-2xl">,${centavos}</span><span class="text-base font-semibold text-white/60"> /mês</span></p>
           <ul class="mt-8 space-y-3 text-white/85 flex-1">${RECURSOS.map((t) => item(t, 'text-brand-red')).join('')}</ul>
-          <p class="mt-6 text-sm text-white/60 inline-flex items-center gap-2">${Icone('check', 'w-4 h-4 text-emerald-400')}${GRATIS}</p>
+          <p class="mt-4 text-sm text-white/70">ou <b class="text-white">${precoBR(PLANO_ANUAL.preco)}/ano</b> no plano anual <span class="text-emerald-300 font-semibold">(economize ${precoBR(ECONOMIA_ANUAL)})</span></p>
+          <p class="mt-4 text-sm text-white/60 inline-flex items-center gap-2">${Icone('check', 'w-4 h-4 text-emerald-400')}${GRATIS}</p>
           ${acao}
         </div>
       </article>`;
@@ -84,7 +92,7 @@ const Planos = (() => {
     const janela = site ? null : window.open('', '_blank');
     setLoading(btn, true, 'Abrindo o Mercado Pago…');
     try {
-      const { link } = await chamar('criar', { email, voltar: site ? `${location.href.split('#')[0]}#/planos?retorno=1` : '' });
+      const { link } = await chamar('criar', { email, plano: planoEscolhido, voltar: site ? `${location.href.split('#')[0]}#/planos?retorno=1` : '' });
       if (site) { location.href = link; return; }
       if (janela) janela.location.href = link; else location.href = link;
       el('caixaAssinar').innerHTML = `
@@ -100,7 +108,7 @@ const Planos = (() => {
       esperarPagamento();
     } catch (err) {
       janela?.close();
-      setLoading(btn, false, `Assinar por ${precoBR(PLANO.preco)}/mês`);
+      setLoading(btn, false, textoBotaoCartao());
       msg.textContent = err.message;
       msg.classList.remove('hidden');
     }
@@ -133,11 +141,12 @@ const Planos = (() => {
     const diasRestam = pago ? Math.ceil((new Date(a.pago_ate) - Date.now()) / 864e5) : 0;
     const titulo = ativa ? 'Assinatura ativa' : viaPix ? `Assinatura via Pix · ${diasRestam} ${diasRestam === 1 ? 'dia' : 'dias'}` : pago ? 'Acesso até o fim do período pago' : cortesia ? 'Acesso de cortesia' : 'Assinatura';
     const linhas = [
+      ['Plano', a.plano === 'anual' ? 'Anual' : 'Mensal'],
       ativa && a.proxima_cobranca ? ['Próxima cobrança', `${data(a.proxima_cobranca)} · ${precoBR(Number(a.valor || PLANO.preco))}`] : null,
       !ativa && pago ? ['Acesso garantido até', data(a.pago_ate)] : null,
       cortesia ? ['Cortesia até', data(a.cortesia_ate)] : null,
       a.email_pagador ? ['Conta do Mercado Pago', App.escapar(a.email_pagador)] : null,
-      viaPix ? ['Renovação', 'Manual, com Pix (cada Pix soma 30 dias)'] : null,
+      viaPix ? ['Renovação', 'Manual, com Pix (cada Pix soma os dias ao que falta)'] : null,
       a.status === 'cancelada' && !viaPix ? ['Renovação', 'Cancelada (sem novas cobranças)'] : null,
       a.status === 'pausada' ? ['Renovação', 'Pausada no Mercado Pago'] : null,
     ].filter(Boolean);
@@ -161,7 +170,7 @@ const Planos = (() => {
             ${linhas.map(([k, v]) => `<div class="flex justify-between gap-4 py-2.5"><dt class="text-slate-500">${k}</dt><dd class="font-semibold text-navy-900 text-right">${v}</dd></div>`).join('') || '<p class="text-slate-500">—</p>'}
           </dl>
           ${ativa ? '<button id="btnCancelar" class="mt-5 w-full font-semibold border border-red-200 text-red-700 hover:bg-red-50 rounded-xl py-3 transition">Cancelar assinatura</button>' : ''}
-          ${!ativa && !cortesia ? `<button id="btnReassinar" data-metodo-inicial="${viaPix ? 'pix' : 'cartao'}" class="mt-5 w-full font-semibold ${viaPix ? 'bg-[#32BCAD] hover:bg-[#2aa598]' : 'bg-brand-red hover:bg-brand-redDark'} text-white rounded-xl py-3 transition">${viaPix ? 'Renovar com Pix (+30 dias)' : 'Renovar assinatura'}</button>` : ''}
+          ${!ativa && !cortesia ? `<button id="btnReassinar" data-metodo-inicial="${viaPix ? 'pix' : 'cartao'}" class="mt-5 w-full font-semibold ${viaPix ? 'bg-[#32BCAD] hover:bg-[#2aa598]' : 'bg-brand-red hover:bg-brand-redDark'} text-white rounded-xl py-3 transition">${viaPix ? 'Renovar com Pix' : 'Renovar assinatura'}</button>` : ''}
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h3 class="font-display font-bold text-navy-900">Pagamentos</h3>
@@ -171,7 +180,8 @@ const Planos = (() => {
           </ul>` : `<p class="mt-4 text-sm text-slate-500">${cortesia && !a.mp_id ? 'Acesso liberado pela equipe, sem cobrança.' : 'As cobranças aparecem aqui assim que o Mercado Pago confirmar.'}</p>`}
           <p class="mt-4 text-xs text-slate-400">Os recibos também ficam na sua conta do Mercado Pago, em "Assinaturas".</p>
         </div>
-      </section>`;
+      </section>
+      <div id="caixaIndicacao" class="mt-6"></div>`;
   }
 
   function caixaAssinar(p, metodo = 'cartao', compacta = caixaCompacta) {
@@ -185,19 +195,33 @@ const Planos = (() => {
       <section id="caixaAssinar" class="reveal bg-white rounded-[2rem] border-2 border-brand-red/20 p-6 md:p-8 ${compacta ? 'h-full' : 'mt-8 max-w-2xl mx-auto'}">
         <h2 class="font-display text-2xl font-bold text-navy-900">Assinar o English Smart</h2>
         <p class="mt-1 text-slate-500">Escolha como prefere pagar. Pagamento seguro pelo Mercado Pago.</p>
-        <div class="mt-6 flex flex-col sm:flex-row gap-3" role="tablist">
-          ${aba('cartao', Icone('cartao', 'w-5 h-5'), 'Cartão de crédito', `${precoBR(PLANO.preco)} por mês · renova sozinho`)}
-          ${aba('pix', ICONE_PIX, 'Pix', `${precoBR(PLANO.preco)} · 30 dias de acesso`)}
+        <div class="mt-6 grid grid-cols-2 gap-2 bg-slate-100 rounded-2xl p-1.5" role="radiogroup" aria-label="Plano">
+          ${['mensal', 'anual'].map((pl) => `<button data-plano="${pl}" role="radio" aria-checked="${pl === planoEscolhido}" class="relative rounded-xl py-2.5 px-3 text-sm font-semibold transition ${pl === planoEscolhido ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-500 hover:text-navy-900'}">
+            ${pl === 'mensal' ? `Mensal · ${precoBR(PLANO.preco)}` : `Anual · ${precoBR(PLANO_ANUAL.preco)}`}
+            ${pl === 'anual' ? `<span class="absolute -top-2.5 right-2 text-[10px] font-bold bg-emerald-500 text-white rounded-full px-2 py-0.5">-${Math.round((ECONOMIA_ANUAL / (PLANO.preco * 12)) * 100)}%</span>` : ''}</button>`).join('')}
+        </div>
+        <div class="mt-4 flex flex-col sm:flex-row gap-3" role="tablist">
+          ${aba('cartao', Icone('cartao', 'w-5 h-5'), 'Cartão de crédito', planoEscolhido === 'anual' ? `${precoBR(PLANO_ANUAL.preco)} por ano · renova sozinho` : `${precoBR(PLANO.preco)} por mês · renova sozinho`)}
+          ${aba('pix', ICONE_PIX, 'Pix', planoEscolhido === 'anual' ? `${precoBR(comCupom(PLANO_ANUAL.preco))} · 365 dias de acesso` : `${precoBR(comCupom(PLANO.preco))} · 30 dias de acesso`)}
         </div>
         <label for="emailMP" class="mt-6 block text-sm font-medium text-slate-600 mb-1.5">E-mail ${metodo === 'pix' ? 'para o comprovante' : 'da sua conta no Mercado Pago'}</label>
         <input id="emailMP" type="email" autocomplete="email" value="${App.escapar(a?.email_pagador || p.email || '')}" class="campo" />
         <p class="mt-2 text-xs text-slate-400">${metodo === 'pix'
           ? 'O QR Code aparece aqui mesmo. Pague pelo app do seu banco e o acesso é liberado na hora. O Pix não renova sozinho: avisamos antes de acabar.'
           : 'Use o mesmo e-mail com que você entra no Mercado Pago (se for diferente do seu login aqui, troque acima).'}</p>
+        ${metodo === 'pix' ? `
+          <div class="mt-4">
+            <label for="cupomPix" class="block text-sm font-medium text-slate-600 mb-1.5">Cupom de desconto <span class="text-slate-400 font-normal">(opcional)</span></label>
+            <div class="flex gap-2">
+              <input id="cupomPix" maxlength="20" autocapitalize="characters" value="${App.escapar(cupomAtual?.codigo || '')}" class="campo uppercase" placeholder="EX.: BEMVINDO10" />
+              <button id="btnCupom" type="button" class="shrink-0 font-semibold border border-slate-200 hover:border-navy-900 text-navy-900 rounded-xl px-4 transition">${cupomAtual ? 'Remover' : 'Aplicar'}</button>
+            </div>
+            <p id="msgCupom" class="mt-1.5 text-xs ${cupomAtual ? 'text-emerald-700 font-semibold' : 'text-slate-400'}">${cupomAtual ? `Cupom ${App.escapar(cupomAtual.codigo)} aplicado: ${cupomAtual.desconto}% de desconto.` : 'Cupons valem para pagamentos com Pix.'}</p>
+          </div>` : ''}
         <p id="msgAssinar" class="hidden mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3" role="alert"></p>
         ${metodo === 'pix'
-          ? `<button id="btnGerarPix" class="btn-shine mt-6 w-full bg-[#32BCAD] hover:bg-[#2aa598] disabled:opacity-70 text-white font-display font-semibold text-lg py-4 rounded-2xl transition hover:-translate-y-0.5 inline-flex items-center justify-center gap-2">${ICONE_PIX}Gerar QR Code Pix · ${precoBR(PLANO.preco)}</button>`
-          : `<button id="btnAssinar" class="btn-shine mt-6 w-full bg-brand-red hover:bg-brand-redDark disabled:opacity-70 text-white font-display font-semibold text-lg py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5">Assinar por ${precoBR(PLANO.preco)}/mês</button>`}
+          ? `<button id="btnGerarPix" class="btn-shine mt-6 w-full bg-[#32BCAD] hover:bg-[#2aa598] disabled:opacity-70 text-white font-display font-semibold text-lg py-4 rounded-2xl transition hover:-translate-y-0.5 inline-flex items-center justify-center gap-2">${textoBotaoPix()}</button>`
+          : `<button id="btnAssinar" class="btn-shine mt-6 w-full bg-brand-red hover:bg-brand-redDark disabled:opacity-70 text-white font-display font-semibold text-lg py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5">${textoBotaoCartao()}</button>`}
         <div id="areaPix"></div>
         <div class="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-slate-400">
           <span class="inline-flex items-center gap-1.5">${Icone('cadeado', 'w-3.5 h-3.5')}${metodo === 'pix' ? 'Pagamento processado pelo Mercado Pago' : 'Seus dados de cartão ficam só no Mercado Pago'}</span>
@@ -210,16 +234,40 @@ const Planos = (() => {
   function ligarCaixa(p) {
     const caixa = el('caixaAssinar');
     if (!caixa) return;
-    caixa.querySelectorAll('[data-metodo]').forEach((b) => b.addEventListener('click', () => {
-      if (b.getAttribute('aria-selected') === 'true') return;
+    const metodoAtual = caixa.querySelector('[data-metodo][aria-selected="true"]')?.dataset.metodo || 'cartao';
+    const refazer = (metodo) => {
       const email = el('emailMP').value;
       pararPix();
-      caixa.outerHTML = caixaAssinar(p, b.dataset.metodo, caixaCompacta);
+      caixa.outerHTML = caixaAssinar(p, metodo, caixaCompacta);
       el('caixaAssinar').classList.add('visible', 'is-visible');
       el('emailMP').value = email;
       revelar(el('caixaAssinar').parentElement);
       ligarCaixa(p);
+    };
+    caixa.querySelectorAll('[data-metodo]').forEach((b) => b.addEventListener('click', () => {
+      if (b.getAttribute('aria-selected') !== 'true') refazer(b.dataset.metodo);
     }));
+    caixa.querySelectorAll('[data-plano]').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.plano === planoEscolhido) return;
+      planoEscolhido = b.dataset.plano;
+      refazer(metodoAtual);
+    }));
+    el('btnCupom')?.addEventListener('click', async () => {
+      if (cupomAtual) { cupomAtual = null; return refazer('pix'); }
+      const codigo = el('cupomPix').value.trim().toUpperCase();
+      const msg = el('msgCupom');
+      if (!/^[A-Z0-9]{3,20}$/.test(codigo)) { msg.className = 'mt-1.5 text-xs text-red-700'; msg.textContent = 'Digite o código do cupom (letras e números).'; return; }
+      setLoading(el('btnCupom'), true);
+      const { data: desconto, error } = await sb.rpc('validar_cupom', { p_codigo: codigo });
+      if (error || !desconto) {
+        setLoading(el('btnCupom'), false, 'Aplicar');
+        msg.className = 'mt-1.5 text-xs text-red-700';
+        msg.textContent = error ? App.mensagemDeErro(error) : 'Cupom inválido ou expirado.';
+        return;
+      }
+      cupomAtual = { codigo, desconto };
+      refazer('pix');
+    });
     el('btnAssinar')?.addEventListener('click', () => assinar(p));
     el('btnGerarPix')?.addEventListener('click', () => gerarPix(p));
   }
@@ -239,11 +287,12 @@ const Planos = (() => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Informe um e-mail válido.'; msg.classList.remove('hidden'); return; }
     setLoading(btn, true);
     try {
-      const d = await chamar('pix', { email });
+      const d = await chamar('pix', { email, plano: planoEscolhido, cupom: cupomAtual?.codigo || undefined });
       btn.classList.add('hidden');
       mostrarPix(p, d);
     } catch (err) {
-      setLoading(btn, false, `${ICONE_PIX}Gerar QR Code Pix · ${precoBR(PLANO.preco)}`);
+      if (/cupom/i.test(err.message)) cupomAtual = null;
+      setLoading(btn, false, textoBotaoPix());
       msg.textContent = err.message;
       msg.classList.remove('hidden');
     }
@@ -259,6 +308,7 @@ const Planos = (() => {
         </div>
         <div class="min-w-0">
           <p class="font-display font-bold text-navy-900">Pague ${precoBR(Number(d.valor || PLANO.preco))} com Pix</p>
+          <p class="text-xs text-slate-500">${Number(d.dias) >= 365 ? 'Plano anual · 365 dias de acesso' : '30 dias de acesso'}${d.desconto ? ` · ${d.desconto}% de desconto` : ''}</p>
           <ol class="mt-2 text-sm text-slate-600 space-y-1 list-decimal list-inside">
             <li>Abra o app do seu banco e escolha <b>Pix</b>.</li>
             <li>Escaneie o QR Code ou use o <b>Pix copia e cola</b>.</li>
@@ -310,6 +360,39 @@ const Planos = (() => {
     relogio();
   }
 
+  // ---------- Indique um amigo: +30 dias para quem indica, quando o amigo faz o 1º pagamento ----------
+  function linkIndicacao(codigo) {
+    const base = location.protocol === 'https:' ? `${location.origin}${location.pathname}` : `${SITE_URL}/`;
+    return `${base}#/cadastro?ref=${encodeURIComponent(codigo)}`;
+  }
+
+  async function desenharIndicacao(p, caixa) {
+    if (!caixa || p?.papel !== 'aluno' || !p.codigo_indicacao) return;
+    const { data: bonus } = await sb.from('indicacoes_bonus').select('*').eq('indicador', p.id);
+    const lista = bonus || [];
+    const link = linkIndicacao(p.codigo_indicacao);
+    const texto = `Estou estudando inglês no English Smart: prova de nivelamento grátis e aulas no seu nível. Crie sua conta pelo meu link: ${link}`;
+    caixa.innerHTML = `
+      <section id="cartaoIndicacao" class="reveal bg-white rounded-2xl border border-slate-200 p-6 flex flex-col md:flex-row gap-6">
+        <span class="w-14 h-14 shrink-0 rounded-2xl bg-emerald-100 text-emerald-700 grid place-items-center">${Icone('presente', 'w-7 h-7')}</span>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-display font-bold text-navy-900 text-lg">Indique um amigo e ganhe 30 dias</h3>
+          <p class="mt-1 text-sm text-slate-500">Quando alguém criar a conta pelo seu link e fizer o primeiro pagamento, você ganha <b class="text-navy-900">30 dias de acesso</b>. Sem limite de indicações.</p>
+          <div class="mt-4 flex flex-col sm:flex-row gap-2">
+            <input id="linkIndicacao" readonly value="${App.escapar(link)}" class="campo !py-2.5 text-sm" onclick="this.select()" />
+            <button id="btnCopiarIndicacao" class="shrink-0 font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-4 py-2.5 transition">Copiar link</button>
+            <a href="https://wa.me/?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener" class="shrink-0 text-center font-semibold bg-[#25D366] hover:bg-[#1fb857] text-white rounded-xl px-4 py-2.5 transition">WhatsApp</a>
+          </div>
+          <p class="mt-3 text-xs text-slate-400">Seu código: <b class="font-mono text-slate-600">${App.escapar(p.codigo_indicacao)}</b> · ${lista.length ? `<span id="totalIndicacoes" class="text-emerald-700 font-semibold">${lista.length} ${lista.length === 1 ? 'amigo assinou' : 'amigos assinaram'} · +${lista.reduce((s, x) => s + (x.dias || 30), 0)} dias ganhos</span>` : 'Nenhuma indicação confirmada ainda.'}</p>
+        </div>
+      </section>`;
+    caixa.querySelector('#btnCopiarIndicacao').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(link); } catch { caixa.querySelector('#linkIndicacao').select(); document.execCommand?.('copy'); }
+      App.toast('Link copiado! Envie para seus amigos.');
+    });
+    revelar(caixa);
+  }
+
   async function render(p, { boasVindas = false, motivo = '', metodoInicial = 'cartao' } = {}) {
     const raiz = el('planosConteudo');
     pararEspera();
@@ -329,6 +412,7 @@ const Planos = (() => {
       const { data: pagamentos } = await sb.from('pagamentos').select('*').eq('aluno_id', p.id);
       raiz.innerHTML = painelStatus(p, (pagamentos || []).filter((x) => x.status !== 'pendente' && x.status !== 'expirado').sort((x, y) => new Date(y.criado_em) - new Date(x.criado_em)));
       el('btnCancelar')?.addEventListener('click', cancelar);
+      desenharIndicacao(p, el('caixaIndicacao'));
       el('btnReassinar')?.addEventListener('click', () => { caixaCompacta = false; raiz.insertAdjacentHTML('beforeend', caixaAssinar(p, el('btnReassinar').dataset.metodoInicial, false)); el('btnReassinar').remove(); ligarCaixa(p); revelar(raiz); el('caixaAssinar').scrollIntoView({ behavior: 'smooth' }); });
       if (boasVindas) {
         raiz.insertAdjacentHTML('afterbegin', `<div id="bemVindoPremium" class="anim-pop mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-5 py-4 font-semibold">Pagamento confirmado! Sua trilha está liberada. <a href="#/curso" class="underline underline-offset-2">Começar agora →</a></div>`);
@@ -339,22 +423,32 @@ const Planos = (() => {
     }
 
     const pendente = aluno && p.assinatura?.status === 'pendente' && p.assinatura?.mp_id;
+    // já teve acesso e acabou: mensagem própria, com o nível onde parou
+    const a = aluno ? p.assinatura : null;
+    const fimAcesso = a ? Math.max(a.pago_ate ? new Date(a.pago_ate).getTime() : 0, a.cortesia_ate ? new Date(a.cortesia_ate).getTime() : 0) : 0;
+    const vencido = fimAcesso > 0 && fimAcesso <= Date.now();
+    if (vencido) {
+      el('planosTitulo').textContent = 'Seu acesso terminou';
+      el('planosSub').textContent = 'Seu progresso continua guardado. Renove para voltar de onde parou.';
+      if (a.ultimo_metodo === 'pix' && metodoInicial === 'cartao') metodoInicial = 'pix';
+    }
     caixaCompacta = aluno;
     const info = temNivel ? nivelInfo(p.nivel_num) : null;
     const faixa = temNivel ? faixaDoNivel(p.nivel_num) : '';
     raiz.innerHTML = `
-      ${motivo && MOTIVOS[motivo] ? `<div id="avisoPlano" class="mb-8 flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-5 py-4">${Icone('cadeado', 'w-5 h-5 shrink-0')}<span><b>${MOTIVOS[motivo]}</b></span></div>` : ''}
+      ${vencido ? `<div id="avisoVencido" class="mb-8 flex flex-col sm:flex-row sm:items-center gap-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-5 py-4">${Icone('relogio', 'w-6 h-6 shrink-0')}<span class="flex-1">Seu acesso terminou em <b>${data(fimAcesso)}</b>. Renove para continuar ${p.nivel_num ? `do <b>nível ${p.nivel_num}</b>` : 'de onde parou'}: suas lições, XP, sequência e certificados estão guardados.</span>${Math.floor((p.xp || 0) / 10) >= 1500 ? '<a href="#/loja" class="shrink-0 text-center font-semibold bg-white border border-amber-300 hover:border-amber-500 rounded-xl px-4 py-2 transition">Trocar moedas por 7 dias</a>' : ''}</div>` : ''}
+      ${!vencido && motivo && MOTIVOS[motivo] ? `<div id="avisoPlano" class="mb-8 flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-5 py-4">${Icone('cadeado', 'w-5 h-5 shrink-0')}<span><b>${MOTIVOS[motivo]}</b></span></div>` : ''}
       ${temNivel ? `
         <section id="seuNivel" class="reveal mb-8 bg-white rounded-[2rem] border border-slate-200 p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
           <div class="w-24 h-24 shrink-0 rounded-3xl ${FAIXAS[faixa].cor} text-white grid place-items-center">
             <div class="text-center"><p class="text-[10px] font-semibold uppercase tracking-widest text-white/70">Nível</p><p class="font-display text-4xl font-extrabold leading-none">${p.nivel_num}</p></div>
           </div>
           <div class="flex-1">
-            <p class="text-xs font-semibold uppercase tracking-widest text-brand-red">Resultado da sua prova</p>
+            <p class="text-xs font-semibold uppercase tracking-widest text-brand-red">${vencido ? 'Onde você parou' : 'Resultado da sua prova'}</p>
             <h2 class="mt-1 text-2xl font-extrabold text-navy-900">Nível ${p.nivel_num} de 16 · ${faixa} ${App.escapar(FAIXAS[faixa].nome)}</h2>
             <p class="mt-1 text-slate-500">Sua trilha começa em <b class="text-navy-900">${App.escapar(info.tema)}</b>: ${App.escapar(info.objetivo || '')}</p>
           </div>
-          <span class="shrink-0 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 bg-slate-100 rounded-full px-4 py-2">${Icone('cadeado', 'w-4 h-4')}Liberado ao assinar</span>
+          <span class="shrink-0 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 bg-slate-100 rounded-full px-4 py-2">${Icone('cadeado', 'w-4 h-4')}${vencido ? 'Liberado ao renovar' : 'Liberado ao assinar'}</span>
         </section>` : ''}
       ${aluno && !p.nivel_num ? `<div class="mb-8 flex flex-col sm:flex-row sm:items-center gap-3 bg-white border border-slate-200 rounded-2xl px-5 py-4"><span class="flex-1 text-slate-600">Ainda não fez a prova de nivelamento? Ela é grátis e mostra em qual dos 16 níveis você começa.</span><a href="#/prova" class="shrink-0 text-center font-semibold border border-slate-200 hover:border-navy-900 text-navy-900 rounded-xl px-5 py-2.5 transition">Fazer a prova grátis</a></div>` : ''}
       ${aluno
@@ -365,7 +459,7 @@ const Planos = (() => {
         })}
       ${pendente ? '<p class="mt-4 text-center text-sm text-slate-500">Começou uma assinatura e não terminou? <button id="btnVerificarPendente" class="font-semibold text-navy-600 hover:text-brand-red underline">Verificar pagamento</button></p>' : ''}
       <section class="reveal mt-12 max-w-3xl mx-auto grid sm:grid-cols-3 gap-4 text-sm">
-        <div class="bg-white rounded-2xl border border-slate-200 p-5"><p class="font-semibold text-navy-900">Cartão ou Pix</p><p class="mt-1 text-slate-500">No cartão renova sozinho todo mês; no Pix, cada pagamento libera 30 dias.</p></div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5"><p class="font-semibold text-navy-900">Cartão ou Pix</p><p class="mt-1 text-slate-500">No cartão renova sozinho; no Pix, cada pagamento libera 30 dias (ou 365 no anual).</p></div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5"><p class="font-semibold text-navy-900">Sem fidelidade</p><p class="mt-1 text-slate-500">Cancele aqui mesmo; o acesso vai até o fim do mês pago.</p></div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5"><p class="font-semibold text-navy-900">Seu progresso fica</p><p class="mt-1 text-slate-500">Se parar de assinar, nada do que você fez é apagado.</p></div>
       </section>`;
@@ -405,5 +499,5 @@ const Planos = (() => {
     esperarPagamento();
   }
 
-  return { cartoes, chamar };
+  return { cartoes, chamar, desenharIndicacao, linkIndicacao };
 })();

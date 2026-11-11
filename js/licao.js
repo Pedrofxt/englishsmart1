@@ -506,10 +506,12 @@
         const melhor = opcoes.reduce((m, t) => (Voz.semelhanca(ex.frase, t) > Voz.semelhanca(ex.frase, m) ? t : m), opcoes[0]);
         const nota = Voz.semelhanca(ex.frase, melhor);
         tentativas++;
+        const palavras = mapaPronuncia(ex.frase, melhor);
         if (nota >= 0.7 || tentativas >= 3) {
           corrigir(nota >= 0.7, ex.frase, null, `Entendemos: “${melhor}”`);
+          el('areaFala')?.insertAdjacentHTML('beforeend', palavras);
         } else {
-          el('micStatus').innerHTML = `Entendemos: “<b>${App.escapar(melhor)}</b>”. Quase! Tente de novo (${tentativas}/3).`;
+          el('micStatus').innerHTML = `Entendemos: “<b>${App.escapar(melhor)}</b>”. Quase! Tente de novo (${tentativas}/3).${palavras}`;
         }
       } catch (err) {
         const e = err.message;
@@ -534,6 +536,24 @@
       }
     });
   }
+
+  // Pronúncia palavra por palavra: verde = entendida, amarelo = quase, vermelho riscado = não entendida
+  function mapaPronuncia(frase, dito) {
+    const r = Atividades.conferir(dito || '', [frase]);
+    if (!r?.marcas?.length) return '';
+    const CLASSE = { igual: 'palavra-ok', quase: 'palavra-quase', falta: 'palavra-falta' };
+    const faltam = r.marcas.filter((m) => m[1] === 'falta').map((m) => m[0]);
+    return `
+      <div id="mapaPronuncia" class="mt-4 text-left bg-slate-50 rounded-2xl p-4">
+        <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Sua pronúncia, palavra por palavra</p>
+        <p class="mt-2 flex flex-wrap gap-1.5 text-base font-semibold">${r.marcas.map(([w, t]) => `<button type="button" data-ouvir-palavra="${App.escapar(w)}" class="${CLASSE[t]} rounded-lg px-2 py-0.5" title="Ouvir “${App.escapar(w)}”">${App.escapar(w)}</button>`).join('')}</p>
+        <p class="mt-2 text-xs text-slate-500">${faltam.length ? `Treine: <b>${faltam.slice(0, 4).map(App.escapar).join(', ')}</b>. Toque numa palavra para ouvir.` : 'Todas as palavras foram entendidas. Excelente!'}</p>
+      </div>`;
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ouvir-palavra]');
+    if (b) Voz.falar(b.dataset.ouvirPalavra, { lento: true });
+  });
 
   // Modo 2: grava a voz do aluno para ele ouvir e comparar com o modelo
   function falaGravar(ex) {
@@ -686,12 +706,12 @@
       if (error) erro = error.message; else resp = data;
       App.limparPerfil();
       // guarda o que o aluno acertou e errou para a revisão inteligente
-      if (st.itens.length) sb.rpc('registrar_revisao', { p_modo: 'licao', p_itens: st.itens, p_acertos: 0, p_total: 0, p_dispositivo: DISPOSITIVO.id }).then(() => {}, () => {});
+      if (st.itens.length && !st.extra) sb.rpc('registrar_revisao', { p_modo: 'licao', p_itens: st.itens, p_acertos: 0, p_total: 0, p_dispositivo: DISPOSITIVO.id }).then(() => {}, () => {});
     }
 
     const C = 2 * Math.PI * 54;
     const subiu = resp?.subiu || resp?.concluiu_curso;
-    const proximo = st.teste ? null : st.l < 4 ? `#/licao?n=${st.n}&l=${st.l + 1}` : `#/licao?n=${st.n}&l=0`;
+    const proximo = st.teste ? null : st.l < 4 ? `#/licao?n=${st.n}&l=${st.l + 1}` : st.extra ? null : `#/licao?n=${st.n}&l=0`;
 
     let titulo, texto;
     if (st.teste) {
@@ -701,7 +721,7 @@
       else { titulo = 'Ainda não foi desta vez'; texto = `Você precisa de ${minimo}% para passar. Revise as lições e tente de novo; você consegue!`; }
     } else {
       titulo = passou ? 'Lição concluída!' : 'Faltou pouco!';
-      texto = passou ? (st.l < 4 ? 'Siga para a próxima lição da trilha.' : 'Você terminou as 4 lições. Hora do teste do nível!')
+      texto = passou ? (st.l < 4 ? 'Siga para a próxima lição da trilha.' : st.extra ? 'Você terminou esta trilha extra. Muito bem!' : 'Você terminou as 4 lições. Hora do teste do nível!')
         : `Para concluir a lição você precisa de ${minimo}%. Revise o conteúdo e tente de novo.`;
     }
 
@@ -932,8 +952,9 @@
       const admin = p.papel === 'admin';
       const n = Number(params.get('n'));
       const l = Number(params.get('l'));
-      if (!(n >= 1 && n <= 16) || !(l >= 0 && l <= 4)) { location.hash = '#/curso'; return false; }
-      if (!admin && n > p.nivel_num) { App.toast('Este nível ainda está bloqueado.'); location.hash = `#/curso?n=${n}`; return false; }
+      const extra = EXTRAS.some((x) => x.n === n);
+      if (!((n >= 1 && n <= 16) || extra) || !(l >= 0 && l <= 4) || (extra && l === 0)) { location.hash = '#/curso'; return false; }
+      if (!admin && !extra && n > p.nivel_num) { App.toast('Este nível ainda está bloqueado.'); location.hash = `#/curso?n=${n}`; return false; }
 
       if (l === 0 && !admin) {
         const { progresso } = await App.dadosDoAluno(p.id);
@@ -941,9 +962,9 @@
         if (feitas < 4) { App.toast('Conclua as 4 lições do nível antes do teste.'); location.hash = `#/curso?n=${n}`; return false; }
       }
 
-      st = { n, l, teste: l === 0, admin, licao: l ? nivelInfo(n).licoes[l - 1] : null, i: 0, acertos: 0, avaliadas: 0, itens: [], erradas: [] };
+      st = { n, l, teste: l === 0, extra, admin, licao: l ? nivelInfo(n).licoes[l - 1] : null, i: 0, acertos: 0, avaliadas: 0, itens: [], erradas: [] };
       el('licaoVoltar').href = `#/curso?n=${n}`;
-      el('licaoRotulo').textContent = `Nível ${n} · ${faixaDoNivel(n)} · ${l ? `Lição ${l} de 4` : 'Teste do nível'}`;
+      el('licaoRotulo').textContent = extra ? `Trilha extra · ${nivelInfo(n).nome} · Lição ${l} de 4` : `Nível ${n} · ${faixaDoNivel(n)} · ${l ? `Lição ${l} de 4` : 'Teste do nível'}`;
       el('licaoTitulo').textContent = l ? st.licao.t : nivelInfo(n).tema;
       iniciarSessao();
     },

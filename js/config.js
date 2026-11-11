@@ -24,7 +24,7 @@ if (!window.supabase) {
 const RESPONSAVEL_NOME = 'Pedro de Farias Xavier Toledo';   // ex.: 'Fulano de Tal' ou a razão social, se tiver empresa
 const RESPONSAVEL_DOC = '';    // CPF ou CNPJ (opcional, mas recomendado)
 const CONTATO_EMAIL = 'pedro.farias.toledo@gmail.com';      // ex.: 'contato@seudominio.com.br'
-const VERSAO_TERMOS = '2026-11-10.2';
+const VERSAO_TERMOS = '2026-11-10.3';
 
 // Google Analytics 4 (opcional): cole o ID "G-XXXXXXX" para medir visitas.
 // Só é carregado para quem aceitar os cookies de estatística no aviso de cookies.
@@ -33,7 +33,16 @@ const ANALYTICS_ID = '';
 // Assinatura (o valor cobrado de verdade fica na função do servidor: segredo PLANO_VALOR, padrão 29.99)
 // Cadastro e prova de nivelamento são grátis; para estudar, é preciso assinar.
 const PLANO = { nome: 'Assinatura English Smart', preco: 29.99 };
+// Plano anual (valor cobrado de verdade: segredo PLANO_ANUAL_VALOR, padrão 299.90)
+const PLANO_ANUAL = { nome: 'Assinatura anual', preco: 299.9 };
 const precoBR = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+// Endereço oficial do site (links de indicação e de verificação de certificado)
+const SITE_URL = 'https://englishsmart.app.br';
+
+// CAPTCHA do Cloudflare Turnstile (opcional, grátis): cole a "Site Key" aqui E ative o Turnstile
+// em Supabase → Authentication → Attack Protection (com a "Secret Key"). Os dois juntos, senão o login falha.
+const TURNSTILE_SITE_KEY = '';
 
 // Identificação deste aparelho (limite de 4 aparelhos por conta).
 // id: aleatório, guardado no navegador · digital: resumo do navegador/tela, para reconhecer o mesmo aparelho

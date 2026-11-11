@@ -210,8 +210,45 @@
       : '<p class="text-sm text-slate-500">Você ainda não tem certificados. Conclua o teste do seu nível na trilha para ganhar o primeiro.</p>';
   }
 
+  // ---------- Turma (código de convite do professor) ----------
+  async function desenharTurma() {
+    const caixa = el('perfilTurma');
+    let turma = null;
+    if (p.turma_id) ({ data: turma } = await sb.from('turmas').select('nome, codigo').eq('id', p.turma_id).maybeSingle());
+    caixa.innerHTML = turma
+      ? `<div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <span class="w-11 h-11 shrink-0 rounded-xl bg-navy-900 text-white grid place-items-center">${Icone('grupo', 'w-5 h-5')}</span>
+          <span class="flex-1"><b id="nomeTurma" class="text-navy-900">${App.escapar(turma.nome)}</b><span class="block text-xs text-slate-400">Seu professor acompanha o seu progresso por aqui.</span></span>
+          <button id="btnSairTurma" class="shrink-0 text-sm font-semibold border border-slate-200 hover:border-red-300 hover:text-red-700 text-slate-600 rounded-xl px-4 py-2 transition">Sair da turma</button>
+        </div>`
+      : `<p class="text-sm text-slate-500">Recebeu um código de turma do seu professor? Digite aqui.</p>
+        <form id="formTurma" class="mt-3 flex gap-2" novalidate>
+          <input id="codigoTurma" maxlength="12" autocapitalize="characters" placeholder="CÓDIGO" class="campo uppercase font-mono" />
+          <button class="shrink-0 font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-5 transition">Entrar</button>
+        </form>`;
+    el('btnSairTurma')?.addEventListener('click', async () => {
+      if (!confirm('Sair da turma?')) return;
+      const { error } = await sb.rpc('sair_turma');
+      if (error) return App.toast(App.mensagemDeErro(error));
+      p.turma_id = null; App.limparPerfil(); desenharTurma();
+    });
+    el('formTurma')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const codigo = el('codigoTurma').value.trim().toUpperCase();
+      if (!/^[A-Z0-9]{4,12}$/.test(codigo)) return App.toast('Digite o código da turma.');
+      const btn = e.target.querySelector('button');
+      setLoading(btn, true);
+      const { data: nome, error } = await sb.rpc('entrar_turma', { p_codigo: codigo });
+      if (error) { setLoading(btn, false, 'Entrar'); return App.toast(error.message || App.mensagemDeErro(error)); }
+      App.toast(`Você entrou na turma "${nome}".`);
+      App.limparPerfil();
+      p = await App.perfil(true);
+      desenharTurma();
+    });
+  }
+
   App.registrar('perfil', {
-    async iniciar() {
+    async iniciar({ params } = {}) {
       p = await App.perfil(true);
       if (!p) { location.hash = '#/entrar'; return false; }
       const admin = p.papel === 'admin';
@@ -227,8 +264,17 @@
       el('pfEmail').value = p.email;
       el('pfTelefone').value = p.telefone || '';
       el('pfCidade').value = p.cidade || '';
-      desenharStats(await App.dadosDoAluno(p.id));
+      const dados = await App.dadosDoAluno(p.id);
+      const { data: compras } = await sb.from('compras').select('*').eq('aluno_id', p.id);
+      desenharStats(dados);
+      el('perfilMedalhas').innerHTML = Loja.gradeMedalhas(p, dados, compras || []);
+      Loja.desenharRanking(el('perfilRanking'));
+      desenharTurma();
+      document.getElementById('caixaIndicacao')?.replaceChildren();
+      document.getElementById('lojaConteudo')?.replaceChildren();
+      Planos.desenharIndicacao(p, el('perfilIndicacao'));
       Aparelhos.desenharNoPerfil(p.id);
+      if (params?.get('ver') === 'medalhas') setTimeout(() => el('perfilMedalhas').scrollIntoView({ behavior: 'smooth' }), 300);
     },
   });
 })();

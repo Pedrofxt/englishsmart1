@@ -9,7 +9,7 @@
   const registro = (n, l) => dados.progresso.find((p) => p.nivel_num === n && p.licao === l);
   const licaoOk = (r) => !!r && r.acertos >= r.total * 0.6;
   const temCertificado = (n) => dados.certificados.some((c) => c.nivel_num === n);
-  const liberado = (n) => admin || n <= perfil.nivel_num;
+  const liberado = (n) => admin || ehExtra(n) || n <= perfil.nivel_num;
   const licoesFeitas = (n) => [1, 2, 3, 4].filter((l) => licaoOk(registro(n, l))).length;
   const pct = (r) => Math.round((r.acertos / r.total) * 100);
 
@@ -37,7 +37,23 @@
               </a>`;
           }).join('')}
         </div>
-      </div>`).join('');
+      </div>`).join('') + `
+      <div>
+        <p class="px-2 mb-2 text-[11px] font-bold uppercase tracking-widest text-white/40">Trilhas extras</p>
+        <div class="space-y-1">
+          ${EXTRAS.map((x) => {
+            const ativo = x.n === visto;
+            return `
+              <a href="#/curso?n=${x.n}" data-extra="${x.n}" class="flex items-center gap-3 px-2 py-2 rounded-xl text-sm transition ${ativo ? 'bg-white text-navy-900 shadow-lg' : 'text-white/80 hover:bg-white/10'}">
+                <span class="w-8 h-8 shrink-0 rounded-lg grid place-items-center ${ativo ? 'bg-navy-900 text-white' : 'bg-white/10'}">${Icone(x.icone, 'w-4 h-4')}</span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-semibold">${App.escapar(x.nome)}</span>
+                  <span class="block text-[11px] ${ativo ? 'text-slate-400' : 'text-white/40'}">${admin ? 'Trilha extra' : `${licoesFeitas(x.n)}/4 lições`}</span>
+                </span>
+              </a>`;
+          }).join('')}
+        </div>
+      </div>`;
   }
 
   // ---------- Cartões de resumo ----------
@@ -46,7 +62,7 @@
       el('painelResumo').innerHTML = '';
       return;
     }
-    const est = App.estatisticas(dados.progresso, perfil.meta_semanal, dados.sessoes);
+    const est = App.estatisticas(dados.progresso, perfil.meta_semanal, dados.sessoes, dados.protegidos);
     const n = perfil.nivel_num;
     const etapas = licoesFeitas(n) + (temCertificado(n) ? 1 : 0);
     const faixa = FAIXAS[perfil.nivel];
@@ -97,6 +113,18 @@
         <p class="mt-1 font-display text-3xl font-extrabold text-navy-900">${est.sequencia > 0 ? `<span class="inline-block align-[-4px] text-brand-red">${Icone('chama', 'w-7 h-7')}</span>` : ''}${est.sequencia}<span class="text-base text-slate-400"> dia${est.sequencia === 1 ? '' : 's'}</span></p>
         <p class="text-[11px] text-slate-400">${est.sequencia ? 'Estude hoje para manter!' : 'Faça uma lição para começar'}</p>
       </div>
+      <a href="#/loja" id="cartaoLoja" class="group col-span-2 flex items-center gap-4 bg-white rounded-2xl p-5 border border-slate-200 hover:border-navy-900 transition">
+        <span class="w-12 h-12 shrink-0 rounded-xl bg-amber-400 text-navy-900 grid place-items-center">${Icone('moeda', 'w-6 h-6')}</span>
+        <span class="flex-1 min-w-0"><span class="block font-display font-bold text-navy-900">${Loja.saldoDe(perfil, dados.compras).toLocaleString('pt-BR')} moedas</span>
+          <span class="block text-sm text-slate-500">Troque por molduras, protetor de sequência e dias de acesso.</span></span>
+        <span class="shrink-0 text-sm font-semibold text-navy-600 group-hover:text-brand-red">Loja →</span>
+      </a>
+      <a href="#/perfil?ver=medalhas" id="cartaoMedalhas" class="group col-span-2 flex items-center gap-4 bg-white rounded-2xl p-5 border border-slate-200 hover:border-navy-900 transition">
+        <span class="w-12 h-12 shrink-0 rounded-xl bg-navy-900 text-amber-300 grid place-items-center">${Icone('medalha', 'w-6 h-6')}</span>
+        <span class="flex-1 min-w-0"><span class="block font-display font-bold text-navy-900">${Loja.conquistadas(perfil, dados, dados.compras).length} de ${Loja.MEDALHAS.length} medalhas</span>
+          <span class="block text-sm text-slate-500">Conquiste medalhas estudando, mantendo a sequência e passando nos testes.</span></span>
+        <span class="shrink-0 text-sm font-semibold text-navy-600 group-hover:text-brand-red">Ver →</span>
+      </a>
       ${dados.progresso.some((r) => r.licao >= 1) ? (() => {
         const hoje = (dados.memoria || []).filter((r) => new Date(r.proxima).getTime() <= Date.now()).length;
         const erros = (dados.memoria || []).filter((r) => r.caixa === 0 && r.erros > 0).length;
@@ -122,8 +150,45 @@
     });
   }
 
+  // ---------- Página de uma trilha extra (sem teste e sem certificado) ----------
+  function renderizarExtra(n) {
+    const x = nivelInfo(n);
+    const feitas = licoesFeitas(n);
+    el('paginaNivel').innerHTML = `
+      <div class="relative overflow-hidden bg-brand-hero text-white rounded-[2rem] p-7 md:p-10">
+        <div class="absolute inset-0 bg-grid opacity-70"></div>
+        <div class="relative flex flex-col md:flex-row md:items-center gap-6">
+          <span class="w-16 h-16 shrink-0 rounded-2xl ${x.cor} grid place-items-center">${Icone(x.icone, 'w-8 h-8')}</span>
+          <div class="flex-1">
+            <span class="text-xs font-semibold uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Trilha extra · ${App.escapar(x.tema)}</span>
+            <h1 class="mt-3 text-3xl md:text-5xl font-extrabold">${App.escapar(x.nome)}</h1>
+            <p class="mt-3 text-white/70 text-lg max-w-2xl">4 lições práticas para <b class="text-white">${App.escapar(x.objetivo)}</b>. Faça na ordem que quiser, quantas vezes quiser.</p>
+            ${!admin ? `<div class="mt-6 max-w-md"><div class="flex justify-between text-xs text-white/60 mb-1.5"><span>Progresso</span><span>${feitas}/4</span></div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-brand-red rounded-full" style="width:${(feitas / 4) * 100}%"></div></div></div>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 grid sm:grid-cols-2 gap-4">${x.licoes.map((l, i) => {
+        const r = registro(n, i + 1);
+        const ok = licaoOk(r);
+        return `
+          <article class="reveal bg-white rounded-2xl border border-slate-200 p-6 flex flex-col hover:-translate-y-1 hover:shadow-card transition duration-300">
+            <div class="flex items-start justify-between gap-3">
+              <span class="w-11 h-11 rounded-xl ${ok ? 'bg-emerald-500' : x.cor} text-white grid place-items-center font-display font-bold">${ok ? Icone('check', 'w-5 h-5') : i + 1}</span>
+              ${r ? `<span class="text-[11px] font-semibold ${ok ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} px-2.5 py-1 rounded-full">${pct(r)}%</span>` : '<span class="text-[11px] font-semibold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">Nova</span>'}
+            </div>
+            <h3 class="mt-4 text-lg font-bold text-navy-900">${App.escapar(l.t)}</h3>
+            <p class="mt-1 text-sm text-slate-500 flex-1">${App.escapar(l.g.split(/(?<=[.:])\s/)[0])}</p>
+            <a href="#/licao?n=${n}&l=${i + 1}" class="mt-4 text-center font-semibold rounded-xl py-2.5 transition ${ok ? 'border border-slate-200 text-navy-900 hover:border-navy-900' : 'bg-brand-red hover:bg-brand-redDark text-white'}">${r ? (ok ? 'Praticar de novo' : 'Tentar de novo') : 'Começar'}</a>
+          </article>`;
+      }).join('')}</div>
+      <p class="reveal mt-4 text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-5">As trilhas extras somam XP e contam para a meta semanal e a sequência. Elas não têm teste nem certificado, e o vocabulário não entra na revisão inteligente.</p>`;
+    revelar(el('paginaNivel'));
+  }
+
   // ---------- Página de um nível ----------
   function renderizarNivel(n) {
+    if (ehExtra(n)) return renderizarExtra(n);
     const info = nivelInfo(n);
     const k = faixaDoNivel(n);
     const faixa = FAIXAS[k];
@@ -224,7 +289,9 @@
               <span class="block text-xs text-slate-400">${new Date(c.emitido_em).toLocaleDateString('pt-BR')}</span></span>
             </a>`).join('')}
         </div>`
-      : '<p class="mt-2 text-sm text-slate-500">Conclua o teste do seu nível para ganhar o primeiro certificado.</p>'}`;
+      : '<p class="mt-2 text-sm text-slate-500">Conclua o teste do seu nível para ganhar o primeiro certificado.</p>'}
+      <div id="cursoRanking" class="mt-8 max-w-2xl"></div>`;
+    if (!admin) Loja.desenharRanking(el('cursoRanking'));
   }
 
   el('btnMenu').addEventListener('click', () => el('painelLateral').classList.toggle('hidden'));
@@ -238,14 +305,19 @@
 
       admin = p.papel === 'admin';
       perfil = admin ? { ...p, nivel_num: 16, nivel: 'C2', xp: 0, meta_semanal: 3 } : p;
-      dados = admin ? { progresso: [], certificados: [], sessoes: [] } : await App.dadosDoAluno(p.id);
+      dados = admin ? { progresso: [], certificados: [], sessoes: [], protegidos: [], compras: [] } : await App.dadosDoAluno(p.id);
       if (!admin) {
-        const { data: memoria } = await sb.from('revisao').select('item, caixa, erros, proxima').eq('aluno_id', p.id);
+        const [{ data: memoria }, { data: compras }] = await Promise.all([
+          sb.from('revisao').select('item, caixa, erros, proxima').eq('aluno_id', p.id),
+          sb.from('compras').select('*').eq('aluno_id', p.id),
+        ]);
         dados.memoria = memoria || [];
+        dados.compras = compras || [];
+        Loja.avisarNovas(p, dados, dados.compras);
       }
 
       const pedido = Number(params.get('n'));
-      const visto = pedido >= 1 && pedido <= 16 ? pedido : admin ? 1 : perfil.nivel_num;
+      const visto = (pedido >= 1 && pedido <= 16) || EXTRAS.some((x) => x.n === pedido) ? pedido : admin ? 1 : perfil.nivel_num;
 
       const primeiroNome = p.nome.split(' ')[0];
       el('nomeAluno').textContent = p.nome;

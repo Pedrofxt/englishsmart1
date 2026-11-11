@@ -12,7 +12,7 @@ const FAIXAS = {
   C2: { nome: 'Proficiente', cor: 'bg-amber-500', texto: 'text-amber-600', niveis: '16', descricao: 'Domínio total: nuances, registro e humor. Você conversa sobre qualquer assunto.' },
 };
 
-const faixaDoNivel = (n) => (n <= 3 ? 'A1' : n <= 6 ? 'A2' : n <= 9 ? 'B1' : n <= 12 ? 'B2' : n <= 15 ? 'C1' : 'C2');
+const faixaDoNivel = (n) => (n > 100 ? 'B1' : n <= 3 ? 'A1' : n <= 6 ? 'A2' : n <= 9 ? 'B1' : n <= 12 ? 'B2' : n <= 15 ? 'C1' : 'C2');
 
 const L = (t, g, v, e, d) => ({ t, g, v, e, d });
 
@@ -392,4 +392,76 @@ const CURRICULO = [
   ] },
 ];
 
-const nivelInfo = (n) => CURRICULO[n - 1];
+const nivelInfo = (n) => (n > 100 ? EXTRAS.find((x) => x.n === n) : CURRICULO[n - 1]);
+const ehExtra = (n) => Number(n) > 100;
+
+// ---------- Trilhas extras (livres para quem assina, sem teste e sem certificado) ----------
+// Números 101–103 para não se misturar com os 16 níveis. Mesmo formato das lições acima.
+const EXTRAS = [
+  { n: 101, tema: 'Travel English', nome: 'Inglês para viagem', icone: 'aviao', cor: 'bg-sky-500', objetivo: 'resolver aeroporto, hotel, transporte e imprevistos em uma viagem', licoes: [
+    L('At the Airport',
+      "No check-in e no embarque: Can I see your passport? / Window or aisle seat? / Is this the line for check-in? / What time does boarding start? O cartão de embarque é o boarding pass e o portão é o gate.",
+      [['boarding pass', 'cartão de embarque'], ['gate', 'portão'], ['aisle seat', 'assento do corredor'], ['window seat', 'assento da janela'], ['carry-on bag', 'bagagem de mão'], ['delayed', 'atrasado']],
+      ["Could I have a window ___, please?|seat|chair|place|sit", "Your flight is ___ by two hours.|delayed|late|slowed|waited", "Boarding starts at gate 12 ___ 9:40.|at|in|on|by", "Can I take this bag ___ board?|on|in|at|to"],
+      [['A', "Good morning. Can I see your passport, please?"], ['B', "Sure, here you go."], ['A', "Window or aisle seat?"], ['B', "Window, please. Is the flight on time?"], ['A', "It's delayed by thirty minutes. Boarding starts at gate 12."], ['B', "Thank you. Can I take this bag on board?"]]),
+    L('Checking In at the Hotel',
+      "No hotel: I have a reservation under the name... / What time is check-out? / Is breakfast included? / Could I have a late check-out? Para reclamar com educação: There seems to be a problem with...",
+      [['reservation', 'reserva'], ['check-out', 'saída do hotel'], ['breakfast included', 'café da manhã incluído'], ['key card', 'cartão da porta'], ['front desk', 'recepção'], ['air conditioning', 'ar-condicionado']],
+      ["I have a reservation ___ the name Silva.|under|on|in|by", "Is breakfast ___?|included|including|include|inclusive", "What time is ___?|check-out|check-off|checking out of|out-check", "There seems to be a problem ___ the air conditioning.|with|of|in|for"],
+      [['A', "Hi, I have a reservation under the name Costa."], ['B', "Welcome! Here is your key card. You're in room 504."], ['A', "Thanks. Is breakfast included?"], ['B', "Yes, from 6:30 to 10 a.m."], ['A', "Great. What time is check-out?"], ['B', "At noon. Just call the front desk if you need anything."]]),
+    L('Getting Around',
+      "Para se locomover: How do I get to...? / Which line goes to...? / How much is a ticket to...? / Is it within walking distance? Respostas: Take the subway, get off at..., It's a ten-minute walk.",
+      [['subway', 'metrô'], ['get off', 'descer (do transporte)'], ['round trip', 'ida e volta'], ['one-way ticket', 'passagem só de ida'], ['walking distance', 'dá para ir a pé'], ['taxi stand', 'ponto de táxi']],
+      ["How do I get ___ the museum?|to|at|in|for", "Get ___ at Central Station.|off|out|down|of", "A one-___ ticket to Boston, please.|way|time|trip|go", "Is it within walking ___?|distance|distant|far|length"],
+      [['A', "Excuse me, how do I get to the museum?"], ['B', "Take the blue line and get off at Central Station."], ['A', "Is it within walking distance from there?"], ['B', "Yes, it's a five-minute walk."], ['A', "How much is a one-way ticket?"], ['B', "Three dollars. You can buy it at the machine."]]),
+    L('Problems on the Road',
+      "Imprevistos: I've lost my passport / My luggage didn't arrive / I missed my connection / I need to see a doctor. Peça ajuda: Could you help me, please? Where is the nearest pharmacy?",
+      [['lost luggage', 'bagagem extraviada'], ['missed my connection', 'perdi a conexão'], ['pharmacy', 'farmácia'], ['embassy', 'embaixada'], ['refund', 'reembolso'], ['emergency', 'emergência']],
+      ["I've ___ my passport. What should I do?|lost|lose|losing|loss", "My luggage didn't ___.|arrive|arrived|arriving|arrival", "Where is the ___ pharmacy?|nearest|near|nearer|most near", "Can I get a ___ for this ticket?|refund|refunding|return money|pay back"],
+      [['A', "Excuse me, my luggage didn't arrive."], ['B', "I'm sorry. Can I see your baggage tag?"], ['A', "Here it is. I also missed my connection."], ['B', "We'll book you on the next flight and send the bag to your hotel."], ['A', "Will I get a refund for the hotel tonight?"], ['B', "Yes, the airline will cover it. Here is a voucher."]]),
+  ] },
+  { n: 102, tema: 'Job Interview', nome: 'Entrevista de emprego', icone: 'entrevista', cor: 'bg-violet-600', objetivo: 'se apresentar, falar da sua experiência e responder às perguntas clássicas de entrevista', licoes: [
+    L('Tell Me About Yourself',
+      "A pergunta mais comum. Estrutura: presente (I'm a... with X years of experience in...), passado (Before that, I worked at...) e futuro (Now I'm looking for...). Seja breve: de 1 a 2 minutos.",
+      [['background', 'formação / histórico'], ['experience', 'experiência'], ['currently', 'atualmente'], ['degree', 'diploma / graduação'], ['skills', 'habilidades'], ['looking for', 'procurando']],
+      ["I have five years of experience ___ marketing.|in|on|at|with", "I'm ___ working as a sales analyst.|currently|actually|nowadays of|current", "I have a ___ in Business Administration.|degree|graduate|grade|formation", "Now I'm looking ___ a new challenge.|for|to|at|after"],
+      [['A', "So, tell me about yourself."], ['B', "I'm a sales analyst with five years of experience in retail."], ['A', "What's your educational background?"], ['B', "I have a degree in Business Administration."], ['A', "And why are you looking for a new job?"], ['B', "I'm looking for a new challenge and a chance to grow."]]),
+    L('Strengths and Weaknesses',
+      "Forças: I'm very organized / I work well under pressure. Fraqueza: escolha algo real e mostre o que faz para melhorar: I used to... but now I... / I'm working on...",
+      [['strength', 'ponto forte'], ['weakness', 'ponto fraco'], ['under pressure', 'sob pressão'], ['detail-oriented', 'atento aos detalhes'], ['team player', 'bom trabalhando em equipe'], ['improve', 'melhorar']],
+      ["My greatest ___ is that I'm very organized.|strength|strong|strongest|strengthen", "I work well ___ pressure.|under|below|on|in", "I'm ___ on my public speaking skills.|working|work|worked|works", "I used to take on too much, but now I ___ better.|delegate|delegated|delegating|to delegate"],
+      [['A', "What would you say is your greatest strength?"], ['B', "I'm very detail-oriented and I work well under pressure."], ['A', "And your biggest weakness?"], ['B', "I used to have trouble speaking in public."], ['A', "How are you dealing with that?"], ['B', "I took a course and now I present at every team meeting."]]),
+    L('Talking About Achievements',
+      "Use o passado simples e números: I increased sales by 20%, I led a team of five, I reduced costs. Estrutura STAR: Situation, Task, Action, Result.",
+      [['increase', 'aumentar'], ['reduce', 'reduzir'], ['lead a team', 'liderar uma equipe'], ['deadline', 'prazo'], ['result', 'resultado'], ['handle', 'lidar com']],
+      ["I ___ sales by 20% last year.|increased|increase|increasing|have increase", "I led a team ___ five people.|of|with|from|by", "We finished the project before the ___.|deadline|dead end|limit time|due", "How did you ___ a difficult customer?|handle|handled|handling|hand"],
+      [['A', "Can you tell me about an achievement you're proud of?"], ['B', "Last year I led a team of five on a new project."], ['A', "What was the result?"], ['B', "We reduced costs by 15% and finished before the deadline."], ['A', "Impressive. What was the biggest challenge?"], ['B', "Handling a tight schedule, but we planned every week carefully."]]),
+    L('Closing the Interview',
+      "No fim, faça perguntas: What does a typical day look like? / What are the next steps? Fale de salário com cuidado: My salary expectation is around... Agradeça: Thank you for your time.",
+      [['salary expectation', 'pretensão salarial'], ['next steps', 'próximos passos'], ['typical day', 'dia típico'], ['benefits', 'benefícios'], ['available', 'disponível'], ['thank you for your time', 'obrigado pelo seu tempo']],
+      ["Do you have any questions ___ us?|for|to|at|with", "What are the next ___?|steps|stairs|stages of|step", "My salary expectation is ___ 6,000 reais.|around|about of|near of|close", "Thank you ___ your time.|for|to|by|of"],
+      [['A', "Do you have any questions for us?"], ['B', "Yes. What does a typical day look like in this role?"], ['A', "You'd have meetings in the morning and client calls in the afternoon."], ['B', "Great. What are the next steps?"], ['A', "We'll get back to you by Friday."], ['B', "Perfect. Thank you for your time!"]]),
+  ] },
+  { n: 103, tema: 'English at Work', nome: 'Inglês no trabalho', icone: 'mala', cor: 'bg-emerald-600', objetivo: 'escrever e-mails, participar de reuniões e conversar com colegas e clientes em inglês', licoes: [
+    L('Professional E-mails',
+      "Abertura: Hi John, / Dear Ms. Smith, Corpo: I'm writing to... / Please find attached... / Could you please...? Fechamento: Best regards, / Looking forward to hearing from you.",
+      [['please find attached', 'segue em anexo'], ['I\'m writing to', 'escrevo para'], ['looking forward to', 'aguardo ansiosamente'], ['best regards', 'atenciosamente'], ['follow up', 'dar retorno / acompanhar'], ['as soon as possible', 'o quanto antes']],
+      ["Please find ___ the report.|attached|attach|attaching|attachment", "I'm writing ___ confirm our meeting.|to|for|about|of", "Looking forward to ___ from you.|hearing|hear|heard|be hearing", "I'm just following ___ on my last e-mail.|up|on|in|out"],
+      [['A', "Did you send the report to the client?"], ['B', "Yes, I wrote: Please find attached the monthly report."], ['A', "Did they reply?"], ['B', "Not yet. I'll follow up tomorrow morning."], ['A', "Ask them to confirm as soon as possible."], ['B', "Sure. I'll end with: Looking forward to hearing from you."]]),
+    L('Meetings',
+      "Em reuniões: Let's get started / Can I add something? / Sorry to interrupt, but... / Could you clarify that? / Let's move on to the next point / To sum up...",
+      [['agenda', 'pauta'], ['clarify', 'esclarecer'], ['move on', 'passar para o próximo'], ['to sum up', 'resumindo'], ['action item', 'tarefa combinada'], ['interrupt', 'interromper']],
+      ["Let's get ___. First item on the agenda...|started|starting|start|starts", "Sorry to ___, but I have a question.|interrupt|interrupting|interruption|interrupted", "Could you ___ what you mean?|clarify|clear|clarity|clarified", "Let's move ___ to the next point.|on|in|up|to"],
+      [['A', "Okay everyone, let's get started."], ['B', "Sorry to interrupt, but could you clarify the deadline?"], ['A', "Sure, it's the end of the month."], ['B', "Thanks. Can I add something about the budget?"], ['A', "Of course. Then let's move on to action items."], ['B', "To sum up: I'll send the numbers by Friday."]]),
+    L('Small Talk with Colleagues',
+      "Conversa leve no café ou antes da reunião: How was your weekend? / Busy day? / Any plans for the holiday? / How's the project going? Respostas curtas e uma pergunta de volta.",
+      [['how was your weekend', 'como foi seu fim de semana'], ['busy', 'ocupado / corrido'], ['catch up', 'colocar o papo em dia'], ['by the way', 'aliás'], ['plans', 'planos'], ['coffee break', 'pausa para o café']],
+      ["How ___ your weekend?|was|were|is|did", "It's been a ___ week!|busy|business|busily|busyness", "Let's catch ___ during the coffee break.|up|on|in|out", "By the ___, are you coming to the party?|way|road|side|time"],
+      [['A', "Hi! How was your weekend?"], ['B', "Great, I went to the beach. And yours?"], ['A', "Quiet. It's been a busy week, though."], ['B', "Tell me about it! Want to grab a coffee?"], ['A', "Sure. By the way, how's the new project going?"], ['B', "Pretty well. Let's catch up during the break."]]),
+    L('Presenting and Updates',
+      "Para apresentar: Today I'm going to talk about... / As you can see on this slide... / Let me walk you through... Para status: We're on track / We're behind schedule / The main blocker is...",
+      [['on track', 'dentro do previsto'], ['behind schedule', 'atrasado'], ['walk you through', 'explicar passo a passo'], ['blocker', 'impedimento'], ['slide', 'slide'], ['update', 'atualização']],
+      ["As you can ___ on this slide, sales went up.|see|look|watch|view", "Let me walk you ___ the results.|through|by|over of|across", "The project is ___ track.|on|in|at|under", "We're a little behind ___.|schedule|time|timing|agenda"],
+      [['A', "Can you give us a quick update?"], ['B', "Sure. Let me walk you through the numbers."], ['A', "Are we on track for the launch?"], ['B', "We're a little behind schedule."], ['A', "What's the main blocker?"], ['B', "We're waiting for the client's approval. As you can see on this slide, everything else is done."]]),
+  ] },
+];

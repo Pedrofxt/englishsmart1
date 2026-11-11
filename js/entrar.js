@@ -9,6 +9,33 @@
   const ATIVA = 'bg-white text-navy-900 shadow';
   const INATIVA = 'text-slate-500 hover:text-navy-900';
 
+  // CAPTCHA (Cloudflare Turnstile): só aparece se TURNSTILE_SITE_KEY estiver preenchido em config.js
+  const Captcha = (() => {
+    const ativo = !!TURNSTILE_SITE_KEY;
+    let carregado = null;
+    const widgets = {};
+    const carregar = () => (carregado ||= new Promise((ok, erro) => {
+      window.aoCarregarTurnstile = ok;
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=aoCarregarTurnstile';
+      s.async = true; s.onerror = erro;
+      document.head.appendChild(s);
+    }));
+    async function montar(form) {
+      if (!ativo || form.id in widgets) return;
+      widgets[form.id] = null;
+      const caixa = document.createElement('div');
+      caixa.className = 'flex justify-center min-h-[65px]';
+      form.querySelector('[data-msg]').before(caixa);
+      try { await carregar(); widgets[form.id] = window.turnstile.render(caixa, { sitekey: TURNSTILE_SITE_KEY, language: 'pt-br', theme: Tema.escuro() ? 'dark' : 'light' }); }
+      catch { caixa.textContent = 'Não foi possível carregar a verificação. Recarregue a página.'; }
+    }
+    const token = (form) => (ativo ? window.turnstile?.getResponse(widgets[form.id]) || '' : undefined);
+    const reiniciar = (form) => { if (ativo && widgets[form.id] != null) window.turnstile?.reset(widgets[form.id]); };
+    return { ativo, montar, token, reiniciar };
+  })();
+  const semCaptcha = (form) => Captcha.ativo && !Captcha.token(form);
+
   function mensagem(form, texto, tipo = 'erro') {
     const el = form.querySelector('[data-msg]');
     const estilos = {
@@ -30,7 +57,9 @@
   // Traduz os erros do Supabase Auth
   function traduzir(erro) {
     const m = (erro?.message || '').toLowerCase();
+    if (m === 'captcha' || m.includes('captcha')) return 'Confirme a verificação "Não sou um robô" e tente de novo.';
     if (m.includes('invalid login')) return 'E-mail ou senha incorretos.';
+    if (m.includes('pwned') || m.includes('leaked') || m.includes('known to be') || m.includes('compromised')) return 'Esta senha apareceu em vazamentos de dados na internet. Escolha outra senha.';
     if (m.includes('email not confirmed')) return 'Confirme seu e-mail pelo link que enviamos antes de entrar.';
     if (m.includes('already registered') || m.includes('already been registered')) return 'Este e-mail já tem conta. Use a aba Entrar.';
     if (m.includes('password should be') || m.includes('weak')) return 'Escolha uma senha mais forte (mínimo 6 caracteres).';
@@ -50,6 +79,7 @@
     formEntrar.classList.toggle('hidden', cadastro || recuperar);
     formCadastro.classList.toggle('hidden', !cadastro);
     formRecuperar.classList.toggle('hidden', !recuperar);
+    Captcha.montar(cadastro ? formCadastro : recuperar ? formRecuperar : formEntrar);
     document.getElementById('abasEntrar').classList.toggle('hidden', recuperar);
     abaEntrar.className = `text-center py-2.5 rounded-xl text-sm font-semibold transition ${cadastro ? INATIVA : ATIVA}`;
     abaCadastro.className = `text-center py-2.5 rounded-xl text-sm font-semibold transition ${cadastro ? ATIVA : INATIVA}`;
@@ -73,10 +103,12 @@
     const email = document.getElementById('entrarEmail').value.trim();
     const senha = document.getElementById('entrarSenha').value;
     if (!email || !senha) return mensagem(formEntrar, 'Informe e-mail e senha.');
+    if (semCaptcha(formEntrar)) return mensagem(formEntrar, 'Confirme a verificação "Não sou um robô".');
 
     setLoading(btn, true);
     try {
-      const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+      const { error } = await sb.auth.signInWithPassword({ email, password: senha, options: { captchaToken: Captcha.token(formEntrar) } });
+      Captcha.reiniciar(formEntrar);
       if (error) return mensagem(formEntrar, traduzir(error));
       App.limparPerfil();
       location.hash = App.destino(await App.perfil(true));
@@ -101,10 +133,12 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mensagem(formCadastro, 'Informe um e-mail válido.');
     if (senha.length < 6) return mensagem(formCadastro, 'A senha precisa ter pelo menos 6 caracteres.');
     if (!document.getElementById('cadAceite').checked) return mensagem(formCadastro, 'Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.');
+    if (semCaptcha(formCadastro)) return mensagem(formCadastro, 'Confirme a verificação "Não sou um robô".');
 
     setLoading(btn, true);
     try {
-      const { data, error } = await sb.auth.signUp({ email, password: senha, options: { data: { nome, aceitou_termos_em: new Date().toISOString(), versao_termos: VERSAO_TERMOS } } });
+      const { data, error } = await sb.auth.signUp({ email, password: senha, options: { captchaToken: Captcha.token(formCadastro), data: { nome, aceitou_termos_em: new Date().toISOString(), versao_termos: VERSAO_TERMOS } } });
+      Captcha.reiniciar(formCadastro);
       if (error) return mensagem(formCadastro, traduzir(error));
 
       if (!data.session) {
@@ -162,7 +196,9 @@
   }
 
   async function enviarCodigo() {
-    const { error } = await sb.auth.resetPasswordForEmail(rec.email, { redirectTo: enderecoDeVolta() });
+    if (semCaptcha(formRecuperar)) throw new Error('captcha');
+    const { error } = await sb.auth.resetPasswordForEmail(rec.email, { redirectTo: enderecoDeVolta(), captchaToken: Captcha.token(formRecuperar) });
+    Captcha.reiniciar(formRecuperar);
     if (error) throw error;
     travarReenvio();
   }
@@ -237,6 +273,7 @@
         if (params?.get('expirou')) mensagem(formRecuperar, 'O link de recuperação expirou ou já foi usado. Peça um novo código abaixo.', 'info');
         return;
       }
+      if (rota === 'cadastro' && App.lerLocal('es_ref')) mensagem(formCadastro, 'Você foi convidado por um amigo! Crie sua conta e faça a prova de nivelamento grátis.', 'info');
       setTimeout(() => document.getElementById(rota === 'cadastro' ? 'cadNome' : 'entrarEmail').focus(), 50);
     },
   });

@@ -3,17 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>English Smart — Learn today. Speak tomorrow.</title>
-  <meta name="description" content="Curso de Inglês Inteligente: prova de nivelamento, lições no seu nível e foco em conversação real." />
+  <title>English Smart — Curso de inglês online do zero à fluência</title>
+  <meta name="description" content="Faça a prova de nivelamento grátis e estude inglês no seu nível: 16 níveis do A1 ao C2, lições com áudio, prática de fala, revisão inteligente e certificados. R$ 29,99/mês." />
   <meta name="theme-color" content="#00174F" />
+  <script>try{if(localStorage.getItem('es_tema')==='escuro')document.documentElement.classList.add('escuro')}catch(e){}</script>
+  <link rel="canonical" href="https://englishsmart.app.br/" />
+  <!-- Compartilhamento (WhatsApp, Instagram, Facebook, LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="English Smart" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:url" content="https://englishsmart.app.br/" />
+  <meta property="og:title" content="English Smart — Learn today. Speak tomorrow." />
+  <meta property="og:description" content="Prova de nivelamento grátis. Estude inglês no seu nível, do A1 ao C2, com áudio, fala e certificados." />
+  <meta property="og:image" content="https://englishsmart.app.br/img/compartilhar.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <!-- App instalável (PWA) -->
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="img/icon.png" />
+  <link rel="apple-touch-icon" href="img/app-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="English Smart" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="js/tw-config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="css/brand.css" />
+  <!-- Visual: Tailwind já compilado (sem montar o CSS no navegador) -->
+  <link rel="stylesheet" href="css/tailwind.css?v=20261110a" />
+  <link rel="stylesheet" href="css/brand.css?v=20261110a" />
+  <link rel="stylesheet" href="css/escuro.css?v=20261110a" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Course","name":"English Smart — Curso de Inglês Inteligente","description":"Curso de inglês online em 16 níveis (A1 a C2) com prova de nivelamento grátis.","provider":{"@type":"Organization","name":"English Smart","url":"https://englishsmart.app.br"},"inLanguage":"pt-BR","offers":{"@type":"Offer","price":"29.99","priceCurrency":"BRL","category":"Subscription"}}</script>
 </head>
 <body class="bg-white text-slate-700">
 
@@ -29,11 +49,13 @@
         <button data-rolar="como-funciona" class="hover:text-white transition">Como funciona</button>
         <button data-rolar="niveis" class="hover:text-white transition">Níveis</button>
         <button data-rolar="atividades" class="hover:text-white transition">Atividades</button>
+        <button data-rolar="experimente" class="hover:text-white transition">Experimente</button>
         <button data-rolar="planos" class="hover:text-white transition">Planos</button>
         <button data-rolar="faq" class="hover:text-white transition">Dúvidas</button>
         <a href="#/termos" class="hover:text-white transition">Termos</a>
       </nav>
       <div class="flex items-center gap-2 sm:gap-3">
+        <button data-tema class="w-9 h-9 shrink-0 grid place-items-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition" aria-label="Usar modo escuro"></button>
         <a id="linkConta" href="#/entrar" class="inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white px-4 py-2 rounded-full border border-white/20 hover:border-white/50 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           <span>Entrar</span>
@@ -48,6 +70,7 @@
         <button data-rolar="como-funciona" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Como funciona</button>
         <button data-rolar="niveis" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Níveis</button>
         <button data-rolar="atividades" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Atividades</button>
+        <button data-rolar="experimente" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Experimente</button>
         <button data-rolar="planos" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Planos</button>
         <button data-rolar="faq" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Dúvidas</button>
         <a href="#/termos" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Termos</a>
@@ -213,6 +236,18 @@
     </div>
   </section>
 
+  <!-- Experimente: mini lição sem cadastro -->
+  <section id="experimente" class="py-24 scroll-mt-20">
+    <div class="max-w-3xl mx-auto px-5">
+      <div class="reveal text-center max-w-2xl mx-auto">
+        <p class="text-brand-red font-semibold tracking-wide uppercase text-sm">Experimente agora</p>
+        <h2 class="mt-3 text-4xl md:text-5xl font-extrabold text-navy-900">Uma mini lição, sem cadastro</h2>
+        <p class="mt-4 text-lg text-slate-500">3 atividades de verdade, iguais às do curso. Leva menos de um minuto.</p>
+      </div>
+      <div id="previewLicao" class="reveal mt-10 bg-white rounded-[2rem] border border-slate-200 shadow-card p-6 md:p-8"></div>
+    </div>
+  </section>
+
   <!-- Planos -->
   <section id="planos" class="py-24 bg-slate-50 scroll-mt-20">
     <div class="max-w-5xl mx-auto px-5">
@@ -259,7 +294,15 @@
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Quanto custa e como funciona a assinatura?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
-          <p class="mt-3 text-slate-500">Criar a conta e fazer a prova de nivelamento é grátis. Para estudar (lições, testes, certificados e revisão), a assinatura custa R$ 29,99 por mês. No cartão, a cobrança é automática todo mês pelo Mercado Pago e você cancela quando quiser em "Meu plano", sem multa, mantendo o acesso até o fim do mês pago. No Pix, você paga pelo QR Code e ganha 30 dias de acesso, sem renovação automática: é só pagar outro Pix quando quiser continuar. Na primeira assinatura, você tem 7 dias para desistir com reembolso total.</p>
+          <p class="mt-3 text-slate-500">Criar a conta e fazer a prova de nivelamento é grátis. Para estudar (lições, testes, certificados e revisão), a assinatura custa R$ 29,99 por mês. No cartão, a cobrança é automática todo mês pelo Mercado Pago e você cancela quando quiser em "Meu plano", sem multa, mantendo o acesso até o fim do mês pago. No Pix, você paga pelo QR Code e ganha 30 dias de acesso, sem renovação automática: é só pagar outro Pix quando quiser continuar. Também há o plano anual, por R$ 299,90 (no cartão ou no Pix, com 365 dias de acesso). Na primeira assinatura, você tem 7 dias para desistir com reembolso total.</p>
+        </details>
+        <details class="reveal bg-slate-50 rounded-2xl p-6">
+          <summary class="flex justify-between items-center font-semibold text-navy-900">O certificado tem validade? Como alguém confere?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
+          <p class="mt-3 text-slate-500">Cada certificado tem um código único. Qualquer pessoa (uma empresa, por exemplo) pode conferir em <a href="#/verificar" class="font-semibold text-navy-600 underline">Verificar certificado</a>. É um certificado de conclusão de curso livre.</p>
+        </details>
+        <details class="reveal bg-slate-50 rounded-2xl p-6">
+          <summary class="flex justify-between items-center font-semibold text-navy-900">Dá para usar como aplicativo no celular?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
+          <p class="mt-3 text-slate-500">Sim. No Android (Chrome), toque em "Instalar app" no rodapé ou no menu do navegador. No iPhone (Safari), toque em Compartilhar e depois em "Adicionar à Tela de Início".</p>
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Posso refazer a prova de nivelamento?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
@@ -273,7 +316,9 @@
     <div class="max-w-7xl mx-auto px-5 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
       <img src="img/logo.png" alt="English Smart" class="h-14 w-auto opacity-90" />
       <p class="text-sm text-center">© <span id="ano"></span> English Smart · Learn today. Speak tomorrow.</p>
-      <div class="flex items-center gap-5 text-sm">
+      <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+        <button data-instalar class="hidden inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 hover:bg-white/20 rounded-full px-3 py-1.5 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>Instalar app</button>
+        <a href="#/verificar" class="hover:text-white transition">Verificar certificado</a>
         <a href="#/termos" class="hover:text-white transition">Termos de Uso</a>
         <a href="#/termos?aba=privacidade" class="hover:text-white transition">Privacidade</a>
         <button data-cookies class="hover:text-white transition">Cookies</button>
@@ -647,6 +692,42 @@
 </div>
 
 <!-- =====================================================================
+     TELA: VERIFICAR CERTIFICADO (pública)
+     ===================================================================== -->
+<div data-view="verificar" class="hidden min-h-screen bg-slate-50">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-3xl mx-auto px-5 h-20 flex items-center justify-between">
+      <a href="#/"><img src="img/logo.png" alt="English Smart" class="h-14 w-auto" /></a>
+      <a href="#/" class="text-sm font-semibold text-white/70 hover:text-white">Ir para o site</a>
+    </div>
+  </header>
+  <main class="max-w-3xl mx-auto px-5 py-12">
+    <p class="text-brand-red font-semibold tracking-wide uppercase text-sm">Autenticidade</p>
+    <h1 class="mt-2 text-3xl md:text-4xl font-extrabold text-navy-900">Verificar certificado</h1>
+    <p class="mt-2 text-slate-500">Digite o código de verificação impresso no canto do certificado para confirmar que ele foi emitido pelo English Smart.</p>
+    <form id="formVerificar" class="mt-8 flex flex-col sm:flex-row gap-3" novalidate>
+      <label for="codigoVerificar" class="sr-only">Código de verificação</label>
+      <input id="codigoVerificar" maxlength="16" autocapitalize="characters" placeholder="Ex.: A1B2C3D4" class="campo uppercase font-mono text-lg" />
+      <button class="shrink-0 font-display font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-2xl px-8 py-3.5 transition">Verificar</button>
+    </form>
+    <div id="resultadoVerificar" class="mt-8"></div>
+  </main>
+</div>
+
+<!-- =====================================================================
+     TELA: LOJA DE MOEDAS
+     ===================================================================== -->
+<div data-view="loja" class="hidden min-h-screen bg-slate-50">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-5xl mx-auto px-5 h-20 flex items-center justify-between gap-4">
+      <a href="#/curso" class="text-sm font-semibold text-white/80 hover:text-white">← Voltar à trilha</a>
+      <button data-avatar data-tamanho="w-10 h-10 text-sm" class="hidden shrink-0 rounded-full ring-2 ring-white/20 hover:ring-white/60 transition"></button>
+    </div>
+  </header>
+  <main id="lojaConteudo" class="max-w-5xl mx-auto px-5 py-10"></main>
+</div>
+
+<!-- =====================================================================
      TELA: PORTAL DO PROFESSOR (administrador)
      ===================================================================== -->
 <div data-view="admin" class="hidden min-h-screen bg-slate-100">
@@ -664,6 +745,18 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-5 py-10">
+    <nav id="abasAdmin" class="rolagem-x flex gap-1 bg-white border border-slate-200 rounded-2xl p-1.5 mb-8 whitespace-nowrap" role="tablist">
+      <button data-aba="alunos" class="aba-admin">Alunos</button>
+      <button data-aba="financeiro" class="aba-admin">Financeiro</button>
+      <button data-aba="turmas" class="aba-admin">Turmas e cupons</button>
+      <button data-aba="erros" class="aba-admin">Erros mais comuns</button>
+      <button data-aba="config" class="aba-admin">Configuração <span id="alertaConfig" class="hidden ml-1 inline-block w-2 h-2 rounded-full bg-brand-red align-middle"></span></button>
+    </nav>
+    <div data-painel="financeiro" id="painelFinanceiro" class="hidden"></div>
+    <div data-painel="turmas" id="painelTurmas" class="hidden"></div>
+    <div data-painel="erros" id="painelErros" class="hidden"></div>
+    <div data-painel="config" id="painelConfig" class="hidden"></div>
+    <div data-painel="alunos">
     <div id="cartoesStatus" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
     <div id="cartoesPlano" class="mt-4 grid sm:grid-cols-3 gap-4"></div>
 
@@ -696,6 +789,10 @@
           <select id="filtroNivel" class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-navy-600/15">
             <option value="">Todos os estágios</option><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
           </select>
+          <select id="filtroTurma" class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-navy-600/15">
+            <option value="">Todas as turmas</option>
+          </select>
+          <button id="btnCsvAlunos" class="shrink-0 inline-flex items-center gap-1.5 border border-slate-300 hover:border-navy-900 px-3 py-2 rounded-xl text-sm font-semibold text-navy-900 transition" title="Baixar a lista filtrada em CSV (abre no Excel)"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>CSV</button>
           <input id="busca" type="search" placeholder="Buscar nome ou e-mail" class="w-full sm:w-56 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-navy-600/15 focus:border-navy-600" />
           <button id="btnAtualizar" class="shrink-0 border border-slate-300 hover:border-navy-900 px-3 py-2 rounded-xl text-navy-900 transition" title="Atualizar">
             <svg id="iconeAtualizar" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.6m14.8 2A8 8 0 004.6 9M4.6 9H9m11 11v-5h-.6m0 0a8 8 0 01-14.8-2m14.8 2H15"/></svg>
@@ -719,6 +816,7 @@
           <tbody id="tabelaAlunos" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
+    </div>
     </div>
   </main>
 </div>
@@ -817,6 +915,17 @@
         <button type="submit" class="bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl px-6 py-3 transition">Alterar senha</button>
       </form>
 
+      <section data-so-aluno id="perfilMedalhas" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24"></section>
+
+      <div data-so-aluno id="perfilRanking"></div>
+
+      <section data-so-aluno class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8">
+        <h2 class="text-xl font-bold text-navy-900">Minha turma</h2>
+        <div id="perfilTurma" class="mt-3"></div>
+      </section>
+
+      <div data-so-aluno id="perfilIndicacao"></div>
+
       <section data-so-aluno class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8">
         <h2 class="text-xl font-bold text-navy-900">Meus certificados</h2>
         <div id="perfilCertificados" class="mt-4"></div>
@@ -909,9 +1018,12 @@
       <h2>7. Assinatura, pagamento e cancelamento</h2>
       <ul>
         <li><b>O que é grátis:</b> criar a conta e fazer a prova de nivelamento, que indica o seu nível de partida.</li>
-        <li><b>O que a assinatura inclui:</b> todas as lições dos 16 níveis, os testes de nível, os certificados e a revisão inteligente. Sem assinatura ativa, esses conteúdos ficam bloqueados.</li>
-        <li><b>Preço:</b> R$ 29,99 (vinte e nove reais e noventa e nove centavos) por mês, cobrados automaticamente a cada mês, a partir da contratação, até o cancelamento. Eventuais reajustes serão avisados com pelo menos 30 dias de antecedência, e você poderá cancelar antes que passem a valer.</li>
-        <li><b>Formas de pagamento:</b> (a) <b>cartão de crédito</b>, com cobrança automática todo mês até o cancelamento; ou (b) <b>Pix</b>, pagamento avulso de R$ 29,99 que libera 30 (trinta) dias de acesso, sem renovação automática. Cada novo Pix soma 30 dias ao período que ainda resta. O QR Code vale por 30 minutos.</li>
+        <li><b>O que a assinatura inclui:</b> todas as lições dos 16 níveis, as trilhas extras, os testes de nível, os certificados e a revisão inteligente. Sem assinatura ativa, esses conteúdos ficam bloqueados.</li>
+        <li><b>Planos e preços:</b> <b>mensal</b>, R$ 29,99 (vinte e nove reais e noventa e nove centavos) por mês; ou <b>anual</b>, R$ 299,90 (duzentos e noventa e nove reais e noventa centavos) por ano. No cartão, a cobrança se repete automaticamente a cada período (mês ou ano), a partir da contratação, até o cancelamento. Eventuais reajustes serão avisados com pelo menos 30 dias de antecedência, e você poderá cancelar antes que passem a valer.</li>
+        <li><b>Formas de pagamento:</b> (a) <b>cartão de crédito</b>, com cobrança automática a cada período até o cancelamento; ou (b) <b>Pix</b>, pagamento avulso que libera 30 (trinta) dias de acesso no plano mensal ou 365 (trezentos e sessenta e cinco) dias no anual, sem renovação automática. Cada novo Pix soma os dias ao período que ainda resta. O QR Code vale por 30 minutos. Avisamos por e-mail antes de o acesso via Pix terminar.</li>
+        <li><b>Cupons de desconto:</b> quando oferecidos, valem para pagamentos com Pix, dentro da validade e do limite de usos informados, e não são cumulativos.</li>
+        <li><b>Indique um amigo:</b> quando uma pessoa cria a conta pelo seu link de indicação e faz o primeiro pagamento aprovado, você ganha 30 dias de acesso, somados ao seu período. Não vale indicar a si mesmo nem criar contas falsas; indicações fraudulentas são canceladas.</li>
+        <li><b>Moedas, medalhas e ranking:</b> as moedas são pontos de motivação ganhos com o estudo (10 XP = 1 moeda), sem valor em dinheiro: não podem ser compradas, vendidas, transferidas nem trocadas por dinheiro, e só servem para os itens da loja da Plataforma. A Plataforma pode ajustar os itens e os preços em moedas. O ranking semanal é opcional e mostra apenas o seu primeiro nome e a inicial do sobrenome, se você escolher participar.</li>
         <li><b>Processamento:</b> os pagamentos são processados pelo <b>Mercado Pago</b>, de acordo com os termos dele. Nós não recebemos nem armazenamos o número do seu cartão nem dados bancários.</li>
         <li><b>Cancelamento:</b> a qualquer momento, sem multa, em <b>Meu plano → Cancelar assinatura</b> (ou na sua conta do Mercado Pago). Não haverá novas cobranças, e o acesso continua até o fim do período já pago.</li>
         <li><b>Direito de arrependimento:</b> na primeira contratação, você pode desistir em até 7 (sete) dias e receber o valor pago de volta integralmente, conforme o art. 49 do Código de Defesa do Consumidor. Basta cancelar e pedir o reembolso pelo e-mail de contato.</li>
@@ -953,11 +1065,14 @@
         <li><b>Cadastro:</b> nome, e-mail e senha. A senha é guardada criptografada (em formato irreversível) e nem nós temos acesso a ela.</li>
         <li><b>Perfil (opcional):</b> telefone, cidade e foto de perfil ou avatar.</li>
         <li><b>Aparelhos conectados:</b> um identificador aleatório de cada aparelho, o nome do navegador e do sistema (por exemplo, "Chrome no Windows"), um resumo técnico do navegador e da tela (para reconhecer o mesmo aparelho) e as datas de conexão e de último acesso. Servem para aplicar o limite de 4 aparelhos por conta.</li>
-        <li><b>Assinatura:</b> e-mail da sua conta no Mercado Pago, situação da assinatura, valores e datas das cobranças.</li>
+        <li><b>Assinatura:</b> e-mail da sua conta no Mercado Pago, situação da assinatura, plano, valores, cupons usados e datas das cobranças.</li>
+        <li><b>Turma (opcional):</b> a turma em que você entrou com o código do professor.</li>
       </ul>
       <h3>Dados gerados pelo uso</h3>
       <ul>
         <li>Respostas e resultado da prova de nivelamento, nível na trilha, notas das lições e testes, pontos de experiência (XP), meta semanal, datas de atividade e certificados emitidos.</li>
+        <li>Moedas gastas e itens da loja, quem indicou você (código de indicação) e os bônus de indicação, e a sua escolha de participar ou não do ranking semanal.</li>
+        <li><b>Verificação de certificado:</b> quem tem o código de um certificado pode conferir na página pública "Verificar certificado" o nome do aluno, o nível e a data de emissão. O código só aparece no seu certificado; você decide com quem compartilhar.</li>
         <li>Data e hora do aceite destes Termos e da Política de Privacidade.</li>
       </ul>
       <h3>Dados técnicos</h3>
@@ -980,7 +1095,9 @@
       <ul>
         <li><b>Supabase</b> — provedor de banco de dados, autenticação e armazenamento das fotos. Os dados ficam em servidores localizados em São Paulo, Brasil.</li>
         <li><b>Mercado Pago</b> — processa os pagamentos da assinatura. Para isso, recebe o e-mail informado e o identificador da sua conta na Plataforma; os dados de pagamento que você digita lá são tratados conforme a política de privacidade do Mercado Pago.</li>
-        <li><b>Serviços que entregam partes do site</b> — Google Fonts (fontes), jsDelivr e Tailwind CSS (bibliotecas de código). Eles recebem dados técnicos da conexão, como o endereço IP, para entregar esses arquivos ao seu navegador.</li>
+        <li><b>Resend</b> — envia os e-mails de aviso de vencimento do acesso. Recebe seu nome e e-mail apenas para esse envio.</li>
+        <li><b>Cloudflare Turnstile</b> (se ativado) — verificação "não sou um robô" no cadastro e no login, que recebe dados técnicos do navegador para prevenir fraudes.</li>
+        <li><b>Serviços que entregam partes do site</b> — Google Fonts (fontes) e jsDelivr (biblioteca de código). Eles recebem dados técnicos da conexão, como o endereço IP, para entregar esses arquivos ao seu navegador.</li>
         <li><b>Recursos de voz do navegador</b> — ao usar o botão de microfone, o reconhecimento de fala é feito pelo seu navegador e, dependendo dele, o áudio pode ser processado pelo fornecedor do navegador (como Google ou Microsoft), de acordo com a política de privacidade desse fornecedor. A English Smart recebe apenas o texto reconhecido, usado na hora para corrigir o exercício, sem armazenar áudio nem transcrições.</li>
         <li><b>Autoridades</b> — somente quando houver obrigação legal ou ordem judicial.</li>
       </ul>
@@ -989,7 +1106,7 @@
       <h2 id="cookies">5. Cookies e armazenamento no seu navegador</h2>
       <p>Usamos cookies e o armazenamento local do navegador (localStorage e sessionStorage) em duas categorias:</p>
       <ul>
-        <li><b>Essenciais (sempre ativos):</b> mantêm você conectado (<code>english-smart-auth</code>), identificam este aparelho na sua conta (<code>es_dispositivo</code>), guardam as respostas de uma prova em andamento (<code>es_prova_…</code>), o modo do microfone na sessão (<code>es_voz_falhou</code>) e a sua escolha sobre cookies (<code>es_cookies_v1</code>). Eles são necessários para o serviço funcionar e não dependem de consentimento (art. 7º, V e IX, da LGPD).</li>
+        <li><b>Essenciais (sempre ativos):</b> mantêm você conectado (<code>english-smart-auth</code>), identificam este aparelho na sua conta (<code>es_dispositivo</code>), guardam as respostas de uma prova em andamento (<code>es_prova_…</code>), o modo do microfone na sessão (<code>es_voz_falhou</code>), a sua escolha sobre cookies (<code>es_cookies_v1</code>), o modo claro ou escuro (<code>es_tema</code>), o código de indicação ou de turma de um link de convite até você entrar (<code>es_ref</code>, <code>es_turma</code>) e as medalhas já avisadas (<code>es_medalhas_…</code>). Se você instalar o app, uma cópia dos arquivos do site fica guardada para abrir sem internet. Eles são necessários para o serviço funcionar e não dependem de consentimento (art. 7º, V e IX, da LGPD).</li>
         <li><b>Estatísticas (opcionais):</b> quando ativadas pela Plataforma, medem de forma agregada visitas e páginas mais usadas (Google Analytics, com IP anonimizado). Só são carregadas se você aceitar, e você pode retirar o consentimento a qualquer momento.</li>
       </ul>
       <p>Não usamos cookies de publicidade. Ao carregar o site, o navegador também busca fontes e bibliotecas em serviços de terceiros (Google Fonts e CDNs), que recebem dados técnicos como o endereço IP. Ao sair da conta, os dados de sessão são removidos.</p>
@@ -1032,25 +1149,27 @@
 <!-- Aviso flutuante -->
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-24 opacity-0 transition duration-300 bg-navy-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-card z-[70]"></div>
 
-<script src="js/config.js"></script>
-<script src="js/curriculo.js"></script>
-<script src="js/voz.js"></script>
-<script src="js/atividades.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/cookies.js"></script>
-<script src="js/app.js"></script>
-<script src="js/inicio.js"></script>
-<script src="js/entrar.js"></script>
-<script src="js/prova.js"></script>
-<script src="js/curso.js"></script>
-<script src="js/licao.js"></script>
-<script src="js/revisao.js"></script>
-<script src="js/plano.js"></script>
-<script src="js/dispositivos.js"></script>
-<script src="js/certificado.js"></script>
-<script src="js/perfil.js"></script>
-<script src="js/termos.js"></script>
-<script src="js/admin.js"></script>
+<script src="js/config.js?v=20261110a"></script>
+<script src="js/curriculo.js?v=20261110a"></script>
+<script src="js/voz.js?v=20261110a"></script>
+<script src="js/atividades.js?v=20261110a"></script>
+<script src="js/ui.js?v=20261110a"></script>
+<script src="js/cookies.js?v=20261110a"></script>
+<script src="js/app.js?v=20261110a"></script>
+<script src="js/inicio.js?v=20261110a"></script>
+<script src="js/entrar.js?v=20261110a"></script>
+<script src="js/prova.js?v=20261110a"></script>
+<script src="js/curso.js?v=20261110a"></script>
+<script src="js/licao.js?v=20261110a"></script>
+<script src="js/revisao.js?v=20261110a"></script>
+<script src="js/plano.js?v=20261110a"></script>
+<script src="js/loja.js?v=20261110a"></script>
+<script src="js/verificar.js?v=20261110a"></script>
+<script src="js/dispositivos.js?v=20261110a"></script>
+<script src="js/certificado.js?v=20261110a"></script>
+<script src="js/perfil.js?v=20261110a"></script>
+<script src="js/termos.js?v=20261110a"></script>
+<script src="js/admin.js?v=20261110a"></script>
 <script>App.iniciar(); Cookies.iniciar();</script>
 </body>
 </html>

@@ -108,6 +108,21 @@ window.Icone = (() => {
     cartao: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>',
     cookie: '<path d="M12 3a9 9 0 1 0 9 9 4 4 0 0 1-4-4 4 4 0 0 1-4-4 1 1 0 0 0-1-1Z"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="10" cy="15.5" r="1"/>',
     certificado: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 9h8M8 12h5"/><circle cx="17" cy="17" r="3"/><path d="M15.5 19.5L15 22l2-1 2 1-.5-2.5"/>',
+    presente: '<rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13M12 8S10.5 3 8 3.5 7 8 12 8zm0 0s1.5-5 4-4.5S17 8 12 8z"/>',
+    moeda: '<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5c-.4-1-1.4-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.6 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1.2 0-2.2-.6-2.6-1.6M12 6.5v1.5M12 16v1.5"/>',
+    lua: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    medalha: '<circle cx="12" cy="15" r="6"/><path d="M8.5 10L6 3h4l2 5M15.5 10L18 3h-4l-2 5M12 12.5l.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/>',
+    mala: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 12h18"/>',
+    aviao: '<path d="M10.5 13.5L3 11l1.5-1.5 8 1 4-4.5a2.1 2.1 0 013 3l-4.5 4 1 8L14.5 22 12 14.5 9 17.5V20l-1.5 1.5-1-3-3-1L5 16h2.5z"/>',
+    entrevista: '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M3 20a5 5 0 0110 0M12 20a5 5 0 0110 0"/>',
+    baixar: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/>',
+    loja: '<path d="M4 9l1.5-5h13L20 9M4 9h16v2a3 3 0 01-6 0 3 3 0 01-4 0 3 3 0 01-6 0V9zM5 13v7h14v-7M10 20v-4h4v4"/>',
+    grupo: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M18 14a6.5 6.5 0 013.5 6"/>',
+    cupom: '<path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V8z"/><path d="M14 6v12" stroke-dasharray="2 2"/>',
+    lista: '<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+    envelope: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    lupa: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
   };
   return (nome, cls = 'w-5 h-5') =>
     `<svg class="${cls}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">${P[nome] || ''}</svg>`;
@@ -132,3 +147,27 @@ window.soltarFaiscas = (elemento) => {
   elemento.appendChild(caixa);
   setTimeout(() => caixa.remove(), 800);
 };
+
+// Modo escuro: escolha guardada neste navegador (padrão: claro)
+window.Tema = (() => {
+  const CHAVE = 'es_tema';
+  const ler = () => { try { return localStorage.getItem(CHAVE) || ''; } catch { return ''; } };
+  const escuro = () => document.documentElement.classList.contains('escuro');
+  function aplicar(sim) {
+    document.documentElement.classList.toggle('escuro', sim);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', sim ? '#020617' : '#00174F');
+    document.querySelectorAll('[data-tema]').forEach((b) => {
+      b.innerHTML = Icone(sim ? 'sol' : 'lua', b.dataset.temaClasse || 'w-4 h-4');
+      b.setAttribute('aria-label', sim ? 'Usar modo claro' : 'Usar modo escuro');
+      b.title = sim ? 'Modo claro' : 'Modo escuro';
+    });
+  }
+  function alternar() {
+    const sim = !escuro();
+    try { localStorage.setItem(CHAVE, sim ? 'escuro' : 'claro'); } catch {}
+    aplicar(sim);
+  }
+  const salvo = ler();
+  aplicar(salvo === 'escuro');
+  return { escuro, alternar, aplicar };
+})();

@@ -51,7 +51,28 @@ const App = (() => {
     perfilCache.assinatura = assinatura || null;
     perfilCache.premium = temPremium(assinatura);
     if (data) perfilCache.aparelho = await checarAparelho(forcar);
+    if (data) await convitesPendentes(perfilCache);
     return perfilCache;
+  }
+
+  // Link de indicação (?ref=) e convite de turma (?turma=) guardados antes do cadastro/login
+  const lerLocal = (k) => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
+  const gravarLocal = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} };
+  async function convitesPendentes(p) {
+    const ref = lerLocal('es_ref');
+    if (ref) {
+      gravarLocal('es_ref', '');
+      if (!p.indicado_por && ref !== p.codigo_indicacao) {
+        const { data: ok } = await sb.rpc('registrar_indicacao', { p_codigo: ref });
+        if (ok) p.indicado_por = ref;
+      }
+    }
+    const turma = lerLocal('es_turma');
+    if (turma) {
+      gravarLocal('es_turma', '');
+      const { data: nome, error } = await sb.rpc('entrar_turma', { p_codigo: turma });
+      if (!error && nome) setTimeout(() => toast(`Você entrou na turma "${nome}".`), 600);
+    }
   }
 
   const limparPerfil = () => { perfilCache = null; };
@@ -80,22 +101,25 @@ const App = (() => {
 
   // Progresso e certificados de um aluno (o banco só devolve os dele; o admin vê todos)
   async function dadosDoAluno(id) {
-    const [prog, cert, ses] = await Promise.all([
+    const [prog, cert, ses, prot] = await Promise.all([
       sb.from('progresso').select('*').eq('aluno_id', id),
       sb.from('certificados').select('*').eq('aluno_id', id),
       sb.from('sessoes_revisao').select('*').eq('aluno_id', id),
+      sb.from('dias_protegidos').select('*').eq('aluno_id', id),
     ]);
     if (prog.error) throw prog.error;
     if (cert.error) throw cert.error;
-    return { progresso: prog.data || [], certificados: cert.data || [], sessoes: ses.error ? [] : ses.data || [] };
+    return { progresso: prog.data || [], certificados: cert.data || [], sessoes: ses.error ? [] : ses.data || [], protegidos: prot?.error ? [] : prot?.data || [] };
   }
 
   // Conta atividades e dias de estudo a partir do progresso (lições) e das sessões de revisão
-  function estatisticas(progresso, meta = 3, sessoes = []) {
+  // protegidos: dias comprados na loja ("protetor de sequência"), contam como estudados
+  function estatisticas(progresso, meta = 3, sessoes = [], protegidos = []) {
     const agora = Date.now();
     const seteDias = progresso.filter((p) => agora - new Date(p.atualizada_em).getTime() <= 7 * 864e5);
     const revisoesSemana = sessoes.filter((x) => agora - new Date(x.feita_em).getTime() <= 7 * 864e5).length;
-    const dias = new Set([...progresso.flatMap((p) => [p.concluida_em, p.atualizada_em]), ...sessoes.map((x) => x.feita_em)].map((d) => new Date(d).toDateString()));
+    const dias = new Set([...progresso.flatMap((p) => [p.concluida_em, p.atualizada_em]), ...sessoes.map((x) => x.feita_em)].filter(Boolean).map((d) => new Date(d).toDateString()));
+    protegidos.forEach((x) => { const [a, m, d] = String(x.dia).split('-').map(Number); if (a) dias.add(new Date(a, m - 1, d).toDateString()); });
     let sequencia = 0;
     const dia = new Date();
     if (!dias.has(dia.toDateString())) dia.setDate(dia.getDate() - 1); // conta até ontem se hoje ainda não estudou
@@ -127,7 +151,9 @@ const App = (() => {
   const ICONES_AVATAR = ['capelo', 'livro', 'globo', 'estrela', 'foguete', 'microfone', 'fone', 'cafe'];
   const iniciaisDe = (nome) => String(nome || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
 
-  function avatarHtml(p, cls = 'w-10 h-10 text-sm') {
+  const MOLDURAS = ['moldura_ouro', 'moldura_neon', 'moldura_arco', 'moldura_diamante'];
+  function avatarHtml(p, clsBase = 'w-10 h-10 text-sm') {
+    const cls = MOLDURAS.includes(p?.moldura) ? `${clsBase} moldura ${p.moldura.replace('_', '-')}` : clsBase;
     const av = p?.avatar || '';
     const ini = escapar(iniciaisDe(p?.nome));
     if (av.startsWith('https://')) {
@@ -174,12 +200,15 @@ const App = (() => {
         ${item('#/perfil', 'usuario', 'Meu perfil')}
         ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do professor') : item('#/curso', 'capelo', 'Minha trilha')}
         ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
+        ${p.papel === 'aluno' && p.nivel_num ? item('#/loja', 'loja', 'Loja de moedas') : ''}
         ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
         ${item('#/termos', 'documento', 'Termos e privacidade')}
+        <button data-menu-tema class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Tema.escuro() ? 'sol' : 'lua', 'w-4 h-4 text-slate-400')}${Tema.escuro() ? 'Modo claro' : 'Modo escuro'}</button>
       </div>
       <button data-menu-sair class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-slate-100 transition">${Icone('sair', 'w-4 h-4')}Sair</button>`;
     document.body.appendChild(menu);
     menu.querySelector('[data-menu-sair]').addEventListener('click', () => { fecharMenuAvatar(); sair(); });
+    menu.querySelector('[data-menu-tema]').addEventListener('click', () => { fecharMenuAvatar(); Tema.alternar(); });
     menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', fecharMenuAvatar));
   }
 
@@ -205,7 +234,12 @@ const App = (() => {
     const [caminho, consulta] = hash.slice(2).split('?');
     const rota = caminho || 'inicio';
     const params = new URLSearchParams(consulta || '');
-    const APELIDOS = { cadastro: 'entrar', recuperar: 'entrar', redefinir: 'entrar', treino: 'licao' };
+    if (/^[A-Za-z0-9]{4,12}$/.test(params.get('ref') || '')) gravarLocal('es_ref', params.get('ref').toUpperCase());
+    if (/^[A-Za-z0-9]{4,12}$/.test(params.get('turma') || '')) {
+      gravarLocal('es_turma', params.get('turma').toUpperCase());
+      if (await usuario()) { limparPerfil(); await perfil(true).catch(() => {}); }
+    }
+    const APELIDOS = { cadastro: 'entrar', recuperar: 'entrar', redefinir: 'entrar', treino: 'licao', conquistas: 'perfil' };
     const nome = APELIDOS[rota] || rota;
     const tela = telas[nome];
     if (!tela) { location.hash = '#/'; return; }
@@ -214,7 +248,7 @@ const App = (() => {
     fecharMenuAvatar();
 
     // aparelho acima do limite: só pode ver a tela de aparelhos, os termos e a página inicial
-    if (!['inicio', 'entrar', 'termos', 'dispositivos'].includes(nome)) {
+    if (!['inicio', 'entrar', 'termos', 'dispositivos', 'verificar'].includes(nome)) {
       try {
         const p = (await usuario()) ? await perfil() : null;
         if (minha !== navegacaoAtual) return;
@@ -250,6 +284,8 @@ const App = (() => {
     return 'Algo deu errado ao abrir esta tela. Recarregue a página (F5) e tente de novo.';
   }
 
+  let instalar = null; // evento de instalação do app (Android/Chrome)
+
   function iniciar() {
     document.getElementById('ano').textContent = new Date().getFullYear();
     document.querySelectorAll('[data-sair]').forEach((b) => b.addEventListener('click', sair));
@@ -263,6 +299,23 @@ const App = (() => {
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharMenuAvatar(); });
     window.addEventListener('resize', fecharMenuAvatar);
+    document.querySelectorAll('[data-tema]').forEach((b) => b.addEventListener('click', () => Tema.alternar()));
+    // App instalável (PWA): só funciona no site publicado (https)
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      instalar = e;
+      document.querySelectorAll('[data-instalar]').forEach((b) => b.classList.remove('hidden'));
+    });
+    document.querySelectorAll('[data-instalar]').forEach((b) => b.addEventListener('click', async () => {
+      if (!instalar) return toast('No iPhone: toque em Compartilhar e depois em "Adicionar à Tela de Início".');
+      instalar.prompt();
+      await instalar.userChoice.catch(() => {});
+      instalar = null;
+      document.querySelectorAll('[data-instalar]').forEach((x) => x.classList.add('hidden'));
+    }));
     if (!sb) { mostrar('inicio'); return; } // biblioteca do Supabase não carregou: config.js já avisa na tela
     // Link de "esqueci minha senha" aberto com o site publicado: o Supabase devolve #access_token=...&type=recovery
     const hashInicial = location.hash;
@@ -282,5 +335,5 @@ const App = (() => {
     navegar();
   }
 
-  return { checarAparelho, temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
+  return { lerLocal, gravarLocal, checarAparelho, temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
 })();

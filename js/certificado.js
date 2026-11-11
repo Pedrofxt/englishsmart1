@@ -54,6 +54,7 @@
               <div class="text-right">
                 <p class="text-xs uppercase tracking-widest text-slate-400">Código de verificação</p>
                 <p class="font-mono font-semibold text-navy-900">${App.escapar(c.codigo)}</p>
+                <p class="text-[11px] text-slate-400">Confira em ${App.escapar(SITE_URL.replace(/^https:\/\//, ''))}/#/verificar</p>
               </div>
             </div>
           </div>

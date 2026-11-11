@@ -831,3 +831,319 @@ grant execute on function public.registrar_revisao(text,jsonb,int,int,text) to a
 grant execute on function public.registrar_dispositivo(text,text,text) to authenticated;
 grant execute on function public.remover_dispositivo(text,text) to authenticated;
 grant execute on function public.admin_limpar_dispositivos(uuid) to authenticated;
+-- =====================================================================
+-- MELHORIAS: plano anual, cupons, indique um amigo, turmas, ranking,
+-- verificação de certificado, trilhas extras, lembretes por e-mail, eventos do Mercado Pago
+-- =====================================================================
+
+-- ---------- Plano mensal/anual e cupons ----------
+alter table public.assinaturas add column if not exists plano text not null default 'mensal' check (plano in ('mensal', 'anual'));
+alter table public.pagamentos  add column if not exists plano text check (plano in ('mensal', 'anual'));
+alter table public.pagamentos  add column if not exists cupom text;
+
+create table if not exists public.cupons (
+  codigo     text primary key check (codigo ~ '^[A-Z0-9]{3,20}$'),
+  desconto   int  not null check (desconto between 1 and 100),   -- % de desconto
+  valido_ate timestamptz,
+  usos_max   int check (usos_max is null or usos_max > 0),
+  usos       int not null default 0,
+  ativo      boolean not null default true,
+  criado_em  timestamptz not null default now()
+);
+alter table public.cupons enable row level security;
+drop policy if exists "admin vê cupons" on public.cupons;
+create policy "admin vê cupons" on public.cupons for select to authenticated using ((select public.eh_admin()));
+
+create or replace function public.admin_salvar_cupom(p_codigo text, p_desconto int, p_valido_ate timestamptz, p_usos_max int, p_ativo boolean)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito ao administrador.'; end if;
+  insert into public.cupons (codigo, desconto, valido_ate, usos_max, ativo)
+  values (upper(trim(p_codigo)), p_desconto, p_valido_ate, p_usos_max, coalesce(p_ativo, true))
+  on conflict (codigo) do update set desconto = excluded.desconto, valido_ate = excluded.valido_ate, usos_max = excluded.usos_max, ativo = excluded.ativo;
+end; $$;
+
+create or replace function public.admin_excluir_cupom(p_codigo text)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito ao administrador.'; end if;
+  delete from public.cupons where codigo = upper(trim(p_codigo));
+end; $$;
+
+-- O aluno confere um cupom antes de pagar (só devolve o desconto)
+create or replace function public.validar_cupom(p_codigo text)
+returns int language sql stable security definer set search_path = '' as $$
+  select desconto from public.cupons
+   where codigo = upper(trim(p_codigo)) and ativo
+     and (valido_ate is null or valido_ate > now())
+     and (usos_max is null or usos < usos_max);
+$$;
+
+-- ---------- Indique um amigo ----------
+alter table public.alunos add column if not exists codigo_indicacao text unique default upper(substr(md5(gen_random_uuid()::text), 1, 8));
+alter table public.alunos add column if not exists indicado_por text;
+update public.alunos set codigo_indicacao = upper(substr(md5(gen_random_uuid()::text), 1, 8)) where codigo_indicacao is null;
+
+create table if not exists public.indicacoes_bonus (
+  indicado   uuid primary key references public.alunos(id) on delete cascade,
+  indicador  uuid not null references public.alunos(id) on delete cascade,
+  dias       int not null default 30,
+  criado_em  timestamptz not null default now()
+);
+alter table public.indicacoes_bonus enable row level security;
+drop policy if exists "indicador vê os bônus" on public.indicacoes_bonus;
+create policy "indicador vê os bônus" on public.indicacoes_bonus for select to authenticated
+  using (indicador = (select auth.uid()) or (select public.eh_admin()));
+
+-- O aluno registra quem o indicou (uma vez, nos 7 primeiros dias, sem ser ele mesmo)
+create or replace function public.registrar_indicacao(p_codigo text)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); a public.alunos;
+begin
+  select * into a from public.alunos where id = uid;
+  if a.id is null or a.indicado_por is not null or a.criado_em < now() - interval '7 days' then return false; end if;
+  if upper(trim(p_codigo)) = a.codigo_indicacao then return false; end if;
+  if not exists (select 1 from public.alunos where codigo_indicacao = upper(trim(p_codigo))) then return false; end if;
+  update public.alunos set indicado_por = upper(trim(p_codigo)) where id = uid;
+  return true;
+end; $$;
+
+-- ---------- Turmas com código de convite ----------
+create table if not exists public.turmas (
+  id        uuid primary key default gen_random_uuid(),
+  nome      text not null check (char_length(nome) between 2 and 60),
+  codigo    text not null unique default upper(substr(md5(gen_random_uuid()::text), 1, 6)),
+  criada_em timestamptz not null default now()
+);
+alter table public.alunos add column if not exists turma_id uuid references public.turmas(id) on delete set null;
+alter table public.turmas enable row level security;
+drop policy if exists "aluno vê a própria turma" on public.turmas;
+create policy "aluno vê a própria turma" on public.turmas for select to authenticated
+  using ((select public.eh_admin()) or id = (select turma_id from public.alunos where id = (select auth.uid())));
+
+create or replace function public.admin_salvar_turma(p_nome text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare c text;
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito ao administrador.'; end if;
+  insert into public.turmas (nome) values (trim(p_nome)) returning codigo into c;
+  return c;
+end; $$;
+
+create or replace function public.admin_excluir_turma(p_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito ao administrador.'; end if;
+  delete from public.turmas where id = p_id;
+end; $$;
+
+create or replace function public.entrar_turma(p_codigo text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare t public.turmas;
+begin
+  select * into t from public.turmas where codigo = upper(trim(p_codigo));
+  if t.id is null then raise exception 'Código de turma não encontrado.'; end if;
+  update public.alunos set turma_id = t.id where id = auth.uid();
+  if not found then raise exception 'Apenas alunos entram em turmas.'; end if;
+  return t.nome;
+end; $$;
+
+create or replace function public.sair_turma()
+returns void language sql security definer set search_path = '' as $$
+  update public.alunos set turma_id = null where id = auth.uid();
+$$;
+
+-- ---------- Ranking semanal (opcional para cada aluno) ----------
+alter table public.alunos add column if not exists ranking_publico boolean not null default false;
+
+create or replace function public.definir_ranking(p_publico boolean)
+returns void language sql security definer set search_path = '' as $$
+  update public.alunos set ranking_publico = coalesce(p_publico, false) where id = auth.uid();
+$$;
+
+-- Pontos da semana: 10 por acerto nas lições atualizadas nos últimos 7 dias + XP das revisões da semana
+create or replace function public.ranking_semanal()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); resultado jsonb;
+begin
+  with pontos as (
+    select a.id, a.ranking_publico, a.nome,
+           coalesce((select sum(p.acertos) * 10 from public.progresso p where p.aluno_id = a.id and p.atualizada_em > now() - interval '7 days'), 0)
+         + coalesce((select sum(s.xp) from public.sessoes_revisao s where s.aluno_id = a.id and s.feita_em > now() - interval '7 days'), 0) as total
+      from public.alunos a
+  ), visiveis as (
+    select *, rank() over (order by total desc) as posicao from pontos where (ranking_publico or id = uid) and total > 0
+  )
+  select jsonb_build_object(
+    'top', coalesce((select jsonb_agg(jsonb_build_object(
+              'posicao', posicao,
+              'nome', split_part(nome, ' ', 1) || coalesce(' ' || left(nullif(split_part(nome, ' ', 2), ''), 1) || '.', ''),
+              'pontos', total, 'eu', id = uid) order by posicao)
+            from (select * from visiveis order by posicao limit 10) t), '[]'),
+    'minha_posicao', (select posicao from visiveis where id = uid),
+    'meus_pontos', (select total from pontos where id = uid),
+    'participo', (select ranking_publico from public.alunos where id = uid)
+  ) into resultado;
+  return resultado;
+end; $$;
+
+-- ---------- Verificação pública de certificado ----------
+create or replace function public.verificar_certificado(p_codigo text)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('nome', a.nome, 'nivel_num', c.nivel_num, 'nivel', public.nivel_cefr(c.nivel_num), 'emitido_em', c.emitido_em, 'codigo', c.codigo)
+    from public.certificados c join public.alunos a on a.id = c.aluno_id
+   where c.codigo = upper(trim(p_codigo)) and upper(trim(p_codigo)) ~ '^[A-Z0-9]{6,16}$';
+$$;
+
+-- ---------- Trilhas extras (viagem 101, entrevista 102, trabalho 103) ----------
+alter table public.progresso drop constraint if exists progresso_nivel_num_check;
+alter table public.progresso add constraint progresso_nivel_num_check check (nivel_num between 1 and 16 or nivel_num between 101 and 103);
+
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('public.registrar_atividade(int,int,int,int,text)'::regprocedure);
+  d := replace(d, 'if p_nivel is null or p_nivel < 1 or p_nivel > aluno.nivel_num then raise exception ''Este nível ainda está bloqueado.''; end if;',
+    'if p_nivel is null or p_nivel < 1 or (p_nivel <= 16 and p_nivel > aluno.nivel_num) or (p_nivel > 16 and p_nivel not between 101 and 103) then raise exception ''Este nível ainda está bloqueado.''; end if;' || chr(10) ||
+    '  if p_nivel > 100 and p_licao = 0 then raise exception ''As trilhas extras não têm teste.''; end if;');
+  execute d;
+end $$;
+
+-- ---------- Eventos do Mercado Pago (para a checagem de configuração) ----------
+create table if not exists public.mp_eventos (
+  id          bigint generated always as identity primary key,
+  tipo        text,
+  recebido_em timestamptz not null default now()
+);
+alter table public.mp_eventos enable row level security;
+drop policy if exists "admin vê eventos" on public.mp_eventos;
+create policy "admin vê eventos" on public.mp_eventos for select to authenticated using ((select public.eh_admin()));
+
+-- ---------- Lembretes de vencimento por e-mail ----------
+create table if not exists public.lembretes_enviados (
+  aluno_id  uuid not null references public.alunos(id) on delete cascade,
+  tipo      text not null check (tipo in ('3d', '1d', 'venceu')),
+  ref       date not null,               -- data de vencimento a que o lembrete se refere
+  enviado_em timestamptz not null default now(),
+  primary key (aluno_id, tipo, ref)
+);
+alter table public.lembretes_enviados enable row level security;
+drop policy if exists "admin vê lembretes" on public.lembretes_enviados;
+create policy "admin vê lembretes" on public.lembretes_enviados for select to authenticated using ((select public.eh_admin()));
+
+-- Configuração privada (só o servidor lê): segredo do agendamento diário
+create table if not exists public.config_privada (chave text primary key, valor text not null);
+alter table public.config_privada enable row level security;
+insert into public.config_privada (chave, valor)
+values ('cron_segredo', encode(extensions.gen_random_bytes(24), 'hex'))
+on conflict (chave) do nothing;
+
+revoke all on function public.admin_salvar_cupom(text,int,timestamptz,int,boolean) from public, anon;
+revoke all on function public.admin_excluir_cupom(text) from public, anon;
+revoke all on function public.validar_cupom(text) from public, anon;
+revoke all on function public.registrar_indicacao(text) from public, anon;
+revoke all on function public.admin_salvar_turma(text) from public, anon;
+revoke all on function public.admin_excluir_turma(uuid) from public, anon;
+revoke all on function public.entrar_turma(text) from public, anon;
+revoke all on function public.sair_turma() from public, anon;
+revoke all on function public.definir_ranking(boolean) from public, anon;
+revoke all on function public.ranking_semanal() from public, anon;
+revoke all on function public.verificar_certificado(text) from public;
+grant execute on function public.admin_salvar_cupom(text,int,timestamptz,int,boolean) to authenticated;
+grant execute on function public.admin_excluir_cupom(text) to authenticated;
+grant execute on function public.validar_cupom(text) to authenticated;
+grant execute on function public.registrar_indicacao(text) to authenticated;
+grant execute on function public.admin_salvar_turma(text) to authenticated;
+grant execute on function public.admin_excluir_turma(uuid) to authenticated;
+grant execute on function public.entrar_turma(text) to authenticated;
+grant execute on function public.sair_turma() to authenticated;
+grant execute on function public.definir_ranking(boolean) to authenticated;
+grant execute on function public.ranking_semanal() to authenticated;
+grant execute on function public.verificar_certificado(text) to anon, authenticated;
+
+
+-- =====================================================================
+-- LEMBRETES AGENDADOS (pg_cron + pg_net) E LOJA DE MOEDAS
+-- =====================================================================
+create extension if not exists pg_net;
+create extension if not exists pg_cron;
+select cron.unschedule('lembretes-diarios') where exists (select 1 from cron.job where jobname = 'lembretes-diarios');
+select cron.schedule('lembretes-diarios', '0 12 * * *', $cron$
+  select net.http_post(
+    url := 'https://wfxqxvlcrqbwvcvqslzi.supabase.co/functions/v1/lembretes',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron', (select valor from public.config_privada where chave = 'cron_segredo')),
+    body := '{}'::jsonb
+  );
+$cron$);
+
+alter table public.alunos add column if not exists moldura text;
+create table if not exists public.compras (
+  id bigint generated always as identity primary key,
+  aluno_id uuid not null references public.alunos(id) on delete cascade,
+  item text not null, custo int not null check (custo >= 0), criada_em timestamptz not null default now()
+);
+create index if not exists compras_aluno on public.compras (aluno_id);
+create table if not exists public.dias_protegidos (
+  aluno_id uuid not null references public.alunos(id) on delete cascade, dia date not null, primary key (aluno_id, dia)
+);
+alter table public.compras enable row level security;
+alter table public.dias_protegidos enable row level security;
+drop policy if exists "aluno vê as próprias compras" on public.compras;
+create policy "aluno vê as próprias compras" on public.compras for select to authenticated using (aluno_id = (select auth.uid()) or (select public.eh_admin()));
+drop policy if exists "aluno vê os próprios dias protegidos" on public.dias_protegidos;
+create policy "aluno vê os próprios dias protegidos" on public.dias_protegidos for select to authenticated using (aluno_id = (select auth.uid()) or (select public.eh_admin()));
+
+create or replace function public.saldo_moedas(p_aluno uuid)
+returns int language sql stable security definer set search_path = '' as $$
+  select coalesce((select xp / 10 from public.alunos where id = p_aluno), 0)
+       - coalesce((select sum(custo) from public.compras where aluno_id = p_aluno), 0)::int;
+$$;
+
+create or replace function public.comprar_item(p_item text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); custo int; saldo int; ontem date := (now() at time zone 'America/Sao_Paulo')::date - 1; s public.assinaturas;
+begin
+  if not exists (select 1 from public.alunos where id = uid) then raise exception 'Apenas alunos usam a loja.'; end if;
+  custo := case p_item when 'moldura_ouro' then 300 when 'moldura_neon' then 300 when 'moldura_arco' then 500 when 'moldura_diamante' then 1000
+    when 'protetor' then 150 when 'dias7' then 1500 else null end;
+  if custo is null then raise exception 'Item não encontrado.'; end if;
+  if p_item like 'moldura_%' and exists (select 1 from public.compras where aluno_id = uid and item = p_item) then
+    update public.alunos set moldura = p_item where id = uid;
+    return jsonb_build_object('ok', true, 'saldo', public.saldo_moedas(uid), 'ja_tinha', true);
+  end if;
+  perform pg_advisory_xact_lock(hashtext(uid::text));
+  saldo := public.saldo_moedas(uid);
+  if saldo < custo then raise exception 'Moedas insuficientes: você tem % e o item custa %.', saldo, custo; end if;
+  if p_item = 'protetor' then
+    if exists (select 1 from public.dias_protegidos where aluno_id = uid and dia = ontem)
+       or exists (select 1 from public.progresso where aluno_id = uid and (atualizada_em at time zone 'America/Sao_Paulo')::date = ontem)
+       or exists (select 1 from public.sessoes_revisao where aluno_id = uid and (feita_em at time zone 'America/Sao_Paulo')::date = ontem) then
+      raise exception 'Você estudou ontem: sua sequência não precisa de proteção.';
+    end if;
+    insert into public.dias_protegidos (aluno_id, dia) values (uid, ontem);
+  elsif p_item = 'dias7' then
+    select * into s from public.assinaturas where aluno_id = uid;
+    if s.status = 'ativa' then raise exception 'Sua assinatura no cartão renova sozinha; os dias extras são para quem paga com Pix.'; end if;
+    insert into public.assinaturas (aluno_id, pago_ate, status)
+    values (uid, greatest(now() + interval '3 days', coalesce(s.pago_ate, now())) + interval '7 days', 'pendente')
+    on conflict (aluno_id) do update set pago_ate = greatest(now() + interval '3 days', coalesce(public.assinaturas.pago_ate, now())) + interval '7 days', atualizada_em = now();
+  else
+    update public.alunos set moldura = p_item where id = uid;
+  end if;
+  insert into public.compras (aluno_id, item, custo) values (uid, p_item, custo);
+  return jsonb_build_object('ok', true, 'saldo', public.saldo_moedas(uid));
+end; $$;
+
+create or replace function public.usar_moldura(p_item text)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if p_item is null then update public.alunos set moldura = null where id = auth.uid(); return; end if;
+  if not exists (select 1 from public.compras where aluno_id = auth.uid() and item = p_item) then raise exception 'Você ainda não tem esta moldura.'; end if;
+  update public.alunos set moldura = p_item where id = auth.uid();
+end; $$;
+
+revoke all on function public.saldo_moedas(uuid) from public, anon, authenticated;
+revoke all on function public.comprar_item(text) from public, anon;
+revoke all on function public.usar_moldura(text) from public, anon;
+grant execute on function public.comprar_item(text) to authenticated;
+grant execute on function public.usar_moldura(text) to authenticated;

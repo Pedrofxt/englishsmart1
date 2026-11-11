@@ -5,6 +5,20 @@ estadual (prova de nivelamento, 16 níveis alinhados ao CEFR, metas semanais e c
 Feita em HTML, Tailwind e JavaScript, com banco e login no **Supabase**.
 
 **Não precisa de servidor, Node ou terminal: é só dar dois cliques no `index.html`.**
+**Nada depende de CNPJ:** Mercado Pago (conta de pessoa física, chave Pix no CPF/e-mail/celular), Supabase, Resend e
+Cloudflare funcionam com CPF. O campo de CPF/CNPJ nos Termos é opcional.
+
+## Novidades desta versão
+| Para o aluno | Para você (portal do professor) |
+|---|---|
+| **Plano anual** (R$ 299,90, cartão ou Pix) e **cupons** de desconto no Pix | Aba **Financeiro**: receita do mês, recorrente, novos, cancelamentos, vencimentos da semana, renovação no Pix, gráfico de 6 meses |
+| **Indique um amigo**: +30 dias quando o amigo faz o 1º pagamento | **Exportar CSV** de alunos e de pagamentos (abre no Excel) |
+| **Loja de moedas** (10 XP = 1 moeda): molduras de avatar, protetor de sequência e +7 dias de acesso | **Turmas** com código/link de convite e filtro por turma |
+| **Medalhas** (16) e **ranking semanal** (só aparece quem quiser) | **Cupons**: criar, pausar, limitar usos e validade |
+| **Trilhas extras**: Viagem, Entrevista de emprego e Inglês no trabalho | **Erros mais comuns** dos alunos (para aulas de reforço) |
+| **Pronúncia palavra por palavra** na prática de fala | **Checklist de lançamento** que confere a configuração sozinho |
+| **Modo escuro**, **app instalável** (PWA) e mini lição grátis na página inicial | **Lembretes por e-mail** antes de o acesso vencer (automáticos) |
+| Mensagem própria de **acesso vencido** ("continue do nível N") | Página pública **Verificar certificado** (`#/verificar`) |
 
 ## Como usar
 
@@ -19,7 +33,7 @@ Para o aluno entrar logo depois de criar a conta, sem confirmar o e-mail:
 
 ### Responsável nos Termos
 Os Termos de Uso e a Política de Privacidade já mostram **Pedro de Farias Xavier Toledo** como responsável e
-**pedro.farias.toledo@gmail.com** como contato (em `js/config.js`). O CPF/CNPJ é opcional: se quiser exibir, preencha `RESPONSAVEL_DOC`.
+**pedro.farias.toledo@gmail.com** como contato (em `js/config.js`). O CPF/CNPJ é opcional (não é exigido para nada): se quiser exibir, preencha `RESPONSAVEL_DOC`.
 
 ### "Esqueci minha senha": dois ajustes no Supabase
 **1. Colocar o código no e-mail (1 minuto).** Abra
@@ -58,9 +72,13 @@ Cria a conta (grátis) ──▶ Prova de nivelamento (grátis) ──▶ Vê o 
 **Formas de pagamento** (em `#/planos`, abas Cartão e Pix):
 - **Cartão de crédito:** assinatura com cobrança automática todo mês pelo Mercado Pago.
 - **Pix:** o site gera na hora o **QR Code** e o **Pix copia e cola** (válidos por 30 minutos, com contagem regressiva).
-  Assim que o banco confirma, o acesso é liberado sozinho por **30 dias**. Cada novo Pix soma 30 dias ao que falta,
-  e faltando 5 dias aparece na trilha o aviso "Renovar com Pix". (A renovação automática pela API do Mercado Pago é no
-  cartão; por isso o Pix funciona como pacote de 30 dias.) Pix estornado retira os 30 dias.
+  Assim que o banco confirma, o acesso é liberado sozinho por **30 dias** (ou **365** no anual), com **3 dias de
+  tolerância** depois do vencimento. Cada novo Pix soma os dias ao que falta; faltando 5 dias aparece na trilha o aviso
+  "Renovar com Pix" e o aluno recebe **e-mails 3 dias antes, 1 dia antes e no vencimento**. Quando acaba, ele vê
+  "Seu acesso terminou em dd/mm. Renove para continuar do nível N" (nada é apagado). Pix estornado retira os dias.
+- **Plano anual:** R$ 299,90 (economia de R$ 59,98). No cartão, cobra uma vez por ano; no Pix, libera 365 dias.
+  Mude o valor cobrado com o segredo `PLANO_ANUAL_VALOR` e o valor mostrado em `PLANO_ANUAL` (`js/config.js`).
+- **Cupons (só Pix):** crie no portal (aba *Turmas e cupons*). O aluno digita o código na aba Pix e o QR Code já sai com desconto.
 
 **Como funciona:** o aluno escolhe a forma de pagamento, paga e a trilha é liberada sozinha, sem recarregar a página. Ele cancela em **Meu plano** e continua com acesso até o fim do mês pago.
 Excluir a conta também cancela a cobrança. O professor vê o plano de cada aluno, os assinantes e a receita estimada no
@@ -98,6 +116,21 @@ com o novo valor (o que é cobrado). Assinaturas antigas continuam com o valor a
 - O conteúdo das lições fica no navegador; a trava real está no banco: sem assinatura não há progresso, teste, certificado nem revisão.
 - Os Termos de Uso já têm a cláusula da assinatura (preço, renovação, cancelamento e os 7 dias de arrependimento do CDC)
   e a Política de Privacidade cita o Mercado Pago.
+
+### Lembretes de vencimento por e-mail
+Já agendados no banco (todo dia às 9h de Brasília). Para os e-mails saírem, crie uma conta grátis no
+**Resend** (https://resend.com, 3.000 e-mails/mês, só com e-mail/CPF) e salve em
+https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/functions/secrets:
+- `RESEND_API_KEY`: a chave do Resend (obrigatório)
+- `EMAIL_REMETENTE`: ex. `English Smart <contato@englishsmart.app.br>` (depois de verificar o domínio no Resend; sem isso, usa o remetente de teste do Resend)
+- `SITE_URL`: `https://englishsmart.app.br` (padrão)
+
+Quem paga no cartão não recebe (renova sozinho). Cada aviso vai uma vez só. O portal tem o botão *Enviar lembretes agora*.
+
+### Indique um amigo
+Cada aluno tem um link (`#/cadastro?ref=CÓDIGO`) em *Minha assinatura* e em *Meu perfil*, com botão de WhatsApp.
+Quando o amigo cria a conta pelo link (até 7 dias) e faz o **primeiro pagamento aprovado**, quem indicou ganha
+**+30 dias** sozinho. Sem limite de indicações; não vale indicar a si mesmo.
 
 ## Limite de 4 aparelhos por conta
 Para impedir que uma assinatura seja compartilhada, cada conta fica conectada em no máximo **4 aparelhos**
@@ -180,18 +213,49 @@ memória dele. Cada acerto empurra o item para uma caixa mais alta e aumenta o i
 - A tela mostra itens para hoje, força da memória, dominados, sessões da semana e os **pontos fracos** (lições com mais erros).
 - Cada acerto vale 5 XP (até 100 XP de revisão por dia) e cada sessão conta na **meta semanal** e na **sequência**.
 
+### Trilhas extras
+Três trilhas de 4 lições cada, liberadas para quem assina, em qualquer ordem: **Inglês para viagem** (aeroporto, hotel,
+transporte, imprevistos), **Entrevista de emprego** (apresentação, pontos fortes, conquistas, encerramento) e
+**Inglês no trabalho** (e-mails, reuniões, conversa com colegas, apresentações). Somam XP, meta e sequência; não têm
+teste nem certificado e não entram na revisão. O conteúdo fica em `EXTRAS`, no fim de `js/curriculo.js`.
+
 ### Motivação
 - **Meta semanal** (o aluno escolhe de 1 a 14 atividades), **XP** (10 por acerto, +100 por nível) e **sequência de dias**.
-- **Certificado** imprimível (ou salvo em PDF) a cada nível, com código de verificação.
+- **Certificado** imprimível (ou salvo em PDF) a cada nível, com código de verificação. Qualquer pessoa confere em
+  **`#/verificar`** (link no rodapé), sem login.
+- **Medalhas** (16, em *Meu perfil*): primeira lição, 10 e 30 lições, 100% numa lição, sequências de 3/7/30 dias,
+  certificados, B1 e C1, revisões, XP, trilha extra e primeira compra. Medalha nova aparece em destaque.
+- **Ranking semanal:** pontos dos últimos 7 dias (10 por acerto nas lições + XP da revisão). Cada aluno escolhe se
+  aparece (primeiro nome e inicial); quem não participa vê só a própria posição.
+- **Loja de moedas** (`#/loja`): cada 10 XP vira 1 moeda; gastar não tira XP nem posição no ranking.
+
+| Item | Moedas | O que faz |
+|---|---|---|
+| Protetor de sequência | 150 | Conta o dia de ontem como estudado |
+| Moldura Ouro / Neon | 300 | Contorno no avatar |
+| Moldura Arco-íris | 500 | Contorno no avatar |
+| Moldura Diamante | 1.000 | Contorno animado no avatar |
+| +7 dias de acesso | 1.500 | Soma 7 dias (para quem paga com Pix; quem venceu também pode trocar) |
+
+O saldo e as compras são conferidos no banco (função `comprar_item`), então ninguém compra sem moedas.
 
 ## Conta do aluno
-- **Avatar no canto superior direito** de todas as telas logadas, com menu: Meu perfil, Minha trilha, Termos e privacidade e Sair.
+- **Avatar no canto superior direito** de todas as telas logadas, com menu: Meu perfil, Minha trilha, Revisão, Loja de moedas, Assinatura, Termos, Modo escuro e Sair.
 - **Meu perfil** (`#/perfil`): nome, telefone e cidade; foto de perfil (recortada e reduzida automaticamente, guardada no Supabase Storage)
-  ou avatar com cor ou ícone; troca de senha; progresso; certificados; e **Excluir conta** (apaga tudo, conforme a LGPD).
+  ou avatar com cor ou ícone; troca de senha; progresso; medalhas; ranking; **turma** (código do professor); indique um amigo;
+  certificados; aparelhos; e **Excluir conta** (apaga tudo, conforme a LGPD).
 - **Termos de Uso e Política de Privacidade** (`#/termos`): aba no topo da página inicial e no rodapé. O cadastro exige o aceite,
   que fica registrado com data e versão.
 
+## Modo escuro e app no celular
+- **Modo escuro:** botão de lua no topo da página inicial e no menu do avatar. A escolha fica no navegador.
+- **App instalável (PWA):** no site publicado, o Chrome do Android oferece "Instalar app" (botão no rodapé); no iPhone,
+  Compartilhar → *Adicionar à Tela de Início*. O app abre direto na trilha, com o ícone do English Smart.
+
 ## Prática de fala (microfone)
+Na correção automática, o aluno vê a **frase palavra por palavra**: verde (entendida), amarelo (quase) e vermelho
+riscado (não entendida), com dica de quais treinar; tocar numa palavra toca o áudio dela devagar.
+
 A atividade "Fale em inglês" escolhe sozinha o melhor modo que o navegador permite:
 
 | Situação | O que acontece |
@@ -214,9 +278,26 @@ Entre com o e-mail da tabela `admins` (hoje `pedro.28fxt@gmail.com`).
 - Status de cada aluno, calculado pelos últimos 7 dias:
   **Alto desempenho** (bateu a meta, média ≥ 80%) · **Em dia** (bateu a meta) · **Atrasado** (abaixo da meta) · **Inativo** (14+ dias sem estudar).
 - Nível, XP, lições concluídas, certificados, última atividade e distribuição por estágio.
-- Filtros por status, estágio e busca. Botão **Nova prova** para liberar outro nivelamento.
+- Filtros por status, estágio, **turma** e busca; **CSV** da lista filtrada. Botão **Nova prova** para liberar outro nivelamento.
 - Botão **Senha**: gera uma senha provisória para o aluno que esqueceu a senha (ela aparece uma única vez).
 - **Ver trilha** abre o curso inteiro desbloqueado para conferência (nada é salvo).
+- Abas: **Financeiro** (números do mês, vencimentos, pagamentos + CSV), **Turmas e cupons**, **Erros mais comuns** e
+  **Configuração** (checklist de lançamento com bolinha vermelha enquanto faltar algo).
+
+### Checklist de lançamento (aba Configuração)
+Conferidos sozinhos: token do Mercado Pago (avisa se for de teste), assinatura do webhook, último aviso recebido,
+Resend, responsável nos Termos e Turnstile. Para marcar: chave Pix na conta, endereço do site no Supabase, bloqueio
+de senhas vazadas, SMTP e um pagamento real de teste.
+
+### CAPTCHA no cadastro (opcional, grátis)
+1. Crie um widget em https://dash.cloudflare.com → **Turnstile** (domínio `englishsmart.app.br`).
+2. Cole a **Site Key** em `TURNSTILE_SITE_KEY` (`js/config.js`).
+3. Cole a **Secret Key** em https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/auth/protection → *Enable CAPTCHA protection* (Turnstile).
+Faça os passos 2 e 3 juntos: com só um deles, o login falha.
+
+### Bloquear senhas vazadas
+Em https://supabase.com/dashboard/project/wfxqxvlcrqbwvcvqslzi/auth/protection ligue *Prevent use of leaked passwords*
+(recurso do plano Pro do Supabase). O site já traduz o aviso para o aluno.
 
 Para adicionar outro administrador, rode no SQL Editor do Supabase:
 ```sql
@@ -230,6 +311,13 @@ insert into public.admins (email) values ('novo-admin@email.com');
 - As notas das lições são calculadas no navegador (é prática, então isso é aceitável); a prova de
   nivelamento é corrigida no banco.
 
+## Publicar atualizações (GitHub Pages)
+- O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
+  gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
+- Os arquivos são chamados com `?v=20261110a` no `index.html`. Ao subir uma versão nova, troque esse número
+  (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
+- O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
+
 ## Como editar o conteúdo
 - **Lições, níveis e diálogos:** `js/curriculo.js`. Cada lição tem `g` (gramática), `v` (vocabulário),
   `e` (frases para completar no formato `frase com ___|certa|errada|errada|errada`) e `d` (diálogo).
@@ -240,9 +328,13 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ```
 index.html            Todas as telas
 css/brand.css         Identidade visual, animações e impressão do certificado
-img/                  Logo e ícone
-js/config.js          Conexão com o Supabase
-js/curriculo.js       16 níveis × 4 lições (conteúdo do curso)
+css/tailwind.css      Visual pronto (gerado de tailwind.config.js + css/tailwind-entrada.css)
+css/escuro.css        Modo escuro
+img/                  Logo, ícones do app e imagem de compartilhamento (compartilhar.png)
+manifest.webmanifest  App instalável (nome, ícones, cores)
+sw.js                 Service worker do app instalável
+js/config.js          Conexão com o Supabase, preços, SITE_URL e TURNSTILE_SITE_KEY
+js/curriculo.js       16 níveis × 4 lições + 3 trilhas extras (conteúdo do curso)
 js/atividades.js      Gera as atividades das lições, do teste e da revisão; corrige respostas digitadas
 js/voz.js             Áudio (voz do navegador) e reconhecimento de fala
 js/app.js             Troca de telas, sessão e estatísticas
@@ -251,14 +343,17 @@ js/entrar.js          Entrar, criar conta e "esqueci minha senha"
 js/prova.js           Prova de nivelamento
 js/curso.js           Trilha do aluno
 js/dispositivos.js    Limite de 4 aparelhos (tela de bloqueio e "Meus aparelhos")
-js/plano.js           Assinatura: cartão ou Pix (QR Code), status, pagamentos e cancelamento
+js/plano.js           Assinatura: mensal/anual, cartão ou Pix (QR Code), cupom, indicação, status e cancelamento
+js/loja.js            Loja de moedas, medalhas e ranking semanal
+js/verificar.js       Página pública de verificação de certificado
 js/cookies.js         Aviso e preferências de cookies (LGPD)
 js/revisao.js         Revisão inteligente (repetição espaçada e treinos)
 js/licao.js           Player das lições e do teste do nível
 js/certificado.js     Certificado
 js/perfil.js          Meu perfil (dados, foto, senha, excluir conta)
 js/termos.js          Termos de Uso e Política de Privacidade
-js/admin.js           Portal do professor
+js/admin.js           Portal do professor (alunos, financeiro, turmas, cupons, erros, configuração)
 supabase/schema.sql   Estrutura completa do banco (já aplicada no seu projeto)
 supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (já publicada)
+supabase/functions/lembretes/index.ts     E-mails de vencimento (já publicada e agendada)
 ```

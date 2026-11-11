@@ -1,0 +1,17 @@
+{
+  "name": "English Smart — Curso de Inglês",
+  "short_name": "English Smart",
+  "description": "Inglês do zero à fluência: lições no seu nível, fala, revisão e certificados.",
+  "lang": "pt-BR",
+  "start_url": "./#/curso",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#00174F",
+  "theme_color": "#00174F",
+  "icons": [
+    { "src": "img/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

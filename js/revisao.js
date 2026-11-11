@@ -15,9 +15,9 @@ const Revisao = (() => {
     ]);
     if (prog.error) throw prog.error;
     const progresso = prog.data || [];
-    const vistas = new Set(progresso.filter((r) => r.licao >= 1).map((r) => `${r.nivel_num}|${r.licao}`));
+    const vistas = new Set(progresso.filter((r) => r.licao >= 1 && r.nivel_num <= 16).map((r) => `${r.nivel_num}|${r.licao}`)); // trilhas extras não entram na revisão
     const memoria = mem.error ? [] : mem.data || [];
-    memoria.forEach((r) => { const [, n, l] = r.item.split('|'); vistas.add(`${n}|${l}`); });
+    memoria.forEach((r) => { const [, n, l] = r.item.split('|'); if (Number(n) <= 16) vistas.add(`${n}|${l}`); });
     const licoes = [...vistas].map((k) => k.split('|').map(Number)).filter(([n]) => n <= (p.nivel_num || 16)).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     return { licoes, memoria, sessoes: ses.error ? [] : ses.data || [], progresso };
   }
