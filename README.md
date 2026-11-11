@@ -351,7 +351,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261111b` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261111c` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 

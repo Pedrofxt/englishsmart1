@@ -38,18 +38,16 @@
 
   // ---------- Login com o Google ----------
   // O botão só aparece quando o Google está ligado no Supabase (Authentication → Providers → Google)
-  let googleLigado = null;
+  // Só guarda a resposta "ligado"; se ainda estiver desligado, confere de novo a cada vez que a tela abre
+  // (assim o botão aparece assim que o Google for ligado no Supabase, sem precisar fechar a aba)
+  let googleLigado = false;
   async function googleDisponivel() {
-    if (googleLigado !== null) return googleLigado;
+    if (googleLigado) return true;
     try {
-      const salvo = sessionStorage.getItem('es_google');
-      if (salvo) return (googleLigado = salvo === '1');
-    } catch {}
-    try {
-      const r = await fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } });
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY }, cache: 'no-store' });
       googleLigado = !!(await r.json())?.external?.google;
+      if (!googleLigado) console.info('[English Smart] Login com o Google desligado no Supabase (Authentication → Sign In / Providers → Google).');
     } catch { googleLigado = false; }
-    try { sessionStorage.setItem('es_google', googleLigado ? '1' : '0'); } catch {}
     return googleLigado;
   }
   async function mostrarGoogle() {
