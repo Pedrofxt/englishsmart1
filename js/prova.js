@@ -213,12 +213,16 @@
           <a href="#/curso" class="btn-shine mt-10 inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-brand-red hover:bg-brand-redDark text-white font-display font-semibold text-lg px-10 py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5 fade-up delay-5">
             Ver minha trilha →
           </a>` : `
-          <div id="chamadaAssinar" class="mt-10 fade-up delay-5 bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div id="chamadaAssinar" data-sem-app class="mt-10 fade-up delay-5 bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
             <div class="flex-1">
               <p class="font-display font-bold text-navy-900">Pronto para começar no Nível ${num}?</p>
               <p class="text-sm text-slate-500">Assine para liberar as lições, os testes, os certificados e a revisão. ${precoBR(PLANO.preco)}/mês no cartão ou no Pix. Cancele quando quiser.</p>
             </div>
             <a href="#/planos" class="btn-shine shrink-0 text-center bg-brand-red hover:bg-brand-redDark text-white font-display font-semibold px-8 py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5">Assinar e começar →</a>
+          </div>
+          <div class="so-app mt-10 fade-up delay-5 bg-slate-50 border border-slate-200 rounded-2xl p-5">
+            <p class="font-display font-bold text-navy-900">Seu nível: ${num}. Prova concluída!</p>
+            <p class="text-sm text-slate-500">Assim que sua conta tiver uma assinatura ativa, as lições do Nível ${num} são liberadas aqui no app automaticamente.</p>
           </div>`}
         </div>
       </div>`;

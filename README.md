@@ -19,6 +19,7 @@ Cloudflare funcionam com CPF. O campo de CPF/CNPJ nos Termos é opcional.
 | **Pronúncia palavra por palavra** na prática de fala | **Checklist de lançamento** que confere a configuração sozinho |
 | **Modo escuro**, **app instalável** (PWA) e mini lição grátis na página inicial | **Lembretes por e-mail** antes de o acesso vencer (automáticos) |
 | Mensagem própria de **acesso vencido** ("continue do nível N") | Página pública **Verificar certificado** (`#/verificar`) |
+| **Lembrete diário às 10h** por notificação · layout ajustado para **tablets** | **App da Google Play** pronto para empacotar (ver PLAY_STORE.md) |
 
 ## Como usar
 
@@ -293,6 +294,18 @@ O saldo e as compras são conferidos no banco (função `comprar_item`), então 
   4,5:1 para texto normal). Por isso o vermelho, o verde, o azul e o laranja de fundo ficaram um tom mais escuros
   (texto branco legível) e os textos cinza ficaram um pouco mais fortes.
 
+## Notificações: lembrete diário às 10h
+- O aluno ativa no cartão **Lembrete diário às 10h** do painel do curso ou em **Perfil → Notificações** (tem "Enviar teste" e "Desativar").
+- Todo dia às **10h de Brasília** (pg_cron `notificacoes-10h`, 13h UTC) a função `notificacoes` envia para todos que ativaram, com mensagem personalizada: nome, "🔥 N dias seguidos", "Sentimos sua falta" para quem parou há 3+ dias, ou "Você já estudou hoje".
+- Tocar na notificação abre a trilha. Aparelhos que desinstalaram/bloquearam são removidos sozinhos.
+- Funciona no Chrome, Edge, Firefox e Samsung Internet (computador e Android) e no app da Play Store. No iPhone/iPad só funciona com o site **adicionado à Tela de Início** (iOS 16.4+); o próprio site explica isso.
+- As chaves VAPID ficam na tabela `config_privada` (só o servidor lê). A pública também está em `js/notificacoes.js`. Se trocar as chaves, todos precisam ativar de novo.
+- Portal → Configuração: **Teste para mim** e **Enviar a todos agora**.
+
+## App na Google Play
+Passo a passo completo (PWABuilder, Play Console, verificação do domínio, textos da ficha, segurança dos dados) em **[PLAY_STORE.md](PLAY_STORE.md)**.
+Dentro do app não aparece preço nem botão de pagar (regra de pagamentos da Google Play): assinantes estudam normal; a assinatura é feita no site.
+
 ## Modo escuro e app no celular
 - **Modo escuro:** botão de lua no topo da página inicial e no menu do avatar, em todas as telas (inclusive portal, loja, lições, termos e aviso de cookies). O certificado continua claro para imprimir. A escolha fica no navegador.
 - **App instalável (PWA):** no site publicado, o Chrome do Android oferece "Instalar app" (botão no rodapé); no iPhone,
@@ -360,7 +373,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261114a` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261115a` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 
@@ -403,4 +416,8 @@ js/admin.js           Portal do professor (alunos, financeiro, turmas, cupons, e
 supabase/schema.sql   Estrutura completa do banco (já aplicada no seu projeto)
 supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (já publicada)
 supabase/functions/lembretes/index.ts     E-mails de vencimento (já publicada e agendada)
+supabase/functions/notificacoes/index.ts  Notificação diária às 10h (já publicada e agendada)
+js/notificacoes.js    Ativar/desativar o lembrete diário (Web Push)
+.well-known/assetlinks.json  Verificação do domínio para o app da Play Store
+PLAY_STORE.md         Como publicar na Google Play
 ```

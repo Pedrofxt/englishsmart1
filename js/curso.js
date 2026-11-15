@@ -75,14 +75,14 @@
     const diasPix = perfil.premium && a?.status !== 'ativa' && a?.ultimo_metodo === 'pix' && a?.pago_ate ? Math.ceil((new Date(a.pago_ate) - Date.now()) / 864e5) : null;
     el('painelResumo').innerHTML = `
       ${diasPix !== null && diasPix <= 5 ? `
-        <a href="#/planos?metodo=pix" id="avisoRenovarPix" class="col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 hover:border-amber-400 transition">
+        <a href="#/planos?metodo=pix" id="avisoRenovarPix" data-sem-app class="col-span-2 md:col-span-3 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 hover:border-amber-400 transition">
           <span class="w-12 h-12 shrink-0 rounded-xl bg-[#32BCAD] text-white grid place-items-center">${Icone('relogio', 'w-6 h-6')}</span>
           <span class="flex-1"><span class="block font-display font-bold text-navy-900">Sua assinatura termina em ${diasPix} ${diasPix === 1 ? 'dia' : 'dias'}</span>
             <span class="block text-sm text-slate-600">Renove com Pix para não perder o acesso às lições, aos testes e à revisão. Os dias novos somam aos que faltam.</span></span>
           <span class="shrink-0 text-center font-semibold bg-[#32BCAD] text-white rounded-xl px-5 py-2.5">Renovar com Pix</span>
         </a>` : ''}
 
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 col-span-2 lg:col-span-1">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 col-span-2 md:col-span-3 lg:col-span-1">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nível atual</p>
         <p class="mt-1 font-display text-3xl font-extrabold text-navy-900">${n}<span class="text-base text-slate-400"> de 16</span></p>
         <p class="text-xs font-semibold ${faixa.texto}">${perfil.nivel} · ${faixa.nome}</p>
@@ -115,13 +115,13 @@
         <p class="mt-1 font-display text-3xl font-extrabold text-navy-900">${est.sequencia > 0 ? `<span class="chama-viva align-[-4px] text-brand-red">${Icone('chama', 'w-7 h-7')}</span>` : ''}${est.sequencia}<span class="text-base text-slate-400"> dia${est.sequencia === 1 ? '' : 's'}</span></p>
         <p class="text-[11px] text-slate-400">${est.sequencia ? 'Estude hoje para manter!' : 'Faça uma lição para começar'}</p>
       </div>
-      <a href="#/loja" id="cartaoLoja" class="group col-span-2 flex items-center gap-4 bg-white rounded-2xl p-5 border border-slate-200 hover:border-navy-900 transition">
+      <a href="#/loja" id="cartaoLoja" class="group col-span-2 md:col-span-3 lg:col-span-2 flex items-center gap-4 bg-white rounded-2xl p-5 border border-slate-200 hover:border-navy-900 transition">
         <span class="w-12 h-12 shrink-0 rounded-xl bg-amber-400 text-navy-900 grid place-items-center">${Icone('moeda', 'w-6 h-6')}</span>
         <span class="flex-1 min-w-0"><span class="block font-display font-bold text-navy-900"><span data-contar="${Loja.saldoDe(perfil, dados.compras)}">0</span> moedas</span>
           <span class="block text-sm text-slate-500">Troque por molduras, protetor de sequência e dias de acesso.</span></span>
         <span class="shrink-0 text-sm font-semibold text-navy-600 group-hover:text-brand-red">Loja →</span>
       </a>
-      <a href="#/perfil?ver=medalhas" id="cartaoMedalhas" class="group col-span-2 flex items-center gap-4 bg-white rounded-2xl p-5 border border-slate-200 hover:border-navy-900 transition">
+      <a href="#/perfil?ver=medalhas" id="cartaoMedalhas" class="group col-span-2 md:col-span-3 lg:col-span-2 flex items-center gap-4 bg-white rounded-2xl p-5 border border-slate-200 hover:border-navy-900 transition">
         <span class="w-12 h-12 shrink-0 rounded-xl bg-navy-900 text-amber-300 grid place-items-center">${Icone('medalha', 'w-6 h-6')}</span>
         <span class="flex-1 min-w-0"><span class="block font-display font-bold text-navy-900">${Loja.conquistadas(perfil, dados, dados.compras).length} de ${Loja.MEDALHAS.length} medalhas</span>
           <span class="block text-sm text-slate-500">Conquiste medalhas estudando, mantendo a sequência e passando nos testes.</span></span>
@@ -131,7 +131,7 @@
         const hoje = (dados.memoria || []).filter((r) => new Date(r.proxima).getTime() <= Date.now()).length;
         const erros = (dados.memoria || []).filter((r) => r.caixa === 0 && r.erros > 0).length;
         return `
-        <a href="#/revisao" id="cartaoRevisao" class="group col-span-2 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-white rounded-2xl p-5 border-2 ${hoje ? 'border-brand-red/30' : 'border-slate-200'} hover:border-navy-900 transition">
+        <a href="#/revisao" id="cartaoRevisao" class="group col-span-2 md:col-span-3 lg:col-span-4 flex flex-col sm:flex-row sm:items-center gap-4 bg-white rounded-2xl p-5 border-2 ${hoje ? 'border-brand-red/30' : 'border-slate-200'} hover:border-navy-900 transition">
           <span class="w-12 h-12 shrink-0 rounded-xl bg-navy-900 text-white grid place-items-center"><span class="${hoje ? 'balanca' : ''}">${Icone('brilho', 'w-6 h-6')}</span></span>
           <span class="flex-1 min-w-0">
             <span class="block font-display font-bold text-navy-900">Revisão inteligente</span>
@@ -143,6 +143,8 @@
 
     el('painelResumo').classList.add('em-sequencia');
     animarNumeros(el('painelResumo'));
+    Notificacoes.cartaoCurso(el('painelResumo'));
+    Notificacoes.sincronizar();
     el('selMeta').addEventListener('change', async (e) => {
       const meta = Number(e.target.value);
       const { error } = await sb.rpc('definir_meta', { p_meta: meta });

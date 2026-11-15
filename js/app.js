@@ -4,6 +4,22 @@ const App = (() => {
   const telas = {}; // nome → { iniciar(params) }
   let perfilCache = null;
 
+  // ---------- App da Google Play (TWA) ----------
+  // O app abre o site com ?origem=playstore (e o Android informa android-app:// como origem).
+  // Dentro do app não mostramos compra nem preço (regra de pagamentos da Google Play):
+  // quem já é assinante estuda normalmente; a assinatura é feita pelo site.
+  // Guardado no sessionStorage (não no localStorage) porque o app divide os dados com o Chrome.
+  const modoApp = (() => {
+    let v = false;
+    try {
+      const q = new URLSearchParams(location.search);
+      if (q.get('origem') === 'playstore' || document.referrer.startsWith('android-app://')) sessionStorage.setItem('es_app', '1');
+      v = sessionStorage.getItem('es_app') === '1';
+    } catch {}
+    if (v) document.documentElement.classList.add('modo-app');
+    return () => v;
+  })();
+
   // ---------- Utilidades ----------
   const escapar = (txt) => {
     const div = document.createElement('div');
@@ -204,7 +220,7 @@ const App = (() => {
         ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do professor') : item('#/curso', 'capelo', 'Minha trilha')}
         ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
         ${p.papel === 'aluno' && p.nivel_num ? item('#/loja', 'loja', 'Loja de moedas') : ''}
-        ${p.papel === 'aluno' ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
+        ${p.papel === 'aluno' && !(modoApp() && !p.premium) ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
         ${item('#/termos', 'documento', 'Termos e privacidade')}
         <button data-menu-som class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Som.ligado() ? 'som' : 'mudo', 'w-4 h-4 text-slate-400')}${Som.ligado() ? 'Desligar sons' : 'Ligar sons'}</button>
         <button data-menu-tema class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Tema.escuro() ? 'sol' : 'lua', 'w-4 h-4 text-slate-400')}${Tema.escuro() ? 'Modo claro' : 'Modo escuro'}</button>
@@ -236,6 +252,13 @@ const App = (() => {
   async function navegar() {
     const minha = ++navegacaoAtual; // se outra troca de tela começar, esta é descartada
     const hash = location.hash || '#/';
+    // no app da Play Store não existe página de vendas: vai direto para a área do aluno
+    if (modoApp() && (hash === '#/' || hash === '#/inicio' || !hash.startsWith('#/'))) {
+      const p = (await usuario().catch(() => null)) ? await perfil().catch(() => null) : null;
+      if (minha !== navegacaoAtual) return;
+      location.replace('#' + destino(p).slice(1));
+      return;
+    }
     if (!hash.startsWith('#/')) {
       fecharMenuAvatar();
       mostrar('inicio');
@@ -384,5 +407,5 @@ const App = (() => {
     navegar();
   }
 
-  return { lerLocal, gravarLocal, checarAparelho, temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
+  return { modoApp, lerLocal, gravarLocal, checarAparelho, temPremium, licaoLivre, registrar, iniciar, perfil, limparPerfil, destino, sair, escapar, toast, carregando, usuario, dadosDoAluno, estatisticas, mensagemDeErro, avatarHtml, atualizarAvatares, CORES_AVATAR, ICONES_AVATAR };
 })();

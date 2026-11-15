@@ -585,6 +585,15 @@
         <div class="flex-1"><h3 class="font-display font-bold text-navy-900">Lembretes de vencimento</h3>
         <p class="text-sm text-slate-500">Rodam sozinhos todo dia às 9h (horário de Brasília). Quem paga com Pix recebe aviso 3 dias antes, 1 dia antes e no dia em que vence. Cada aviso vai uma vez só.</p></div>
         <button id="btnLembretes" class="shrink-0 font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-5 py-3 transition">Enviar lembretes agora</button>
+      </section>
+      <section class="mt-5 bg-white rounded-2xl border border-slate-200 p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <span class="w-12 h-12 shrink-0 rounded-xl bg-brand-red text-white grid place-items-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
+        <div class="flex-1"><h3 class="font-display font-bold text-navy-900">Notificações diárias às 10h</h3>
+        <p class="text-sm text-slate-500">Todo dia às 10h (Brasília) cada aluno que ativou as notificações recebe um lembrete personalizado (nome, sequência de dias, volta depois de dias parado). Para testar, ative as notificações no seu perfil e use "Teste para mim".</p></div>
+        <div class="shrink-0 flex flex-wrap gap-2">
+          <button id="btnPushTeste" class="font-semibold border border-slate-200 text-navy-900 hover:border-navy-900 rounded-xl px-4 py-3 transition">Teste para mim</button>
+          <button id="btnPushTodos" class="font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-5 py-3 transition">Enviar a todos agora</button>
+        </div>
       </section>`;
     raiz.querySelectorAll('[data-marcar]').forEach((b) => b.addEventListener('change', () => {
       const atual = new Set((App.lerLocal('es_checklist') || '').split(',').filter(Boolean));
@@ -592,6 +601,15 @@
       App.gravarLocal('es_checklist', [...atual].join(','));
       painelConfig();
     }));
+    const push = async (b, corpo, rotulo) => {
+      setLoading(b, true);
+      const { data, error } = await sb.functions.invoke('notificacoes', { body: corpo });
+      setLoading(b, false, rotulo);
+      if (error) return App.toast('Não foi possível enviar as notificações agora.');
+      App.toast(data?.aviso || `${data?.enviados || 0} notificação(ões) enviada(s).${data?.removidos ? ` ${data.removidos} aparelho(s) desinscrito(s) removido(s).` : ''}`);
+    };
+    el('btnPushTeste').addEventListener('click', (e) => push(e.currentTarget, { teste: true }, 'Teste para mim'));
+    el('btnPushTodos').addEventListener('click', (e) => { if (confirm('Enviar o lembrete agora para todos os alunos com notificações ativadas?')) push(e.currentTarget, { todos: true }, 'Enviar a todos agora'); });
     el('btnLembretes').addEventListener('click', async (e) => {
       setLoading(e.target, true);
       const { data, error } = await sb.functions.invoke('lembretes', { body: {} });

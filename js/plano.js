@@ -409,9 +409,39 @@ const Planos = (() => {
     el('planosTitulo').textContent = aluno && p.premium ? 'Minha assinatura' : temNivel ? 'Falta pouco para começar' : 'Assine o English Smart';
     el('planosSub').textContent = aluno && p.premium ? 'Sua assinatura, cobranças e acesso.'
       : temNivel ? 'Você já sabe o seu nível. Assine para liberar a sua trilha.' : `${precoBR(PLANO.preco)} por mês. ${GRATIS}`;
+    // App da Google Play: sem compra nem preço dentro do app (regra de pagamentos da Play)
+    if (App.modoApp() && !(aluno && p.premium)) {
+      el('planosTitulo').textContent = 'Sua conta';
+      el('planosSub').textContent = logado ? 'Situação do seu acesso às lições.' : 'Entre na sua conta para estudar.';
+      raiz.innerHTML = `
+        <section class="max-w-xl mx-auto bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 text-center">
+          <span class="w-14 h-14 mx-auto rounded-2xl bg-navy-900 text-white grid place-items-center">${Icone('capelo', 'w-7 h-7')}</span>
+          <h2 class="mt-4 text-xl font-bold text-navy-900">${logado ? 'Sua conta ainda não tem uma assinatura ativa' : 'Entre para continuar'}</h2>
+          <p class="mt-2 text-slate-500">${logado
+            ? 'Assim que a assinatura da sua conta estiver ativa, as lições, os testes, a revisão e os certificados são liberados aqui no app automaticamente.'
+            : 'Use o mesmo e-mail da sua conta English Smart.'}</p>
+          ${logado
+            ? '<button type="button" id="btnAtualizarAcesso" class="mt-6 font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Atualizar meu acesso</button>'
+            : '<a href="#/entrar" class="mt-6 inline-block font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Entrar</a>'}
+          ${aluno && !p.nivel_num ? '<a href="#/prova" class="mt-3 block text-sm font-semibold text-navy-600 hover:text-brand-red">Fazer a prova de nivelamento grátis →</a>' : ''}
+        </section>`;
+      el('btnAtualizarAcesso')?.addEventListener('click', async (e) => {
+        const b = e.currentTarget;
+        setLoading(b, true);
+        try { await chamar('sincronizar'); } catch {}
+        App.limparPerfil();
+        const novo = await App.perfil(true);
+        if (novo?.premium) { location.hash = '#/curso'; return; }
+        setLoading(b, false, 'Atualizar meu acesso');
+        App.toast('Ainda não encontramos uma assinatura ativa nesta conta.');
+      });
+      revelar(raiz);
+      return;
+    }
     if (aluno && p.premium) {
       const { data: pagamentos } = await sb.from('pagamentos').select('*').eq('aluno_id', p.id);
       raiz.innerHTML = painelStatus(p, (pagamentos || []).filter((x) => x.status !== 'pendente' && x.status !== 'expirado').sort((x, y) => new Date(y.criado_em) - new Date(x.criado_em)));
+      if (App.modoApp()) raiz.querySelectorAll('#btnReassinar, a[href*="#/planos"], [data-sem-app]').forEach((x) => x.remove());
       el('btnCancelar')?.addEventListener('click', cancelar);
       desenharIndicacao(p, el('caixaIndicacao'));
       el('btnReassinar')?.addEventListener('click', () => { caixaCompacta = false; raiz.insertAdjacentHTML('beforeend', caixaAssinar(p, el('btnReassinar').dataset.metodoInicial, false)); el('btnReassinar').remove(); ligarCaixa(p); revelar(raiz); el('caixaAssinar').scrollIntoView({ behavior: 'smooth' }); });

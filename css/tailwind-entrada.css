@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* App da Google Play: esconde compra e preços (ver App.modoApp) */
+.modo-app [data-sem-app] { display: none !important; }
+.so-app { display: none; }
+.modo-app .so-app { display: revert; }

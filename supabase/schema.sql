@@ -1200,3 +1200,52 @@ begin
   d := replace(d, '[1-4]', '[1-8]');
   execute d;
 end $$;
+
+-- =====================================================================
+-- Notificações diárias (Web Push) — lembrete às 10h de Brasília
+-- As chaves VAPID ficam em config_privada ('vapid_publica', 'vapid_privada'); não vão para o GitHub.
+-- =====================================================================
+create table if not exists public.push_inscricoes (
+  endpoint text primary key check (endpoint ~ '^https://' and length(endpoint) <= 1000),
+  aluno_id uuid not null references auth.users(id) on delete cascade,
+  p256dh text not null check (length(p256dh) between 20 and 200),
+  auth text not null check (length(auth) between 8 and 100),
+  aparelho text check (length(aparelho) <= 80),
+  criado_em timestamptz not null default now(),
+  falhas int not null default 0
+);
+create index if not exists push_inscricoes_aluno on public.push_inscricoes(aluno_id);
+alter table public.push_inscricoes enable row level security;
+drop policy if exists "ve as proprias inscricoes" on public.push_inscricoes;
+create policy "ve as proprias inscricoes" on public.push_inscricoes for select to authenticated using (aluno_id = (select auth.uid()));
+
+create or replace function public.salvar_inscricao_push(p_endpoint text, p_p256dh text, p_auth text, p_aparelho text default null)
+returns void language plpgsql security definer set search_path = '' as $$
+declare v uuid := auth.uid();
+begin
+  if v is null then raise exception 'Entre na sua conta.'; end if;
+  if (select count(*) from public.push_inscricoes where aluno_id = v and endpoint <> p_endpoint) >= 8 then
+    delete from public.push_inscricoes where endpoint = (select endpoint from public.push_inscricoes where aluno_id = v order by criado_em limit 1);
+  end if;
+  insert into public.push_inscricoes(endpoint, aluno_id, p256dh, auth, aparelho)
+  values (p_endpoint, v, p_p256dh, p_auth, left(p_aparelho, 80))
+  on conflict (endpoint) do update set aluno_id = excluded.aluno_id, p256dh = excluded.p256dh, auth = excluded.auth, aparelho = excluded.aparelho, falhas = 0;
+end $$;
+
+create or replace function public.remover_inscricao_push(p_endpoint text)
+returns void language sql security definer set search_path = '' as $$
+  delete from public.push_inscricoes where endpoint = p_endpoint and aluno_id = auth.uid();
+$$;
+revoke all on function public.salvar_inscricao_push(text,text,text,text) from public, anon;
+revoke all on function public.remover_inscricao_push(text) from public, anon;
+grant execute on function public.salvar_inscricao_push(text,text,text,text) to authenticated;
+grant execute on function public.remover_inscricao_push(text) to authenticated;
+
+select cron.schedule('notificacoes-10h', '0 13 * * *', $c$
+  select net.http_post(
+    url := 'https://wfxqxvlcrqbwvcvqslzi.supabase.co/functions/v1/notificacoes',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron', (select valor from public.config_privada where chave = 'cron_segredo')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000
+  );
+$c$);

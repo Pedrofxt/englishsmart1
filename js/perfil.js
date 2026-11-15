@@ -274,6 +274,7 @@
       el('formSenha').reset();
       ajustarSenha();
       desenharAvatar();
+      Notificacoes.painelPerfil(el('perfilNotificacoes'));
       if (admin) return;
       el('pfNome').value = p.nome;
       el('pfEmail').value = p.email;
