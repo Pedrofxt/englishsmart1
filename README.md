@@ -294,6 +294,16 @@ O saldo e as compras são conferidos no banco (função `comprar_item`), então 
   4,5:1 para texto normal). Por isso o vermelho, o verde, o azul e o laranja de fundo ficaram um tom mais escuros
   (texto branco legível) e os textos cinza ficaram um pouco mais fortes.
 
+## Material de estudo das lições
+Antes das atividades, cada uma das 220 lições (128 dos níveis + 92 das trilhas extras) tem:
+- **Como se usa:** quadro com a estrutura (afirmativa, negativa, pergunta, respostas…) ou as frases-chave, com áudio;
+- **Na prática:** as frases da lição com a palavra-chave destacada;
+- **Mais exemplos com tradução:** 4 frases novas com áudio; a tradução fica escondida até o aluno tocar (para ele tentar antes);
+- **Erros comuns de brasileiros:** ❌ errado → ✅ certo + o porquê, e uma **dica** de uso ou pronúncia;
+- **Aquecimento:** 3 perguntas rápidas sem nota (vocabulário, completar e "qual frase está correta?");
+- **Como funciona cada atividade:** dicas para cada tipo de exercício da prática.
+O conteúdo fica em `js/materiais.js` (objeto `MATERIAIS`, chave `"nível|lição"`).
+
 ## Notificações: lembrete diário às 10h
 - O aluno ativa no cartão **Lembrete diário às 10h** do painel do curso ou em **Perfil → Notificações** (tem "Enviar teste" e "Desativar").
 - Todo dia às **10h de Brasília** (pg_cron `notificacoes-10h`, 13h UTC) a função `notificacoes` envia para todos que ativaram, com mensagem personalizada: nome, "🔥 N dias seguidos", "Sentimos sua falta" para quem parou há 3+ dias, ou "Você já estudou hoje".
@@ -373,7 +383,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261115a` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261115b` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 
@@ -418,6 +428,7 @@ supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (
 supabase/functions/lembretes/index.ts     E-mails de vencimento (já publicada e agendada)
 supabase/functions/notificacoes/index.ts  Notificação diária às 10h (já publicada e agendada)
 js/notificacoes.js    Ativar/desativar o lembrete diário (Web Push)
+js/materiais.js       Material de estudo extra de cada lição (estrutura, exemplos, erros comuns, dica)
 .well-known/assetlinks.json  Verificação do domínio para o app da Play Store
 PLAY_STORE.md         Como publicar na Google Play
 ```

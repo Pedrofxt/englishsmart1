@@ -36,18 +36,158 @@
     el('licaoContador').textContent = st.modo === 'pratica' ? `${st.i + 1}/${total}` : '';
   }
 
+  // ---------- Material de estudo extra (js/materiais.js) ----------
+  const DICAS_TIPOS = {
+    'Escolha': 'Leia a frase inteira antes de escolher: o contexto mostra a resposta.',
+    'Escuta': 'Ouça quantas vezes quiser. Use o botão "Lento" se precisar.',
+    'Completar diálogo': 'Leia a fala de antes e a de depois: a resposta precisa combinar com as duas.',
+    'Montar frase': 'Comece pelo sujeito e pelo verbo. Perguntas começam com o auxiliar (do, are, can...).',
+    'Fala': 'Ouça, repita em voz alta e fale com calma. Não precisa ser perfeito.',
+    'Ditado': 'Ouça a frase inteira primeiro e depois escreva. Pode ouvir de novo.',
+    'Escrita': 'Escreva em inglês. Maiúsculas e pontuação não contam.',
+    'Ligar': 'Comece pelos pares que você tem certeza. Os outros ficam mais fáceis.',
+    'Frase própria': 'Escreva uma frase simples e verdadeira sobre você usando a palavra pedida.',
+    'Flashcard': 'Tente lembrar antes de virar. Seja honesto ao marcar.',
+  };
+  const realcar = (txt) => App.escapar(txt).replace(/ \/ /g, ' <span class="text-slate-400">/</span> ');
+  const ancora = (id, rotulo) => `<a href="#${id}" data-ancora="${id}" class="shrink-0 text-sm font-semibold bg-white border border-slate-200 text-navy-900 hover:border-navy-900 rounded-full px-3.5 py-1.5 transition">${rotulo}</a>`;
+
+  function blocoMaterial(m) {
+    if (!m) return '';
+    return `
+          <div id="estudoComo" class="mt-6 scroll-mt-24">
+            <p class="text-sm font-bold text-navy-900">Como se usa</p>
+            <div class="mt-2 rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-200">
+              ${m.c.map(([rot, ex]) => `
+              <div class="grid sm:grid-cols-[minmax(0,11rem)_1fr] gap-x-4 gap-y-0.5 px-4 py-3 bg-white">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 sm:pt-0.5">${App.escapar(rot)}</p>
+                <div class="flex items-start gap-2 min-w-0"><p class="flex-1 min-w-0 text-navy-900 font-medium">${realcar(ex)}</p>${botaoSom(ex.replace(/ \/ /g, '. '), '!w-8 !h-8 -my-1')}</div>
+              </div>`).join('')}
+            </div>
+          </div>`;
+  }
+
+  function secoesMaterial(m) {
+    if (!m) return '';
+    return `
+        <section id="estudoExemplos" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24">
+          <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-red">${Icone('lista', 'w-4 h-4')} Mais exemplos com tradução</p>
+          <p class="mt-1 text-sm text-slate-500">Ouça, leia em voz alta e tente dizer a tradução antes de olhar.</p>
+          <div class="mt-4 space-y-2">
+            ${m.x.map(([en, pt], i) => `
+            <div class="flex items-start gap-3 bg-slate-50 rounded-xl px-4 py-3">
+              ${botaoSom(en)}
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-navy-900">${App.escapar(en)}</p>
+                <button type="button" data-traducao="${i}" class="mt-0.5 text-left text-sm text-slate-500 hover:text-navy-900"><span class="traducao-oculta">Toque para ver a tradução</span><span class="traducao-texto hidden">${App.escapar(pt)}</span></button>
+              </div>
+            </div>`).join('')}
+          </div>
+          <button type="button" id="btnTodasTraducoes" class="mt-3 text-sm font-semibold text-navy-600 hover:text-brand-red">Mostrar todas as traduções</button>
+        </section>
+
+        <section id="estudoErros" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24">
+          <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-red">${Icone('alvo', 'w-4 h-4')} Erros comuns de brasileiros</p>
+          <div class="mt-4 space-y-3">
+            ${m.r.map(([errado, certo, porque]) => `
+            <div class="rounded-xl border border-slate-200 p-4">
+              <p class="flex items-start gap-2 text-red-700"><span class="mt-0.5 w-5 h-5 shrink-0 rounded-full bg-red-100 text-red-700 grid place-items-center">${Icone('x', 'w-3 h-3')}</span><span class="line-through decoration-red-400/70">${App.escapar(errado)}</span></p>
+              <p class="mt-1.5 flex items-start gap-2 text-emerald-800 font-semibold"><span class="mt-0.5 w-5 h-5 shrink-0 rounded-full bg-emerald-100 text-emerald-800 grid place-items-center">${Icone('check', 'w-3 h-3')}</span><span>${App.escapar(certo)}</span></p>
+              <p class="mt-2 text-sm text-slate-500 pl-7">${App.escapar(porque)}</p>
+            </div>`).join('')}
+          </div>
+          <div class="mt-4 flex gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <span class="shrink-0 w-8 h-8 rounded-lg bg-amber-400 text-navy-900 grid place-items-center">${Icone('brilho', 'w-4 h-4')}</span>
+            <p class="text-sm text-amber-900"><b>Dica:</b> ${App.escapar(m.t)}</p>
+          </div>
+        </section>`;
+  }
+
+  const embaralhar = (lista) => Atividades.embaralhar([...lista]);
+  const sortear = (lista, q) => embaralhar(lista).slice(0, q);
+  // Aquecimento: 3 perguntas rápidas, sem nota, para chegar preparado nas atividades
+  function perguntasAquecimento(l, m) {
+    const qs = [];
+    const v = sortear(l.v, 1)[0];
+    if (v) qs.push({ p: `Como se diz “${v[1]}” em inglês?`, ops: embaralhar([v[0], ...sortear(l.v.filter((x) => x !== v).map((x) => x[0]), 2)]), certa: v[0], porque: `“${v[0]}” = ${v[1]}.` });
+    const e = sortear(l.e, 1)[0];
+    if (e) { const [t, c, ...err] = e.split('|'); qs.push({ p: `Complete: ${t}`, ops: embaralhar([c, ...err]), certa: c, porque: t.replace('___', c) }); }
+    const limpo = (x) => x.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    const frase = (x) => x.split(' ').length >= 3 && /^[A-Z"']/.test(x);
+    const boas = (m?.r || []).filter(([a, b]) => { const e = limpo(a), c = limpo(b); return e && c && e !== c && frase(e) && frase(c) && !c.includes(' / ') && !c.includes('...'); });
+    if (boas.length) {
+      const [errado, certo, porque] = sortear(boas, 1)[0];
+      qs.push({ p: 'Qual frase está correta?', ops: embaralhar([limpo(certo), limpo(errado)]), certa: limpo(certo), porque });
+    }
+    return qs;
+  }
+  function blocoAquecimento(qs) {
+    if (!qs.length) return '';
+    return `
+        <section id="estudoAquecimento" class="bg-navy-900 text-white rounded-[1.5rem] p-6 md:p-8 scroll-mt-24">
+          <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/70">${Icone('foguete', 'w-4 h-4')} Aquecimento</p>
+          <h2 class="mt-1 text-xl font-bold">Teste rápido antes das atividades</h2>
+          <p class="text-sm text-white/70">Não vale nota. Serve para você ver se já está pronto.</p>
+          <div class="mt-5 space-y-5">
+            ${qs.map((q, i) => `
+            <div data-aquec="${i}">
+              <p class="font-semibold">${i + 1}. ${App.escapar(q.p)}</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                ${q.ops.map((o) => `<button type="button" data-op-aquec="${App.escapar(o)}" class="text-left bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl px-4 py-2 transition">${App.escapar(o)}</button>`).join('')}
+              </div>
+              <p data-retorno class="hidden mt-2 text-sm"></p>
+            </div>`).join('')}
+          </div>
+          <p id="aquecResumo" class="hidden mt-5 font-semibold"></p>
+        </section>`;
+  }
+  function ligarAquecimento(raiz, qs) {
+    let feitas = 0, certas = 0;
+    raiz.querySelectorAll('[data-aquec]').forEach((box) => {
+      const q = qs[Number(box.dataset.aquec)];
+      box.querySelectorAll('[data-op-aquec]').forEach((b) => b.addEventListener('click', () => {
+        if (box.dataset.ok) return;
+        box.dataset.ok = '1'; feitas++;
+        const acertou = b.dataset.opAquec === q.certa;
+        if (acertou) certas++;
+        if (typeof Som !== 'undefined') Som.tocar(acertou ? 'acerto' : 'erro');
+        box.querySelectorAll('[data-op-aquec]').forEach((x) => {
+          x.disabled = true;
+          if (x.dataset.opAquec === q.certa) x.className = 'text-left bg-emerald-500 border border-emerald-400 text-white font-semibold rounded-xl px-4 py-2';
+          else if (x === b) x.className = 'text-left bg-red-500/80 border border-red-400 text-white rounded-xl px-4 py-2 line-through';
+          else x.classList.add('opacity-50');
+        });
+        const r = box.querySelector('[data-retorno]');
+        r.innerHTML = `<b>${acertou ? 'Isso!' : 'Quase.'}</b> ${App.escapar(q.porque)}`;
+        r.classList.remove('hidden');
+        if (feitas === qs.length) {
+          const res = raiz.querySelector('#aquecResumo');
+          res.textContent = certas === qs.length ? `${certas}/${qs.length}: você está pronto! Bora para as atividades.` : `${certas}/${qs.length}: revise os pontos acima com calma e depois comece. Você vai se sair bem!`;
+          res.classList.remove('hidden');
+        }
+      }));
+    });
+  }
+
   // ===================== 1. APRENDA =====================
   function renderizarAprenda() {
     st.modo = 'aprenda';
     atualizarBarra();
     const l = st.licao;
+    const m = typeof MATERIAIS !== 'undefined' ? MATERIAIS[`${st.n}|${st.l}`] : null;
+    const aquec = perguntasAquecimento(l, m);
     el('licaoConteudo').innerHTML = `
       <div class="lesson-enter space-y-5">
-        <section class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8">
-          <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-red">${Icone('livro', 'w-4 h-4')} Gramática</p>
+        <nav id="indiceEstudo" aria-label="Partes da lição" class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          ${ancora('estudoGramatica', st.extra ? 'Frases-chave' : 'Gramática')}${m ? ancora('estudoExemplos', 'Exemplos') + ancora('estudoErros', 'Erros comuns') : ''}${ancora('estudoVocab', 'Vocabulário')}${ancora('estudoDialogo', 'Diálogo')}${aquec.length ? ancora('estudoAquecimento', 'Aquecimento') : ''}
+        </nav>
+        <section id="estudoGramatica" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24">
+          <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-red">${Icone('livro', 'w-4 h-4')} ${st.extra ? 'Frases-chave' : 'Gramática'}</p>
           <h1 class="mt-2 text-2xl md:text-3xl font-extrabold text-navy-900">${App.escapar(l.t)}</h1>
           <p class="mt-3 text-slate-600 leading-relaxed">${App.escapar(l.g)}</p>
-          <div class="mt-5 space-y-2">
+          ${blocoMaterial(m)}
+          <p class="mt-6 text-sm font-bold text-navy-900">${m ? 'Na prática' : ''}</p>
+          <div class="mt-2 space-y-2">
             ${l.e.map((f) => { const [t, c] = f.split('|'); const frase = t.replace('___', c); return `
               <div class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-2.5">
                 ${botaoSom(frase)}
@@ -56,7 +196,9 @@
           </div>
         </section>
 
-        <section class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8">
+        ${secoesMaterial(m)}
+
+        <section id="estudoVocab" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24">
           <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-red">${Icone('som', 'w-4 h-4')} Vocabulário e expressões</p>
           <div class="mt-4 grid sm:grid-cols-2 gap-3">
             ${l.v.map(([en, pt]) => `
@@ -67,7 +209,7 @@
           </div>
         </section>
 
-        <section class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8">
+        <section id="estudoDialogo" class="bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 scroll-mt-24">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <p class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-red">${Icone('conversa', 'w-4 h-4')} Diálogo</p>
             <button id="btnDialogo" class="inline-flex items-center gap-2 text-sm font-semibold text-navy-900 border border-slate-200 hover:border-navy-900 rounded-xl px-4 py-2 transition">${Icone('som', 'w-4 h-4')} Ouvir a conversa</button>
@@ -85,12 +227,20 @@
 
         ${!Voz.temOuvir ? '<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">Seu navegador não tem leitura em voz alta. Para ouvir os áudios, use o Google Chrome ou o Microsoft Edge.</p>' : ''}
 
+        ${blocoAquecimento(aquec)}
+
         <section>
-          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Nesta prática</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Nesta prática</p>
           <div id="tiposPratica" class="mt-3 flex flex-wrap gap-2">
-            ${Object.entries(st.exercicios.reduce((m, ex) => { const t = NOMES_TIPOS(ex); m[t] = (m[t] || 0) + 1; return m; }, {}))
+            ${Object.entries(st.exercicios.reduce((acc, ex) => { const t = NOMES_TIPOS(ex); acc[t] = (acc[t] || 0) + 1; return acc; }, {}))
               .map(([t, q]) => `<span class="text-sm bg-slate-50 border border-slate-200 text-slate-600 rounded-full px-3 py-1.5">${t}${q > 1 ? ` <b class="text-navy-900">×${q}</b>` : ''}</span>`).join('')}
           </div>
+          <details id="guiaAtividades" class="mt-3 bg-white border border-slate-200 rounded-xl">
+            <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-navy-900">Como funciona cada atividade?</summary>
+            <ul class="px-4 pb-4 space-y-2 text-sm text-slate-600">
+              ${[...new Set(st.exercicios.map(NOMES_TIPOS))].map((t) => `<li><b class="text-navy-900">${t}:</b> ${DICAS_TIPOS[t] || ''}</li>`).join('')}
+            </ul>
+          </details>
         </section>
 
         <button id="btnPraticar" class="btn-shine w-full bg-brand-red hover:bg-brand-redDark text-white font-display font-semibold text-lg py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5">
@@ -99,6 +249,11 @@
       </div>`;
 
     ligarSons(el('licaoConteudo'));
+    ligarAquecimento(el('licaoConteudo'), aquec);
+    const mostrarTraducao = (b) => { b.querySelector('.traducao-oculta')?.classList.add('hidden'); b.querySelector('.traducao-texto')?.classList.remove('hidden'); b.classList.add('text-navy-900'); };
+    el('licaoConteudo').querySelectorAll('[data-traducao]').forEach((b) => b.addEventListener('click', () => mostrarTraducao(b)));
+    document.getElementById('btnTodasTraducoes')?.addEventListener('click', (e) => { el('licaoConteudo').querySelectorAll('[data-traducao]').forEach(mostrarTraducao); e.currentTarget.remove(); });
+    el('licaoConteudo').querySelectorAll('[data-ancora]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); document.getElementById(a.dataset.ancora)?.scrollIntoView({ behavior: 'smooth' }); }));
     el('btnPraticar').addEventListener('click', () => { Voz.parar(); comecarPratica(); });
     el('btnDialogo').addEventListener('click', tocarDialogo);
     window.scrollTo(0, 0);
