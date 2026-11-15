@@ -13,7 +13,7 @@ const Planos = (() => {
   const textoBotaoPix = () => `${ICONE_PIX}Gerar QR Code Pix · ${precoBR(comCupom(precoPlano()))}`;
   const textoBotaoCartao = () => (planoEscolhido === 'anual' ? `Assinar por ${precoBR(PLANO_ANUAL.preco)}/ano` : `Assinar por ${precoBR(PLANO.preco)}/mês`);
 
-  const RECURSOS = ['Todas as 64 lições dos 16 níveis, do A1 ao C2, + 3 trilhas extras', 'Teste de cada nível e certificados', 'Revisão inteligente: ditado, escrita, flashcards e desafio', 'Metas, XP, sequência e acompanhamento', 'Cartão (renova sozinho) ou Pix', 'Cancele quando quiser, sem multa'];
+  const RECURSOS = ['Todas as 128 lições dos 16 níveis, do A1 ao C2, + 8 trilhas extras com 100 lições', 'Teste de cada nível e certificados', 'Revisão inteligente: ditado, escrita, flashcards e desafio', 'Metas, XP, sequência e acompanhamento', 'Cartão (renova sozinho) ou Pix', 'Cancele quando quiser, sem multa'];
   const GRATIS = 'Criar a conta e fazer a prova de nivelamento é grátis.';
 
   const item = (t, cor) => `<li class="flex gap-3"><span class="${cor} mt-0.5 shrink-0">${Icone('check', 'w-5 h-5')}</span><span>${t}</span></li>`;

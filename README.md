@@ -183,7 +183,7 @@ guardado no navegador). Se os Termos mudarem de versão (`VERSAO_TERMOS`), o avi
 ## A trilha
 
 ```
-Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 4 lições ──▶ Teste do nível ──▶ Certificado + próximo nível
+Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 8 lições ──▶ Teste do nível ──▶ Certificado + próximo nível
 ```
 
 | Estágio (CEFR) | Níveis | Temas |
@@ -195,7 +195,7 @@ Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 4 lições ──▶ Test
 | C1 · Avançado | 13–15 | Advanced Structures · Natural Fluency · Persuasive Communication |
 | C2 · Proficiente | 16 | Mastery |
 
-**64 lições** no total. Cada uma tem:
+**128 lições** nos 16 níveis (8 por nível), mais **100 lições** nas 8 trilhas extras. Cada uma tem:
 - **Aprenda:** explicação de gramática em português, frases de exemplo, 6 palavras/expressões e um diálogo, tudo com áudio (normal e 🐢 devagar).
 - **Pratique:** de 17 a 18 atividades com correção na hora. Os tipos e a dificuldade mudam com o estágio:
 
@@ -209,7 +209,7 @@ Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 4 lições ──▶ Test
   usada numa frase completa e mostra um exemplo da lição para comparar (não corrige a gramática livre).
 - **Resultado:** nota, XP ganho e o próximo passo. A lição conta como concluída com 60%.
 
-**Teste do nível:** 12 questões das 4 lições (mudam a cada tentativa). Com **70%**, o aluno ganha o
+**Teste do nível:** 16 questões das 8 lições (1 de gramática e 1 de vocabulário de cada) (mudam a cada tentativa). Com **70%**, o aluno ganha o
 certificado do nível e sobe para o próximo. No nível 16, ganha o certificado de conclusão do curso.
 
 ### Prova de nivelamento
@@ -239,10 +239,19 @@ memória dele. Cada acerto empurra o item para uma caixa mais alta e aumenta o i
 - Cada acerto vale 5 XP (até 100 XP de revisão por dia) e cada sessão conta na **meta semanal** e na **sequência**.
 
 ### Trilhas extras
-Três trilhas de 4 lições cada, liberadas para quem assina, em qualquer ordem: **Inglês para viagem** (aeroporto, hotel,
-transporte, imprevistos), **Entrevista de emprego** (apresentação, pontos fortes, conquistas, encerramento) e
-**Inglês no trabalho** (e-mails, reuniões, conversa com colegas, apresentações). Somam XP, meta e sequência; não têm
-teste nem certificado e não entram na revisão. O conteúdo fica em `EXTRAS`, no fim de `js/curriculo.js`.
+Oito trilhas, liberadas para quem assina, em qualquer ordem. Somam XP, meta e sequência; não têm teste nem
+certificado e não entram na revisão. O conteúdo fica em `EXTRAS`, no fim de `js/curriculo.js`.
+
+| Trilha | Lições | O que treina |
+|---|---|---|
+| Inglês para viagem | 14 | aeroporto, imigração, hotel, carro, restaurante, compras, passeios, emergências, táxi/app |
+| Entrevista de emprego | 14 | apresentação, formação, pontos fortes, conquistas, salário, entrevista online, liderança, follow-up |
+| Inglês no trabalho | 14 | e-mails, reuniões, telefone, Slack, prazos, status, brainstorm, networking, números |
+| Inglês para tecnologia | 10 | stack, daily, code review, bugs, features, entrevista técnica, ágil, documentação, incidentes |
+| Morar no exterior | 10 | aluguel, banco, mercado, vizinhos, médico, burocracia, contas, escola, reparos |
+| Conversação e gírias | 10 | cumprimentos informais, reações, mensagens (BTW, IDK), "muletas", planos, séries, elogios |
+| Atendimento e vendas | 10 | receber o cliente, entender a necessidade, apresentar, objeções, preço, fechamento, pós-venda |
+| Recebendo turistas | 10 | recepção de hotel, direções, restaurantes, passeios, reclamações, comidas brasileiras, check-out |
 
 ### Motivação
 - **Meta semanal** (o aluno escolhe de 1 a 14 atividades), **XP** (10 por acerto, +100 por nível) e **sequência de dias**.
@@ -344,14 +353,14 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Segurança
 - A chave em `js/config.js` é a chave **pública** do Supabase; pode ficar no navegador.
 - As regras do banco (RLS) garantem que cada aluno só vê os próprios dados, que níveis bloqueados
-  não podem ser registrados, que o teste só é aceito depois das 4 lições e que só o admin vê a turma.
+  não podem ser registrados, que o teste só é aceito depois das 8 lições e que só o admin vê a turma.
 - As notas das lições são calculadas no navegador (é prática, então isso é aceitável); a prova de
   nivelamento é corrigida no banco.
 
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261111c` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261114a` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 
@@ -371,7 +380,7 @@ img/                  Logo, ícones do app e imagem de compartilhamento (compart
 manifest.webmanifest  App instalável (nome, ícones, cores)
 sw.js                 Service worker do app instalável
 js/config.js          Conexão com o Supabase, preços, SITE_URL e TURNSTILE_SITE_KEY
-js/curriculo.js       16 níveis × 4 lições + 3 trilhas extras (conteúdo do curso)
+js/curriculo.js       16 níveis × 8 lições + 8 trilhas extras (conteúdo do curso)
 js/atividades.js      Gera as atividades das lições, do teste e da revisão; corrige respostas digitadas
 js/voz.js             Áudio (voz do navegador) e reconhecimento de fala
 js/som.js             Efeitos sonoros (Web Audio)

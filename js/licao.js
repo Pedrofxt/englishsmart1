@@ -720,7 +720,7 @@
 
     const C = 2 * Math.PI * 54;
     const subiu = resp?.subiu || resp?.concluiu_curso;
-    const proximo = st.teste ? null : st.l < 4 ? `#/licao?n=${st.n}&l=${st.l + 1}` : st.extra ? null : `#/licao?n=${st.n}&l=0`;
+    const proximo = st.teste ? null : st.l < totalLicoes(st.n) ? `#/licao?n=${st.n}&l=${st.l + 1}` : st.extra ? null : `#/licao?n=${st.n}&l=0`;
 
     let titulo, texto;
     if (st.teste) {
@@ -730,7 +730,7 @@
       else { titulo = 'Ainda não foi desta vez'; texto = `Você precisa de ${minimo}% para passar. Revise as lições e tente de novo; você consegue!`; }
     } else {
       titulo = passou ? 'Lição concluída!' : 'Faltou pouco!';
-      texto = passou ? (st.l < 4 ? 'Siga para a próxima lição da trilha.' : st.extra ? 'Você terminou esta trilha extra. Muito bem!' : 'Você terminou as 4 lições. Hora do teste do nível!')
+      texto = passou ? (st.l < totalLicoes(st.n) ? 'Siga para a próxima lição da trilha.' : st.extra ? 'Você terminou esta trilha extra. Muito bem!' : `Você terminou as ${totalLicoes(st.n)} lições. Hora do teste do nível!`)
         : `Para concluir a lição você precisa de ${minimo}%. Revise o conteúdo e tente de novo.`;
     }
 
@@ -752,7 +752,7 @@
         ${erro ? `<p class="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">Não foi possível salvar: ${App.escapar(erro)}</p>` : ''}
         <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
           ${subiu ? `<a href="#/certificado?n=${st.n}" class="btn-shine font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">Ver meu certificado</a>` : ''}
-          ${!st.teste && passou && proximo ? `<a href="${proximo}" class="btn-shine font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">${st.l < 4 ? 'Próxima lição →' : 'Fazer o teste do nível →'}</a>` : ''}
+          ${!st.teste && passou && proximo ? `<a href="${proximo}" class="btn-shine font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">${st.l < totalLicoes(st.n) ? 'Próxima lição →' : 'Fazer o teste do nível →'}</a>` : ''}
           ${!passou ? `<button id="btnRefazer" class="font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Tentar de novo</button>` : ''}
           <a href="#/curso?n=${subiu && resp?.nivel_num ? resp.nivel_num : st.n}" class="font-semibold border border-slate-200 hover:border-navy-900 text-navy-900 rounded-xl px-6 py-3 transition">Voltar à trilha</a>
         </div>
@@ -907,7 +907,7 @@
             <div class="relative">
               <p class="text-white/60 font-medium">Nível ${st.n} · ${App.escapar(nivelInfo(st.n).tema)}</p>
               <h1 class="mt-2 text-3xl md:text-4xl font-extrabold">Teste do nível</h1>
-              <p class="mt-3 text-white/70 text-lg">${st.exercicios.length} questões sobre as 4 lições deste nível.</p>
+              <p class="mt-3 text-white/70 text-lg">${st.exercicios.length} questões sobre as lições deste nível.</p>
             </div>
           </div>
           <div class="p-8 md:p-10">
@@ -965,18 +965,18 @@
       const n = Number(params.get('n'));
       const l = Number(params.get('l'));
       const extra = EXTRAS.some((x) => x.n === n);
-      if (!((n >= 1 && n <= 16) || extra) || !(l >= 0 && l <= 4) || (extra && l === 0)) { location.hash = '#/curso'; return false; }
+      if (!((n >= 1 && n <= 16) || extra) || !(l >= 0 && l <= totalLicoes(n)) || (extra && l === 0)) { location.hash = '#/curso'; return false; }
       if (!admin && !extra && n > p.nivel_num) { App.toast('Este nível ainda está bloqueado.'); location.hash = `#/curso?n=${n}`; return false; }
 
       if (l === 0 && !admin) {
         const { progresso } = await App.dadosDoAluno(p.id);
         const feitas = progresso.filter((r) => r.nivel_num === n && r.licao >= 1 && r.acertos >= r.total * 0.6).length;
-        if (feitas < 4) { App.toast('Conclua as 4 lições do nível antes do teste.'); location.hash = `#/curso?n=${n}`; return false; }
+        if (feitas < totalLicoes(n)) { App.toast(`Conclua as ${totalLicoes(n)} lições do nível antes do teste.`); location.hash = `#/curso?n=${n}`; return false; }
       }
 
       st = { n, l, teste: l === 0, extra, admin, licao: l ? nivelInfo(n).licoes[l - 1] : null, i: 0, acertos: 0, avaliadas: 0, itens: [], erradas: [] };
       el('licaoVoltar').href = `#/curso?n=${n}`;
-      el('licaoRotulo').textContent = extra ? `Trilha extra · ${nivelInfo(n).nome} · Lição ${l} de 4` : `Nível ${n} · ${faixaDoNivel(n)} · ${l ? `Lição ${l} de 4` : 'Teste do nível'}`;
+      el('licaoRotulo').textContent = extra ? `Trilha extra · ${nivelInfo(n).nome} · Lição ${l} de ${totalLicoes(n)}` : `Nível ${n} · ${faixaDoNivel(n)} · ${l ? `Lição ${l} de ${totalLicoes(n)}` : 'Teste do nível'}`;
       el('licaoTitulo').textContent = l ? st.licao.t : nivelInfo(n).tema;
       iniciarSessao();
     },

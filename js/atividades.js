@@ -199,12 +199,12 @@ const Atividades = (() => {
     return lista;
   }
 
-  // Teste do nível: 12 questões misturando as 4 lições (gramática, vocabulário e escuta)
+  // Teste do nível: 16 questões misturando as 8 lições (1 de gramática e 1 de vocabulário por lição)
   function doTeste(nivel) {
     const info = nivelInfo(nivel);
     const lista = [];
     info.licoes.forEach((l, li) => {
-      sortear(l.e.map((f, i) => [f, i]), 2).forEach(([f, i]) => lista.push(lacuna(f, 'Gramática', chave('e', nivel, li + 1, i))));
+      sortear(l.e.map((f, i) => [f, i]), info.licoes.length > 4 ? 1 : 2).forEach(([f, i]) => lista.push(lacuna(f, 'Gramática', chave('e', nivel, li + 1, i))));
       const v = sortear(l.v, 1)[0];
       lista.push(significado(v, l.v, chave('v', nivel, li + 1, l.v.indexOf(v))));
     });

@@ -1175,3 +1175,28 @@ revoke all on function public.criar_aluno() from public, anon, authenticated;
 -- atualizar_perfil também aceita manter a foto do Google já gravada:
 --   or (av ~ '^https://[a-z0-9.-]+\.googleusercontent\.com/' and char_length(av) <= 300
 --       and av = (select a.avatar from public.alunos a where a.id = uid))
+
+-- =====================================================================
+-- 8 lições por nível (licao 1–8; 0 = teste) e 8 trilhas extras (101–108)
+-- =====================================================================
+alter table public.progresso drop constraint if exists progresso_licao_check;
+alter table public.progresso add constraint progresso_licao_check check (licao >= 0 and licao <= 20);
+alter table public.progresso drop constraint if exists progresso_nivel_num_check;
+alter table public.progresso add constraint progresso_nivel_num_check check ((nivel_num between 1 and 16) or (nivel_num between 101 and 120));
+alter table public.revisao drop constraint if exists revisao_item_check;
+alter table public.revisao add constraint revisao_item_check check (item ~ '^[ved]\|([1-9]|1[0-6])\|[1-8]\|[0-9]{1,2}$');
+-- registrar_atividade: extras 101–108; lição até 8 nos níveis e até 20 nas trilhas; teste exige as 8 lições com 60%
+-- registrar_revisao: itens aceitam lição 1–8
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('public.registrar_atividade(integer,integer,integer,integer,text)'::regprocedure);
+  d := replace(d, 'p_nivel not between 101 and 103', 'p_nivel not between 101 and 108');
+  d := replace(d, 'if p_licao is null or p_licao < 0 or p_licao > 4 then', 'if p_licao is null or p_licao < 0 or (p_nivel <= 16 and p_licao > 8) or (p_nivel > 100 and p_licao > 20) then');
+  d := replace(d, 'licao between 1 and 4 and acertos >= total * 0.6;', 'licao between 1 and 8 and acertos >= total * 0.6;');
+  d := replace(d, 'if licoes_ok < 4 then raise exception ''Conclua as 4 lições do nível antes do teste.''; end if;', 'if licoes_ok < 8 then raise exception ''Conclua as 8 lições do nível antes do teste.''; end if;');
+  execute d;
+  d := pg_get_functiondef('public.registrar_revisao(text,jsonb,integer,integer,text)'::regprocedure);
+  d := replace(d, '[1-4]', '[1-8]');
+  execute d;
+end $$;

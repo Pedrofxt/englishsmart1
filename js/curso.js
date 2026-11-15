@@ -1,4 +1,4 @@
-// curso.js — Trilha do aluno: 16 níveis, 4 lições + teste por nível, meta semanal, XP e certificados
+// curso.js — Trilha do aluno: 16 níveis, 8 lições + teste por nível, meta semanal, XP e certificados
 
 (() => {
   const el = (id) => document.getElementById(id);
@@ -10,8 +10,10 @@
   const licaoOk = (r) => !!r && r.acertos >= r.total * 0.6;
   const temCertificado = (n) => dados.certificados.some((c) => c.nivel_num === n);
   const liberado = (n) => admin || ehExtra(n) || n <= perfil.nivel_num;
-  const licoesFeitas = (n) => [1, 2, 3, 4].filter((l) => licaoOk(registro(n, l))).length;
+  const licoesFeitas = (n) => nivelInfo(n).licoes.filter((_, i) => licaoOk(registro(n, i + 1))).length;
   const pct = (r) => Math.round((r.acertos / r.total) * 100);
+  // Resumo curto da explicação para o cartão da lição (primeira frase, ou o começo do texto)
+  const resumoLicao = (g) => { const f = g.split(/(?<=\.)\s/)[0]; return f.length <= 140 && !/:$/.test(f) ? f : `${g.slice(0, g.lastIndexOf(' ', 120))}…`; };
 
   // ---------- Barra lateral: os 16 níveis ----------
   function renderizarNiveis(visto) {
@@ -32,7 +34,7 @@
                   ${feito ? 'bg-emerald-500 text-white' : atual ? 'bg-brand-red text-white' : ativo ? 'bg-navy-900 text-white' : 'bg-white/10'}">${icone}</span>
                 <span class="min-w-0 flex-1">
                   <span class="block truncate font-semibold">${App.escapar(n.tema)}</span>
-                  <span class="block text-[11px] ${ativo ? 'text-slate-400' : 'text-white/40'}">Nível ${n.n}${atual ? ' · você está aqui' : aberto && !admin ? ` · ${licoesFeitas(n.n)}/4 lições` : ''}</span>
+                  <span class="block text-[11px] ${ativo ? 'text-slate-400' : 'text-white/40'}">Nível ${n.n}${atual ? ' · você está aqui' : aberto && !admin ? ` · ${licoesFeitas(n.n)}/${totalLicoes(n.n)} lições` : ''}</span>
                 </span>
               </a>`;
           }).join('')}
@@ -48,7 +50,7 @@
                 <span class="w-8 h-8 shrink-0 rounded-lg grid place-items-center ${ativo ? 'bg-navy-900 text-white' : 'bg-white/10'}">${Icone(x.icone, 'w-4 h-4')}</span>
                 <span class="min-w-0 flex-1">
                   <span class="block truncate font-semibold">${App.escapar(x.nome)}</span>
-                  <span class="block text-[11px] ${ativo ? 'text-slate-400' : 'text-white/40'}">${admin ? 'Trilha extra' : `${licoesFeitas(x.n)}/4 lições`}</span>
+                  <span class="block text-[11px] ${ativo ? 'text-slate-400' : 'text-white/40'}">${admin ? 'Trilha extra' : `${licoesFeitas(x.n)}/${totalLicoes(x.n)} lições`}</span>
                 </span>
               </a>`;
           }).join('')}
@@ -84,8 +86,8 @@
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nível atual</p>
         <p class="mt-1 font-display text-3xl font-extrabold text-navy-900">${n}<span class="text-base text-slate-400"> de 16</span></p>
         <p class="text-xs font-semibold ${faixa.texto}">${perfil.nivel} · ${faixa.nome}</p>
-        <div class="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="barra-cresce h-full ${faixa.cor} rounded-full" style="width:${(etapas / 5) * 100}%"></div></div>
-        <p class="mt-1 text-[11px] text-slate-400">${etapas} de 5 etapas do nível</p>
+        <div class="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="barra-cresce h-full ${faixa.cor} rounded-full" style="width:${(etapas / (totalLicoes(n) + 1)) * 100}%"></div></div>
+        <p class="mt-1 text-[11px] text-slate-400">${etapas} de ${totalLicoes(n) + 1} etapas do nível</p>
       </div>
       <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 flex items-center gap-3 sm:gap-4">
         <svg viewBox="0 0 60 60" class="w-11 h-11 sm:w-16 sm:h-16 shrink-0 -rotate-90">
@@ -164,9 +166,9 @@
           <div class="flex-1">
             <span class="text-xs font-semibold uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Trilha extra · ${App.escapar(x.tema)}</span>
             <h1 class="mt-3 text-3xl md:text-5xl font-extrabold">${App.escapar(x.nome)}</h1>
-            <p class="mt-3 text-white/70 text-lg max-w-2xl">4 lições práticas para <b class="text-white">${App.escapar(x.objetivo)}</b>. Faça na ordem que quiser, quantas vezes quiser.</p>
-            ${!admin ? `<div class="mt-6 max-w-md"><div class="flex justify-between text-xs text-white/60 mb-1.5"><span>Progresso</span><span>${feitas}/4</span></div>
-              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-brand-red rounded-full" style="width:${(feitas / 4) * 100}%"></div></div></div>` : ''}
+            <p class="mt-3 text-white/70 text-lg max-w-2xl">${x.licoes.length} lições práticas para <b class="text-white">${App.escapar(x.objetivo)}</b>. Faça na ordem que quiser, quantas vezes quiser.</p>
+            ${!admin ? `<div class="mt-6 max-w-md"><div class="flex justify-between text-xs text-white/60 mb-1.5"><span>Progresso</span><span>${feitas}/${x.licoes.length}</span></div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-brand-red rounded-full" style="width:${(feitas / x.licoes.length) * 100}%"></div></div></div>` : ''}
           </div>
         </div>
       </div>
@@ -180,7 +182,7 @@
               ${r ? `<span class="text-[11px] font-semibold ${ok ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} px-2.5 py-1 rounded-full">${pct(r)}%</span>` : '<span class="text-[11px] font-semibold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">Nova</span>'}
             </div>
             <h3 class="mt-4 text-lg font-bold text-navy-900">${App.escapar(l.t)}</h3>
-            <p class="mt-1 text-sm text-slate-500 flex-1">${App.escapar(l.g.split(/(?<=[.:])\s/)[0])}</p>
+            <p class="mt-1 text-sm text-slate-500 flex-1">${App.escapar(resumoLicao(l.g))}</p>
             <a href="#/licao?n=${n}&l=${i + 1}" class="mt-4 text-center font-semibold rounded-xl py-2.5 transition ${ok ? 'border border-slate-200 text-navy-900 hover:border-navy-900' : 'bg-brand-red hover:bg-brand-redDark text-white'}">${r ? (ok ? 'Praticar de novo' : 'Tentar de novo') : 'Começar'}</a>
           </article>`;
       }).join('')}</div>
@@ -198,7 +200,7 @@
     const feitas = licoesFeitas(n);
     const cert = temCertificado(n);
     const testeReg = registro(n, 0);
-    const testeLiberado = admin || (aberto && feitas === 4);
+    const testeLiberado = admin || (aberto && feitas === info.licoes.length);
 
     const cartaoLicao = (l, i) => {
       const num = i + 1;
@@ -207,7 +209,7 @@
       const chip = !r ? '<span class="text-[11px] font-semibold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">Nova</span>'
         : ok ? `<span class="text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">Concluída · ${pct(r)}%</span>`
         : `<span class="text-[11px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">${pct(r)}% · refaça</span>`;
-      const resumo = l.g.split(/(?<=\.)\s/)[0];
+      const resumo = resumoLicao(l.g);
       return `
         <article class="reveal group relative bg-white rounded-2xl border border-slate-200 p-6 flex flex-col ${aberto ? 'hover:-translate-y-1 hover:shadow-card' : 'opacity-60'} transition duration-300" style="transition-delay:${i * 60}ms">
           <div class="flex items-start justify-between gap-3">
@@ -238,14 +240,14 @@
       blocoTeste = `
         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
           <span class="w-14 h-14 shrink-0 rounded-2xl bg-brand-red text-white grid place-items-center">${Icone('alvo', 'w-7 h-7')}</span>
-          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n}</p><p class="text-sm text-slate-500">12 questões das 4 lições. Com 70% você ganha o certificado${n < 16 ? ` e vai para o nível ${n + 1}` : ' de conclusão do curso'}.${testeReg ? ` Sua melhor nota: ${pct(testeReg)}%.` : ''}</p></div>
+          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n}</p><p class="text-sm text-slate-500">16 questões das 8 lições. Com 70% você ganha o certificado${n < 16 ? ` e vai para o nível ${n + 1}` : ' de conclusão do curso'}.${testeReg ? ` Sua melhor nota: ${pct(testeReg)}%.` : ''}</p></div>
           <a href="#/licao?n=${n}&l=0" class="btn-shine text-center font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">${testeReg ? 'Tentar de novo' : 'Fazer o teste'}</a>
         </div>`;
     } else {
       blocoTeste = `
         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
           <span class="w-14 h-14 shrink-0 rounded-2xl bg-slate-200 text-slate-500 grid place-items-center">${Icone('cadeado', 'w-7 h-7')}</span>
-          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n}</p><p class="text-sm text-slate-500">${aberto ? `Conclua as 4 lições com pelo menos 60% para liberar. (${feitas}/4)` : `Chegue ao nível ${n} para liberar.`}</p></div>
+          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n}</p><p class="text-sm text-slate-500">${aberto ? `Conclua as ${info.licoes.length} lições com pelo menos 60% para liberar. (${feitas}/${info.licoes.length})` : `Chegue ao nível ${n} para liberar.`}</p></div>
         </div>`;
     }
 
@@ -268,8 +270,8 @@
           <p class="mt-3 text-white/70 text-lg max-w-2xl">Ao final deste nível, você vai conseguir <b class="text-white">${App.escapar(info.objetivo)}</b>.</p>
           ${aberto && !admin ? `
             <div class="mt-6 max-w-md">
-              <div class="flex justify-between text-xs text-white/60 mb-1.5"><span>Progresso do nível</span><span>${feitas + (cert ? 1 : 0)}/5</span></div>
-              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="barra-cresce barra-brilho h-full bg-brand-red rounded-full transition-all duration-700" style="width:${((feitas + (cert ? 1 : 0)) / 5) * 100}%"></div></div>
+              <div class="flex justify-between text-xs text-white/60 mb-1.5"><span>Progresso do nível</span><span>${feitas + (cert ? 1 : 0)}/${info.licoes.length + 1}</span></div>
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="barra-cresce barra-brilho h-full bg-brand-red rounded-full transition-all duration-700" style="width:${((feitas + (cert ? 1 : 0)) / (info.licoes.length + 1)) * 100}%"></div></div>
             </div>` : ''}
         </div>
       </div>

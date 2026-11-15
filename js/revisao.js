@@ -6,7 +6,7 @@ const Revisao = (() => {
   // Lições estudadas + memória (tabela revisao) + sessões. O admin vê tudo liberado e nada é salvo.
   async function dados(p) {
     if (p.papel === 'admin') {
-      return { licoes: CURRICULO.flatMap((n) => [1, 2, 3, 4].map((l) => [n.n, l])), memoria: [], sessoes: [], progresso: [] };
+      return { licoes: CURRICULO.flatMap((n) => n.licoes.map((_, i) => [n.n, i + 1])), memoria: [], sessoes: [], progresso: [] };
     }
     const [prog, mem, ses] = await Promise.all([
       sb.from('progresso').select('*').eq('aluno_id', p.id),
