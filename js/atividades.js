@@ -199,7 +199,7 @@ const Atividades = (() => {
     return lista;
   }
 
-  // Teste do nível: 16 questões misturando as 8 lições (1 de gramática e 1 de vocabulário por lição)
+  // Teste do nível: 20 questões misturando as 10 lições (1 de gramática e 1 de vocabulário por lição)
   function doTeste(nivel) {
     const info = nivelInfo(nivel);
     const lista = [];

@@ -10,3 +10,10 @@
 /* Prova em tela cheia (ModoProva): sem seleção de texto */
 .modo-prova body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .modo-prova input, .modo-prova textarea { -webkit-user-select: text; user-select: text; }
+
+/* Seletor de tipo de conta (cadastro) */
+.tipo-conta { @apply block cursor-pointer; }
+.tipo-conta span { @apply block text-center text-sm font-semibold border-2 border-slate-200 rounded-xl py-2.5 text-navy-900 transition; }
+.tipo-conta:hover span { @apply border-navy-600; }
+.tipo-conta input:checked + span { @apply border-navy-900 bg-navy-900 text-white; }
+.tipo-conta input:focus-visible + span { @apply ring-2 ring-brand-red ring-offset-2; }

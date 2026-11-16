@@ -58,6 +58,22 @@ const App = (() => {
       return perfilCache;
     }
 
+    // Conta de professor/escola criada com o Google: o tipo escolhido ficou guardado antes do login
+    const pendente = lerLocal('es_tipo_conta');
+    if (pendente) {
+      gravarLocal('es_tipo_conta', '');
+      try {
+        const c = JSON.parse(pendente);
+        const { error: e2 } = await sb.rpc('tornar_educador', { p_tipo: c.tipo, p_nome: c.nome || user.user_metadata?.full_name || user.email, p_instituicao: c.instituicao || null, p_documento: c.documento || null, p_codigo_escola: c.codigo || null });
+        if (e2) setTimeout(() => toast(e2.message), 600);
+      } catch {}
+    }
+    const { data: ctx } = await sb.rpc('meu_contexto');
+    if (ctx?.papel === 'educador') {
+      perfilCache = { papel: 'educador', id: user.id, email: user.email, nome: ctx.nome, subtipo: ctx.subtipo, instituicao: ctx.instituicao || null, vinculo: ctx.vinculo || null, premium: true };
+      return perfilCache;
+    }
+
     const [{ data, error }, { data: assinatura }] = await Promise.all([
       sb.from('alunos').select('*').eq('id', user.id).maybeSingle(),
       sb.from('assinaturas').select('*').eq('aluno_id', user.id).maybeSingle(),
@@ -65,7 +81,9 @@ const App = (() => {
     if (error) throw error;
     perfilCache = data ? { papel: 'aluno', ...data } : { papel: 'aluno', id: user.id, nome: user.email, email: user.email, semCadastro: true };
     perfilCache.assinatura = assinatura || null;
-    perfilCache.premium = temPremium(assinatura);
+    perfilCache.turmasEdu = ctx?.turmas || [];
+    perfilCache.premiumTurma = !temPremium(assinatura) && !!ctx?.premium;
+    perfilCache.premium = temPremium(assinatura) || !!ctx?.premium;
     if (data) perfilCache.aparelho = await checarAparelho(forcar);
     if (data) await convitesPendentes(perfilCache);
     return perfilCache;
@@ -149,6 +167,7 @@ const App = (() => {
   function destino(p) {
     if (!p) return '#/entrar';
     if (p.papel === 'admin') return '#/admin';
+    if (p.papel === 'educador') return '#/escola';
     if (!p.nivel_num) return '#/prova';      // primeiro a prova de nivelamento (grátis)
     return p.premium ? '#/curso' : '#/planos'; // depois, só com assinatura
   }
@@ -216,8 +235,10 @@ const App = (() => {
         <div class="min-w-0"><p class="font-semibold text-navy-900 truncate">${escapar(p.nome)}</p><p class="text-xs text-slate-400 truncate">${escapar(p.email || '')}</p></div>
       </div>
       <div class="py-1">
-        ${item('#/perfil', 'usuario', 'Meu perfil')}
-        ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do professor') : item('#/curso', 'capelo', 'Minha trilha')}
+        ${p.papel === 'educador' ? item('#/escola', 'grafico', p.subtipo === 'escola' ? 'Painel da escola' : 'Painel do professor') + item('#/escola?aba=turmas', 'grupo', 'Turmas') : item('#/perfil', 'usuario', 'Meu perfil')}
+        ${p.papel === 'admin' ? item('#/admin', 'grafico', 'Portal do administrador') : p.papel === 'aluno' ? item('#/curso', 'capelo', 'Minha trilha') : ''}
+        ${p.papel === 'aluno' ? item('#/turmas', 'grupo', 'Minhas turmas') : ''}
+        ${item('#/comunidade', 'conversa', 'Comunidade')}
         ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
         ${p.papel === 'aluno' && p.nivel_num ? item('#/loja', 'loja', 'Loja de moedas') : ''}
         ${p.papel === 'aluno' && !(modoApp() && !p.premium) ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
@@ -288,6 +309,8 @@ const App = (() => {
         const p = (await usuario()) ? await perfil() : null;
         if (minha !== navegacaoAtual) return;
         if (p?.papel === 'aluno' && p.aparelho && p.aparelho.ok === false) { location.hash = '#/dispositivos'; return; }
+        // professor/escola: telas de aluno levam para o painel (as lições abrem em modo de visualização)
+        if (p?.papel === 'educador' && ['curso', 'prova', 'planos', 'revisao', 'loja', 'perfil', 'dispositivos', 'turmas'].includes(nome)) { location.hash = '#/escola'; return; }
       } catch { /* a própria tela trata o erro */ }
     }
 

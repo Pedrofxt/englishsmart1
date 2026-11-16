@@ -1089,7 +1089,7 @@
   // Sessão de revisão: #/treino?modo=dia|erros|estagio|ditado|escrita|relampago|flashcards[&faixa=B1]
   async function iniciarTreino(p, params) {
     clearInterval(st.relogio);
-    const admin = p.papel === 'admin';
+    const admin = p.papel === 'admin' || p.papel === 'educador';
     const modo = params.get('modo');
     if (!MODOS_REVISAO[modo]) { location.hash = '#/revisao'; return false; }
     const faixa = modo === 'estagio' ? params.get('faixa') : null;
@@ -1122,7 +1122,7 @@
         if (!App.licaoLivre(p, l0)) { location.hash = '#/planos?motivo=assinatura'; return false; }
       }
       clearInterval(st.relogio);
-      const admin = p.papel === 'admin';
+      const admin = p.papel === 'admin' || p.papel === 'educador';
       const n = Number(params.get('n'));
       const l = Number(params.get('l'));
       const extra = EXTRAS.some((x) => x.n === n);

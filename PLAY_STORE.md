@@ -83,7 +83,7 @@ Aprenda hoje. Fale amanhã.
 O English Smart descobre o seu nível com uma prova de nivelamento grátis e monta a sua trilha de inglês, do "Hello" até conversar com naturalidade.
 
 O QUE VOCÊ ENCONTRA
-• 16 níveis, do A1 ao C2, com 128 lições de gramática, vocabulário e diálogos
+• 16 níveis, do A1 ao C2, com 160 lições de gramática, vocabulário e diálogos
 • 8 trilhas extras: viagem, entrevista de emprego, inglês no trabalho, tecnologia, morar no exterior, conversação e gírias, atendimento e vendas, turismo
 • Áudio em todas as frases, com velocidade normal e lenta
 • Prática de fala: fale no microfone e receba a correção na hora

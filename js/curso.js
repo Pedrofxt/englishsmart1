@@ -1,4 +1,4 @@
-// curso.js — Trilha do aluno: 16 níveis, 8 lições + teste por nível, meta semanal, XP e certificados
+// curso.js — Trilha do aluno: 16 níveis, 10 lições + teste por nível, meta semanal, XP e certificados
 
 (() => {
   const el = (id) => document.getElementById(id);
@@ -242,7 +242,7 @@
       blocoTeste = `
         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
           <span class="w-14 h-14 shrink-0 rounded-2xl bg-brand-red text-white grid place-items-center">${Icone('alvo', 'w-7 h-7')}</span>
-          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n}</p><p class="text-sm text-slate-500">16 questões das 8 lições. Com 70% você ganha o certificado${n < 16 ? ` e vai para o nível ${n + 1}` : ' de conclusão do curso'}.${testeReg ? ` Sua melhor nota: ${pct(testeReg)}%.` : ''}</p></div>
+          <div class="flex-1"><p class="font-display text-lg font-bold text-navy-900">Teste do nível ${n}</p><p class="text-sm text-slate-500">20 questões das 10 lições. Com 70% você ganha o certificado${n < 16 ? ` e vai para o nível ${n + 1}` : ' de conclusão do curso'}.${testeReg ? ` Sua melhor nota: ${pct(testeReg)}%.` : ''}</p></div>
           <a href="#/licao?n=${n}&l=0" class="btn-shine text-center font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">${testeReg ? 'Tentar de novo' : 'Fazer o teste'}</a>
         </div>`;
     } else {

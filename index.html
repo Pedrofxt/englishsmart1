@@ -29,9 +29,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <!-- Visual: Tailwind já compilado (sem montar o CSS no navegador) -->
-  <link rel="stylesheet" href="css/tailwind.css?v=20261115c" />
-  <link rel="stylesheet" href="css/brand.css?v=20261115c" />
-  <link rel="stylesheet" href="css/escuro.css?v=20261115c" />
+  <link rel="stylesheet" href="css/tailwind.css?v=20261115d" />
+  <link rel="stylesheet" href="css/brand.css?v=20261115d" />
+  <link rel="stylesheet" href="css/escuro.css?v=20261115d" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Course","name":"English Smart — Curso de Inglês Inteligente","description":"Curso de inglês online em 16 níveis (A1 a C2) com prova de nivelamento grátis.","provider":{"@type":"Organization","name":"English Smart","url":"https://englishsmart.app.br"},"inLanguage":"pt-BR","offers":{"@type":"Offer","price":"29.99","priceCurrency":"BRL","category":"Subscription"}}</script>
 </head>
@@ -51,6 +51,7 @@
         <button data-rolar="atividades" class="hover:text-white transition">Atividades</button>
         <button data-rolar="experimente" class="hover:text-white transition">Experimente</button>
         <button data-rolar="planos" class="hover:text-white transition">Planos</button>
+        <button data-rolar="escolas" class="hover:text-white transition">Escolas</button>
         <button data-rolar="faq" class="hover:text-white transition">Dúvidas</button>
         <a href="#/termos" class="hover:text-white transition">Termos</a>
       </nav>
@@ -73,6 +74,7 @@
         <button data-rolar="atividades" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Atividades</button>
         <button data-rolar="experimente" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Experimente</button>
         <button data-rolar="planos" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Planos</button>
+        <button data-rolar="escolas" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Escolas</button>
         <button data-rolar="faq" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Dúvidas</button>
         <a href="#/termos" class="px-2.5 py-1.5 rounded-full hover:bg-white/10 hover:text-white transition">Termos</a>
       </div>
@@ -102,7 +104,7 @@
         </h1>
         <p class="fade-up delay-3 mt-8 text-lg md:text-xl text-white/70 max-w-xl leading-relaxed">
           O <strong class="text-white font-semibold">Curso de Inglês Inteligente</strong> descobre o seu nível com uma prova de nivelamento
-          e monta a sua trilha: 128 lições com áudio, diálogos e prática de fala, do "Hello" até conversar com naturalidade.
+          e monta a sua trilha: 160 lições com áudio, diálogos e prática de fala, do "Hello" até conversar com naturalidade.
         </p>
         <div class="fade-up delay-4 mt-10 flex flex-col sm:flex-row gap-4">
           <a href="#/cadastro" class="btn-shine group inline-flex items-center justify-center gap-3 bg-brand-red hover:bg-brand-redDark text-white font-display font-semibold text-lg px-8 py-4 rounded-2xl shadow-glow transition hover:-translate-y-0.5">
@@ -188,7 +190,7 @@
         </div>
         <div class="reveal group bg-white rounded-3xl p-8 border border-slate-200 hover:border-brand-red/40 hover:-translate-y-1 hover:shadow-card transition duration-300" style="transition-delay:.1s">
           <span aria-hidden="true" class="font-display text-6xl font-extrabold text-slate-100 group-hover:text-brand-redSoft transition">02</span>
-          <h3 class="mt-2 text-xl font-bold text-navy-900">8 lições por nível</h3>
+          <h3 class="mt-2 text-xl font-bold text-navy-900">10 lições por nível</h3>
           <p class="mt-2 text-slate-500">Cada lição tem gramática, vocabulário, diálogo com áudio e de 17 a 18 atividades, que ficam mais escritas a cada estágio.</p>
         </div>
         <div class="reveal group bg-white rounded-3xl p-8 border border-slate-200 hover:border-brand-red/40 hover:-translate-y-1 hover:shadow-card transition duration-300" style="transition-delay:.2s">
@@ -261,6 +263,46 @@
     </div>
   </section>
 
+  <!-- Escolas e professores -->
+  <section id="escolas" class="py-24 bg-white scroll-mt-20" data-sem-app>
+    <div class="max-w-6xl mx-auto px-5">
+      <div class="reveal text-center max-w-2xl mx-auto">
+        <p class="text-brand-red font-semibold tracking-wide uppercase text-sm">Para escolas e professores</p>
+        <h2 class="mt-3 text-4xl md:text-5xl font-extrabold text-navy-900">Leve o English Smart para as suas turmas</h2>
+        <p class="mt-4 text-lg text-slate-500">Crie turmas, aprove os alunos pelo código da turma e acompanhe tudo num painel com indicadores. Você paga só pelos alunos aprovados.</p>
+      </div>
+      <div class="mt-12 grid md:grid-cols-2 gap-6">
+        <article class="reveal bg-slate-50 rounded-[1.75rem] border border-slate-200 p-7 md:p-8 flex flex-col">
+          <span class="w-12 h-12 rounded-2xl bg-emerald-700 text-white grid place-items-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span>
+          <h3 class="mt-4 text-2xl font-extrabold text-navy-900">Professor</h3>
+          <p class="mt-1 text-emerald-800 font-bold">5% de desconto por aluno</p>
+          <ul class="mt-4 space-y-2 text-slate-600 text-sm flex-1">
+            <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Turmas ilimitadas com código e link de convite</li>
+            <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Você aprova cada aluno que pede para entrar</li>
+            <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Painel de desempenho, aulas ao vivo e vídeos para a turma</li>
+            <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Comunidade privada da turma · plano mensal ou anual</li>
+          </ul>
+          <a href="#/cadastro?tipo=professor" class="mt-6 text-center font-display font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-2xl px-6 py-3.5 transition">Criar conta de professor</a>
+        </article>
+        <article class="reveal bg-brand-hero text-white rounded-[1.75rem] p-7 md:p-8 flex flex-col relative overflow-hidden">
+          <div class="absolute inset-0 bg-grid opacity-60"></div>
+          <div class="relative flex flex-col flex-1">
+            <span class="w-12 h-12 rounded-2xl bg-brand-red text-white grid place-items-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></span>
+            <h3 class="mt-4 text-2xl font-extrabold">Escola</h3>
+            <p class="mt-1 text-amber-300 font-bold">10% de desconto por aluno</p>
+            <ul class="mt-4 space-y-2 text-white/80 text-sm flex-1">
+              <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-amber-300" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Professores vinculados pelo código da escola, com sua aprovação</li>
+              <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-amber-300" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Crie, edite e exclua turmas de qualquer professor</li>
+              <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-amber-300" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Painel estilo BI: engajamento, níveis, médias por turma e por aluno, exportação</li>
+              <li><svg class="inline w-4 h-4 mr-1 -mt-0.5 text-amber-300" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Uma fatura só para todos os alunos · comunidade da escola</li>
+            </ul>
+            <a href="#/cadastro?tipo=escola" class="mt-6 text-center font-display font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-2xl px-6 py-3.5 transition">Criar conta da escola</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <!-- Chamada final -->
   <section class="py-24 bg-slate-50">
     <div class="reveal max-w-4xl mx-auto px-5">
@@ -287,7 +329,7 @@
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Como eu subo de nível?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
-          <p class="mt-3 text-slate-500">Conclua as 8 lições do seu nível (com pelo menos 60% em cada) e faça o teste do nível. Com 70% de acertos, você recebe o certificado e o próximo nível é liberado.</p>
+          <p class="mt-3 text-slate-500">Conclua as 10 lições do seu nível (com pelo menos 60% em cada) e faça o teste do nível. Com 70% de acertos, você recebe o certificado e o próximo nível é liberado.</p>
         </details>
         <details class="reveal bg-slate-50 rounded-2xl p-6">
           <summary class="flex justify-between items-center font-semibold text-navy-900">Preciso de microfone?<span class="faq-icon text-2xl text-brand-red">+</span></summary>
@@ -433,6 +475,27 @@
           <div>
             <h1 class="text-3xl font-extrabold text-navy-900">Crie sua conta</h1>
             <p class="mt-2 text-slate-500">Depois você já faz a prova de nivelamento.</p>
+          </div>
+          <fieldset>
+            <legend class="block text-sm font-medium text-slate-600 mb-1.5">Tipo de conta</legend>
+            <div id="tipoConta" class="grid grid-cols-3 gap-2" role="radiogroup">
+              <label class="tipo-conta"><input type="radio" name="tipoConta" value="aluno" checked class="sr-only" /><span>Aluno</span></label>
+              <label class="tipo-conta"><input type="radio" name="tipoConta" value="professor" class="sr-only" /><span>Professor</span></label>
+              <label class="tipo-conta"><input type="radio" name="tipoConta" value="escola" class="sr-only" /><span>Escola</span></label>
+            </div>
+          </fieldset>
+          <div id="camposProfessor" class="hidden space-y-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Você dá aula">
+              <label class="tipo-conta"><input type="radio" name="tipoProf" value="professor" checked class="sr-only" /><span class="!text-xs">Por conta própria</span></label>
+              <label class="tipo-conta"><input type="radio" name="tipoProf" value="vinculado" class="sr-only" /><span class="!text-xs">Numa escola</span></label>
+            </div>
+            <p id="textoProf" class="text-xs text-slate-500">Crie turmas, aprove seus alunos e pague por aluno com <b>5% de desconto</b>.</p>
+            <div id="campoCodEscola" class="hidden"><label for="cadCodEscola" class="block text-sm font-medium text-slate-600 mb-1.5">Código da escola</label><input id="cadCodEscola" maxlength="12" placeholder="Peça à coordenação" class="campo uppercase font-mono tracking-widest" /></div>
+          </div>
+          <div id="camposEscola" class="hidden space-y-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <p data-sem-app class="text-xs text-slate-500">Cadastre professores, crie turmas e pague por aluno com <b>10% de desconto</b>. Painel com indicadores de toda a escola.</p>
+            <div><label for="cadEscola" class="block text-sm font-medium text-slate-600 mb-1.5">Nome da escola</label><input id="cadEscola" maxlength="100" placeholder="Colégio Exemplo" class="campo" /></div>
+            <div><label for="cadDoc" class="block text-sm font-medium text-slate-600 mb-1.5">CNPJ (opcional)</label><input id="cadDoc" maxlength="20" inputmode="numeric" class="campo" /></div>
           </div>
           <div data-social="cadastro" class="hidden space-y-5">
             <button type="button" data-google="cadastro" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-navy-600 hover:bg-slate-50 text-navy-900 font-semibold py-3.5 rounded-2xl transition"><svg class="w-5 h-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Criar conta com o Google</span></button>
@@ -738,15 +801,73 @@
   <main id="lojaConteudo" class="max-w-5xl mx-auto px-5 py-10"></main>
 </div>
 
+
 <!-- =====================================================================
-     TELA: PORTAL DO PROFESSOR (administrador)
+     TELA: ÁREA DE ESCOLAS E PROFESSORES
+     ===================================================================== -->
+<div data-view="escola" class="hidden min-h-screen bg-slate-100">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-7xl mx-auto px-5 pt-5 pb-3">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4 min-w-0">
+          <a href="#/escola"><img src="img/logo.png" alt="English Smart" class="h-12 w-auto" /></a>
+          <div class="min-w-0"><h1 id="escolaTitulo" class="text-lg md:text-xl font-extrabold truncate">Painel</h1><p id="escolaSub" class="text-xs md:text-sm text-white/70 truncate"></p></div>
+        </div>
+        <button data-avatar data-tamanho="w-10 h-10 text-sm" class="hidden shrink-0 rounded-full ring-2 ring-white/20 hover:ring-white/60 transition"></button>
+      </div>
+      <nav id="escolaAbas" class="mt-4 flex gap-1 overflow-x-auto pb-1" aria-label="Seções do painel"></nav>
+    </div>
+  </header>
+  <div id="escolaAviso" class="hidden"></div>
+  <main id="escolaConteudo" class="max-w-7xl mx-auto px-5 py-6"></main>
+</div>
+
+<!-- =====================================================================
+     TELA: MINHAS TURMAS (aluno) · TURMA · COMUNIDADE
+     ===================================================================== -->
+<div data-view="turmas" class="hidden min-h-screen bg-slate-50">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-4xl mx-auto px-5 h-20 flex items-center justify-between gap-4">
+      <a href="#/curso" class="text-sm font-semibold text-white/80 hover:text-white">← Voltar à trilha</a>
+      <button data-avatar data-tamanho="w-10 h-10 text-sm" class="hidden shrink-0 rounded-full ring-2 ring-white/20 hover:ring-white/60 transition"></button>
+    </div>
+  </header>
+  <main id="turmasConteudo" class="max-w-4xl mx-auto px-5 py-10"></main>
+</div>
+
+<div data-view="turma" class="hidden min-h-screen bg-slate-50">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-6xl mx-auto px-5 h-20 flex items-center justify-between gap-4">
+      <a id="turmaVoltar" href="#/turmas" class="text-sm font-semibold text-white/80 hover:text-white">← Voltar</a>
+      <button data-avatar data-tamanho="w-10 h-10 text-sm" class="hidden shrink-0 rounded-full ring-2 ring-white/20 hover:ring-white/60 transition"></button>
+    </div>
+  </header>
+  <main id="turmaConteudo" class="max-w-6xl mx-auto px-5 py-8"></main>
+</div>
+
+<div data-view="comunidade" class="hidden min-h-screen bg-slate-50">
+  <header class="bg-navy-900 text-white">
+    <div class="max-w-3xl mx-auto px-5 h-20 flex items-center justify-between gap-4">
+      <a id="comunidadeVoltar" href="#/curso" class="text-sm font-semibold text-white/80 hover:text-white">← Voltar</a>
+      <span class="font-display font-bold">Comunidade</span>
+      <button data-avatar data-tamanho="w-10 h-10 text-sm" class="hidden shrink-0 rounded-full ring-2 ring-white/20 hover:ring-white/60 transition"></button>
+    </div>
+  </header>
+  <main class="max-w-3xl mx-auto px-5 py-8">
+    <nav id="comunidadeAbas" class="flex gap-2 overflow-x-auto pb-1" aria-label="Comunidades"></nav>
+    <div id="comunidadeMural" class="mt-5"></div>
+  </main>
+</div>
+
+<!-- =====================================================================
+     TELA: PORTAL DO ADMINISTRADOR (administrador)
      ===================================================================== -->
 <div data-view="admin" class="hidden min-h-screen bg-slate-100">
   <header class="bg-navy-900 text-white">
     <div class="max-w-7xl mx-auto px-5 h-20 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <a href="#/"><img src="img/logo.png" alt="English Smart" class="h-14 w-auto" /></a>
-        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Portal do professor</span>
+        <span class="hidden sm:inline text-xs font-semibold uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full">Portal do administrador</span>
       </div>
       <div class="flex items-center gap-1">
         <a href="#/curso" class="hidden sm:inline-flex text-sm font-semibold text-white/70 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition">Ver trilha</a>
@@ -760,11 +881,15 @@
       <button data-aba="alunos" class="aba-admin">Alunos</button>
       <button data-aba="financeiro" class="aba-admin">Financeiro</button>
       <button data-aba="turmas" class="aba-admin">Turmas e cupons</button>
+      <button data-aba="escolas" class="aba-admin">Escolas e professores</button>
+      <button data-aba="denuncias" class="aba-admin">Denúncias</button>
       <button data-aba="erros" class="aba-admin">Erros mais comuns</button>
       <button data-aba="config" class="aba-admin">Configuração <span id="alertaConfig" class="hidden ml-1 inline-block w-2 h-2 rounded-full bg-brand-red align-middle"></span></button>
     </nav>
     <div data-painel="financeiro" id="painelFinanceiro" class="hidden"></div>
     <div data-painel="turmas" id="painelTurmas" class="hidden"></div>
+    <div data-painel="escolas" id="painelEscolas" class="hidden"></div>
+    <div data-painel="denuncias" id="painelDenuncias" class="hidden"></div>
     <div data-painel="erros" id="painelErros" class="hidden"></div>
     <div data-painel="config" id="painelConfig" class="hidden"></div>
     <div data-painel="alunos">
@@ -1049,6 +1174,24 @@
         <li>A equipe pode liberar acesso de cortesia, por tempo determinado, a critério dela.</li>
       </ul>
 
+      <h2>7-A. Planos para escolas e professores</h2>
+      <ul>
+        <li><b>Quem pode contratar:</b> escolas (pessoa jurídica ou responsável indicado) e professores independentes, pela conta de escola ou de professor. Professores vinculados a uma escola entram com o código da escola e só ficam ativos depois da aprovação dela; nesse caso, quem paga é a escola.</li>
+        <li><b>Como é a cobrança:</b> por aluno aprovado nas turmas da instituição, contado uma única vez mesmo que esteja em mais de uma turma. O valor por aluno é o mesmo do plano individual (mensal R$ 29,99 ou anual R$ 299,90), com <b>10% de desconto para escolas</b> e <b>5% de desconto para professores independentes</b>, aplicado sobre o total.</li>
+        <li><b>Faturas:</b> a instituição escolhe o ciclo mensal ou anual. A fatura de cada ciclo é gerada com os alunos aprovados naquele momento e paga por Pix ou cartão no Mercado Pago. Alunos aprovados no meio de um ciclo já pago geram uma cobrança proporcional aos dias restantes, somada à fatura seguinte (no ciclo anual, cobrada no mês seguinte). Alunos removidos deixam de ser cobrados a partir do próximo ciclo, sem reembolso do ciclo em andamento.</li>
+        <li><b>Acesso dos alunos:</b> enquanto a instituição estiver em dia, os alunos aprovados acessam todas as lições sem precisar de assinatura própria. Faturas vencidas há mais de 7 (sete) dias suspendem o acesso liberado pela instituição até o pagamento. O progresso dos alunos continua guardado.</li>
+        <li><b>Responsabilidades da instituição:</b> aprovar apenas alunos que de fato fazem parte das suas turmas; obter, quando o aluno for menor de idade, a autorização dos pais ou responsáveis para o uso da Plataforma; usar os dados de desempenho dos alunos só para fins pedagógicos; e manter seguros os acessos de seus professores.</li>
+        <li><b>Encerramento:</b> a instituição pode excluir turmas ou a própria conta a qualquer momento. Valores de ciclos já pagos não são devolvidos, salvo o direito de arrependimento previsto em lei quando aplicável.</li>
+      </ul>
+
+      <h2>7-B. Comunidade, aulas ao vivo e vídeos</h2>
+      <ul>
+        <li><b>Comunidade:</b> há uma comunidade pública (todos os usuários) e comunidades privadas da escola e de cada turma. Publique com respeito: são proibidos ofensas, discriminação, assédio, conteúdo sexual, violento ou ilegal, spam, propaganda não autorizada e dados pessoais (seus ou de outras pessoas), como telefone e endereço.</li>
+        <li><b>Moderação:</b> a escola e o professor moderam as comunidades da escola e das turmas; a equipe English Smart modera tudo. Publicações podem ser removidas, e contas que violarem estas regras podem ser suspensas. Use o botão <b>Denunciar</b> para avisar a equipe.</li>
+        <li><b>Aulas ao vivo:</b> as salas de vídeo abrem em serviços de terceiros (Jitsi Meet, por padrão, ou o link que o professor informar, como Google Meet ou Zoom), sujeitos aos termos e às políticas desses serviços. A English Smart não grava as aulas.</li>
+        <li><b>Vídeos:</b> os vídeos publicados nas turmas ficam hospedados em serviços de terceiros (como YouTube ou Vimeo). Quem publica é responsável por ter o direito de compartilhar o conteúdo.</li>
+      </ul>
+
       <h2>8. Recursos de áudio e voz</h2>
       <p>A pronúncia das frases e o reconhecimento de fala usam recursos do próprio navegador. A disponibilidade e a qualidade desses recursos dependem do navegador e do dispositivo usados. Recomendamos o Google Chrome ou o Microsoft Edge.</p>
 
@@ -1095,6 +1238,8 @@
       <h3>Dados técnicos</h3>
       <ul>
         <li>Endereço IP, tipo de navegador e data e hora dos acessos, registrados automaticamente pelos servidores, para segurança e funcionamento do serviço.</li>
+        <li><b>Turmas, escolas e professores:</b> se você é aluno de uma turma, a turma, o status do seu pedido de entrada e, depois de aprovado, o seu desempenho (nível, lições, médias, XP, certificados e último acesso), que ficam visíveis para a escola e o professor da turma. Se você é professor ou escola: nome, e-mail, nome e documento da instituição (opcional), turmas, professores vinculados e faturas.</li>
+        <li><b>Comunidade, aulas e vídeos:</b> o texto das publicações e comentários, curtidas e denúncias, além das aulas e dos links de vídeo publicados pelos professores. Na comunidade, aparecem para os outros usuários apenas o seu primeiro nome, a inicial do sobrenome e a foto (se houver).</li>
         <li><b>Notificações (só se você ativar):</b> o endereço de entrega gerado pelo seu navegador ou celular, as chaves de criptografia da inscrição e o nome do aparelho (ex.: "Chrome no celular Android"). Servem apenas para enviar o lembrete diário de estudo.</li>
       </ul>
       <p>Não recebemos o número do cartão nem dados bancários (o pagamento acontece inteiramente no Mercado Pago), e não coletamos documentos de identidade nem gravações de voz.</p>
@@ -1120,6 +1265,8 @@
         <li><b>Cloudflare Turnstile</b> (se ativado) — verificação "não sou um robô" no cadastro e no login, que recebe dados técnicos do navegador para prevenir fraudes.</li>
         <li><b>Serviços que entregam partes do site</b> — Google Fonts (fontes) e jsDelivr (biblioteca de código). Eles recebem dados técnicos da conexão, como o endereço IP, para entregar esses arquivos ao seu navegador.</li>
         <li><b>Recursos de voz do navegador</b> — ao usar o botão de microfone, o reconhecimento de fala é feito pelo seu navegador e, dependendo dele, o áudio pode ser processado pelo fornecedor do navegador (como Google ou Microsoft), de acordo com a política de privacidade desse fornecedor. A English Smart recebe apenas o texto reconhecido, usado na hora para corrigir o exercício, sem armazenar áudio nem transcrições.</li>
+        <li><b>Sua escola ou professor</b> — se você for aprovado numa turma, eles veem o seu desempenho nas turmas deles, para acompanhamento pedagógico. Ao sair da turma, deixam de ver os seus dados novos.</li>
+        <li><b>Jitsi Meet, Google Meet, Zoom, YouTube e Vimeo</b> — quando você entra numa aula ao vivo ou assiste a um vídeo da turma, esses serviços recebem dados técnicos da conexão e o que você compartilhar lá (como imagem e voz), conforme as políticas deles.</li>
         <li><b>Autoridades</b> — somente quando houver obrigação legal ou ordem judicial.</li>
       </ul>
       <p>Alguns desses fornecedores podem tratar dados fora do Brasil. Nesses casos, a transferência ocorre de acordo com o art. 33 da LGPD.</p>
@@ -1150,7 +1297,7 @@
       <p>Para os demais pedidos, escreva para <b data-contato></b>. Responderemos no prazo previsto em lei.</p>
 
       <h2>8. Crianças e adolescentes</h2>
-      <p>O tratamento de dados de crianças (até 12 anos incompletos) só ocorre com o consentimento específico de pelo menos um dos pais ou responsável legal, conforme o art. 14 da LGPD. Os dados de crianças e adolescentes são tratados sempre no seu melhor interesse e apenas para as finalidades educacionais descritas aqui. Se você é responsável e acredita que dados de uma criança foram cadastrados sem autorização, fale com a gente para que sejam excluídos.</p>
+      <p>O tratamento de dados de crianças (até 12 anos incompletos) só ocorre com o consentimento específico de pelo menos um dos pais ou responsável legal, conforme o art. 14 da LGPD. Quando o acesso é liberado por uma escola, cabe a ela obter essa autorização dos responsáveis antes de aprovar o aluno na turma. Os dados de crianças e adolescentes são tratados sempre no seu melhor interesse e apenas para as finalidades educacionais descritas aqui. Se você é responsável e acredita que dados de uma criança foram cadastrados sem autorização, fale com a gente para que sejam excluídos.</p>
 
       <h2>9. Segurança</h2>
       <p>Adotamos medidas técnicas e administrativas para proteger seus dados: conexão criptografada (HTTPS), senhas protegidas por criptografia, regras de acesso no banco de dados que permitem a cada aluno ver apenas as próprias informações, e acesso administrativo restrito. Nenhum sistema é totalmente imune a incidentes; se algum incidente relevante acontecer, comunicaremos os afetados e a ANPD, conforme a lei.</p>
@@ -1170,31 +1317,34 @@
 <!-- Aviso flutuante -->
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-24 opacity-0 transition duration-300 bg-navy-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-card z-[70]"></div>
 
-<script src="js/config.js?v=20261115c"></script>
-<script src="js/curriculo.js?v=20261115c"></script>
-<script src="js/materiais.js?v=20261115c"></script>
-<script src="js/voz.js?v=20261115c"></script>
-<script src="js/atividades.js?v=20261115c"></script>
-<script src="js/ui.js?v=20261115c"></script>
-<script src="js/som.js?v=20261115c"></script>
-<script src="js/cookies.js?v=20261115c"></script>
-<script src="js/app.js?v=20261115c"></script>
-<script src="js/inicio.js?v=20261115c"></script>
-<script src="js/entrar.js?v=20261115c"></script>
-<script src="js/modoprova.js?v=20261115c"></script>
-<script src="js/prova.js?v=20261115c"></script>
-<script src="js/curso.js?v=20261115c"></script>
-<script src="js/licao.js?v=20261115c"></script>
-<script src="js/revisao.js?v=20261115c"></script>
-<script src="js/plano.js?v=20261115c"></script>
-<script src="js/loja.js?v=20261115c"></script>
-<script src="js/verificar.js?v=20261115c"></script>
-<script src="js/dispositivos.js?v=20261115c"></script>
-<script src="js/notificacoes.js?v=20261115c"></script>
-<script src="js/certificado.js?v=20261115c"></script>
-<script src="js/perfil.js?v=20261115c"></script>
-<script src="js/termos.js?v=20261115c"></script>
-<script src="js/admin.js?v=20261115c"></script>
+<script src="js/config.js?v=20261115d"></script>
+<script src="js/curriculo.js?v=20261115d"></script>
+<script src="js/materiais.js?v=20261115d"></script>
+<script src="js/voz.js?v=20261115d"></script>
+<script src="js/atividades.js?v=20261115d"></script>
+<script src="js/ui.js?v=20261115d"></script>
+<script src="js/som.js?v=20261115d"></script>
+<script src="js/cookies.js?v=20261115d"></script>
+<script src="js/app.js?v=20261115d"></script>
+<script src="js/inicio.js?v=20261115d"></script>
+<script src="js/entrar.js?v=20261115d"></script>
+<script src="js/modoprova.js?v=20261115d"></script>
+<script src="js/prova.js?v=20261115d"></script>
+<script src="js/curso.js?v=20261115d"></script>
+<script src="js/licao.js?v=20261115d"></script>
+<script src="js/revisao.js?v=20261115d"></script>
+<script src="js/plano.js?v=20261115d"></script>
+<script src="js/loja.js?v=20261115d"></script>
+<script src="js/verificar.js?v=20261115d"></script>
+<script src="js/dispositivos.js?v=20261115d"></script>
+<script src="js/comunidade.js?v=20261115d"></script>
+<script src="js/turma.js?v=20261115d"></script>
+<script src="js/escola.js?v=20261115d"></script>
+<script src="js/notificacoes.js?v=20261115d"></script>
+<script src="js/certificado.js?v=20261115d"></script>
+<script src="js/perfil.js?v=20261115d"></script>
+<script src="js/termos.js?v=20261115d"></script>
+<script src="js/admin.js?v=20261115d"></script>
 <script>App.iniciar(); Cookies.iniciar();</script>
 </body>
 </html>

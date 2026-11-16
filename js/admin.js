@@ -285,13 +285,58 @@
     App.toast(`${dados.length} linha(s) exportada(s).`);
   }
 
+  // ---------- Escolas e professores ----------
+  async function painelEscolas() {
+    const raiz = document.getElementById('painelEscolas');
+    const { data, error } = await sb.rpc('admin_instituicoes');
+    if (error) throw error;
+    const brl = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const ativos = data.filter((i) => i.ativa);
+    raiz.innerHTML = `
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        ${[['Escolas', data.filter((i) => i.tipo === 'escola').length], ['Professores independentes', data.filter((i) => i.tipo === 'professor').length], ['Em dia', ativos.length], ['Alunos pagos por instituições', ativos.reduce((s, i) => s + i.alunos, 0)]]
+          .map(([n, v]) => `<div class="bg-white rounded-2xl border border-slate-200 p-5"><p class="text-xs font-bold uppercase tracking-wider text-slate-500">${n}</p><p class="mt-1 font-display text-3xl font-extrabold text-navy-900">${v}</p></div>`).join('')}
+      </div>
+      <div class="mt-5 bg-white rounded-2xl border border-slate-200 p-5 overflow-x-auto">
+        <table class="w-full text-sm min-w-[52rem]">
+          <thead><tr class="text-left text-xs uppercase tracking-wider text-slate-500"><th class="py-2">Instituição</th><th>Tipo</th><th>Código</th><th>Plano</th><th>Professores</th><th>Turmas</th><th>Alunos</th><th>Em aberto</th><th>Acesso até</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">${data.map((i) => `
+            <tr><td class="py-2.5"><b class="text-navy-900">${App.escapar(i.nome)}</b><br><span class="text-xs text-slate-500">${App.escapar(i.email)}</span></td>
+            <td>${i.tipo === 'escola' ? 'Escola (−10%)' : 'Professor (−5%)'}</td><td class="font-mono">${App.escapar(i.codigo)}</td><td>${i.ciclo}</td><td>${i.professores}</td><td>${i.turmas}</td><td>${i.alunos}</td>
+            <td>${Number(i.em_aberto) > 0 ? `<b class="text-amber-700">${brl(i.em_aberto)}</b>` : '—'}</td>
+            <td><span class="text-xs font-bold rounded-full px-2 py-0.5 ${i.ativa ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">${i.pago_ate ? new Date(i.pago_ate).toLocaleDateString('pt-BR') : 'sem pagamento'}</span></td></tr>`).join('') || '<tr><td colspan="9" class="py-4 text-slate-500">Nenhuma escola ou professor cadastrado ainda.</td></tr>'}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // ---------- Denúncias da comunidade ----------
+  async function painelDenuncias() {
+    const raiz = document.getElementById('painelDenuncias');
+    const { data, error } = await sb.rpc('admin_denuncias');
+    if (error) throw error;
+    raiz.innerHTML = `
+      <p class="text-sm text-slate-500">Publicações e comentários denunciados na comunidade. Apague o conteúdo ou dispense a denúncia.</p>
+      <div class="mt-4 space-y-3">${data.map((d) => `
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <p class="text-xs text-slate-500">${d.comentario_id ? 'Comentário' : 'Publicação'} de <b>${App.escapar(d.autor?.nome || '—')}</b> · denunciado em ${new Date(d.criada_em).toLocaleString('pt-BR')}</p>
+          <p class="mt-2 text-navy-900">${App.escapar(d.texto || '(já apagado)')}</p>
+          ${d.motivo ? `<p class="mt-1 text-sm text-amber-800">Motivo: ${App.escapar(d.motivo)}</p>` : ''}
+          <div class="mt-3 flex gap-2"><button data-denuncia="${d.id}" data-apagar="1" class="text-sm font-semibold bg-red-600 text-white rounded-lg px-3 py-1.5">Apagar conteúdo</button><button data-denuncia="${d.id}" data-apagar="0" class="text-sm font-semibold border border-slate-200 rounded-lg px-3 py-1.5">Dispensar</button></div>
+        </div>`).join('') || '<div class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">Nenhuma denúncia pendente.</div>'}</div>`;
+    raiz.querySelectorAll('[data-denuncia]').forEach((b) => b.addEventListener('click', async () => {
+      const { error: er } = await sb.rpc('admin_resolver_denuncia', { p_id: Number(b.dataset.denuncia), p_apagar: b.dataset.apagar === '1' });
+      if (er) return App.toast(er.message);
+      painelDenuncias();
+    }));
+  }
+
   // ---------- Abas do portal ----------
   let abaAtual = 'alunos';
   function abrirAba(aba) {
     abaAtual = aba;
     document.querySelectorAll('#abasAdmin [data-aba]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.aba === aba)));
     document.querySelectorAll('[data-view="admin"] [data-painel]').forEach((p) => p.classList.toggle('hidden', p.dataset.painel !== aba));
-    const fazer = { financeiro: painelFinanceiro, turmas: painelTurmas, erros: painelErros, config: painelConfig }[aba];
+    const fazer = { financeiro: painelFinanceiro, turmas: painelTurmas, escolas: painelEscolas, denuncias: painelDenuncias, erros: painelErros, config: painelConfig }[aba];
     fazer?.().catch((err) => { console.error(err); App.toast(App.mensagemDeErro(err)); });
   }
   document.querySelectorAll('#abasAdmin [data-aba]').forEach((b) => b.addEventListener('click', () => {
@@ -627,7 +672,7 @@
       App.carregando(true);
       try { await carregar(); } finally { App.carregando(false); }
       const aba = params?.get('aba');
-      abrirAba(['financeiro', 'turmas', 'erros', 'config'].includes(aba) ? aba : 'alunos');
+      abrirAba(['financeiro', 'turmas', 'escolas', 'denuncias', 'erros', 'config'].includes(aba) ? aba : 'alunos');
     },
   });
 })();

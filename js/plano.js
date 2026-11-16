@@ -13,7 +13,7 @@ const Planos = (() => {
   const textoBotaoPix = () => `${ICONE_PIX}Gerar QR Code Pix · ${precoBR(comCupom(precoPlano()))}`;
   const textoBotaoCartao = () => (planoEscolhido === 'anual' ? `Assinar por ${precoBR(PLANO_ANUAL.preco)}/ano` : `Assinar por ${precoBR(PLANO.preco)}/mês`);
 
-  const RECURSOS = ['Todas as 128 lições dos 16 níveis, do A1 ao C2, + 8 trilhas extras com 100 lições', 'Teste de cada nível e certificados', 'Revisão inteligente: ditado, escrita, flashcards e desafio', 'Metas, XP, sequência e acompanhamento', 'Cartão (renova sozinho) ou Pix', 'Cancele quando quiser, sem multa'];
+  const RECURSOS = ['Todas as 160 lições dos 16 níveis, do A1 ao C2, + 8 trilhas extras com 108 lições', 'Teste de cada nível e certificados', 'Revisão inteligente: ditado, escrita, flashcards e desafio', 'Metas, XP, sequência e acompanhamento', 'Cartão (renova sozinho) ou Pix', 'Cancele quando quiser, sem multa'];
   const GRATIS = 'Criar a conta e fazer a prova de nivelamento é grátis.';
 
   const item = (t, cor) => `<li class="flex gap-3"><span class="${cor} mt-0.5 shrink-0">${Icone('check', 'w-5 h-5')}</span><span>${t}</span></li>`;
@@ -409,6 +409,22 @@ const Planos = (() => {
     el('planosTitulo').textContent = aluno && p.premium ? 'Minha assinatura' : temNivel ? 'Falta pouco para começar' : 'Assine o English Smart';
     el('planosSub').textContent = aluno && p.premium ? 'Sua assinatura, cobranças e acesso.'
       : temNivel ? 'Você já sabe o seu nível. Assine para liberar a sua trilha.' : `${precoBR(PLANO.preco)} por mês. ${GRATIS}`;
+    // Acesso pago pela escola/professor da turma
+    if (aluno && p.premiumTurma) {
+      const ts = (p.turmasEdu || []).filter((t) => t.status === 'aprovado' && t.ativa);
+      el('planosTitulo').textContent = 'Seu acesso';
+      el('planosSub').textContent = 'Liberado pela sua turma.';
+      raiz.innerHTML = `
+        <section class="max-w-xl mx-auto bg-white rounded-[1.5rem] border border-slate-200 p-6 md:p-8 text-center">
+          <span class="w-14 h-14 mx-auto rounded-2xl bg-emerald-700 text-white grid place-items-center">${Icone('grupo', 'w-7 h-7')}</span>
+          <h2 class="mt-4 text-xl font-bold text-navy-900">Seu acesso é pago pela sua ${ts[0]?.tipo === 'escola' ? 'escola' : 'turma'}</h2>
+          <p class="mt-2 text-slate-500">${ts.map((t) => `<b class="text-navy-900">${App.escapar(t.nome)}</b> · ${App.escapar(t.instituicao)}`).join('<br>')}</p>
+          <p class="mt-2 text-sm text-slate-500">Você não precisa assinar. Enquanto estiver aprovado na turma, todas as lições ficam liberadas.</p>
+          <a href="#/curso" class="mt-6 inline-block font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Ir para a trilha</a>
+        </section>`;
+      revelar(raiz);
+      return;
+    }
     // App da Google Play: sem compra nem preço dentro do app (regra de pagamentos da Play)
     if (App.modoApp() && !(aluno && p.premium)) {
       el('planosTitulo').textContent = 'Sua conta';

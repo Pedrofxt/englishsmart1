@@ -50,6 +50,41 @@
     } catch { googleLigado = false; }
     return googleLigado;
   }
+  // ---------- Tipo de conta (aluno / professor / escola) ----------
+  const tipoEscolhido = () => document.querySelector('input[name=tipoConta]:checked')?.value || 'aluno';
+  const tipoProf = () => document.querySelector('input[name=tipoProf]:checked')?.value || 'professor';
+  function atualizarTipo() {
+    const t = tipoEscolhido();
+    document.getElementById('camposProfessor').classList.toggle('hidden', t !== 'professor');
+    document.getElementById('camposEscola').classList.toggle('hidden', t !== 'escola');
+    const vinc = tipoProf() === 'vinculado';
+    document.getElementById('campoCodEscola').classList.toggle('hidden', !vinc);
+    document.getElementById('textoProf').innerHTML = vinc
+      ? 'Você vai criar turmas e acompanhar seus alunos. Quem paga é a escola; ela aprova o seu vínculo.'
+      : App.modoApp() ? 'Crie turmas, aprove seus alunos e acompanhe o desempenho deles.' : 'Crie turmas, aprove seus alunos e pague por aluno com <b>5% de desconto</b>.';
+    document.querySelector('label[for=cadNome]').textContent = t === 'escola' ? 'Nome do responsável' : 'Nome completo';
+    formCadastro.querySelector('[type=submit]').textContent = t === 'aluno' ? 'Criar conta e fazer a prova' : t === 'escola' ? 'Criar conta da escola' : 'Criar conta de professor';
+    const sub = formCadastro.querySelector('h1 + p');
+    if (sub) sub.textContent = t === 'aluno' ? 'Depois você já faz a prova de nivelamento.' : 'Depois você cria as turmas e convida os alunos.';
+  }
+  document.querySelectorAll('input[name=tipoConta], input[name=tipoProf]').forEach((r) => r.addEventListener('change', atualizarTipo));
+  // dados extras para conta de professor/escola (ou null para aluno); devolve string de erro se faltar algo
+  function dadosEducador() {
+    const t = tipoEscolhido();
+    if (t === 'aluno') return null;
+    if (t === 'escola') {
+      const inst = document.getElementById('cadEscola').value.trim();
+      if (inst.length < 2) return 'Informe o nome da escola.';
+      return { tipo: 'escola', instituicao: inst, documento: document.getElementById('cadDoc').value.trim() };
+    }
+    if (tipoProf() === 'vinculado') {
+      const codigo = document.getElementById('cadCodEscola').value.trim().toUpperCase();
+      if (codigo.length < 4) return 'Informe o código da escola.';
+      return { tipo: 'vinculado', codigo };
+    }
+    return { tipo: 'professor' };
+  }
+
   async function mostrarGoogle() {
     const ok = await googleDisponivel();
     document.querySelectorAll('[data-social]').forEach((b) => b.classList.toggle('hidden', !ok));
@@ -61,6 +96,11 @@
       return mensagem(form, 'Para criar a conta, marque que aceita os Termos de Uso e a Política de Privacidade (lá embaixo).');
     }
     if (!/^https?:$/.test(location.protocol)) return mensagem(form, 'O login com o Google funciona no site publicado (https://).');
+    if (btn.dataset.google === 'cadastro') {
+      const ed = dadosEducador();
+      if (typeof ed === 'string') return mensagem(form, ed);
+      App.gravarLocal('es_tipo_conta', ed ? JSON.stringify(ed) : '');
+    }
     const texto = btn.innerHTML;
     setLoading(btn, true);
     App.gravarLocal('es_social', 'google');
@@ -173,11 +213,13 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return mensagem(formCadastro, 'Informe um e-mail válido.');
     if (senha.length < 6) return mensagem(formCadastro, 'A senha precisa ter pelo menos 6 caracteres.');
     if (!document.getElementById('cadAceite').checked) return mensagem(formCadastro, 'Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.');
+    const ed = dadosEducador();
+    if (typeof ed === 'string') return mensagem(formCadastro, ed);
     if (semCaptcha(formCadastro)) return mensagem(formCadastro, 'Confirme a verificação "Não sou um robô".');
 
     setLoading(btn, true);
     try {
-      const { data, error } = await sb.auth.signUp({ email, password: senha, options: { captchaToken: Captcha.token(formCadastro), data: { nome, aceitou_termos_em: new Date().toISOString(), versao_termos: VERSAO_TERMOS } } });
+      const { data, error } = await sb.auth.signUp({ email, password: senha, options: { captchaToken: Captcha.token(formCadastro), data: { nome, aceitou_termos_em: new Date().toISOString(), versao_termos: VERSAO_TERMOS, ...(ed ? { tipo_conta: ed.tipo, instituicao: ed.instituicao || null, documento: ed.documento || null, codigo_escola: ed.codigo || null } : {}) } } });
       Captcha.reiniciar(formCadastro);
       if (error) return mensagem(formCadastro, traduzir(error));
 
@@ -294,6 +336,9 @@
       limparMensagem(formEntrar);
       limparMensagem(formCadastro);
       limparMensagem(formRecuperar);
+      const tipoUrl = params.get('tipo');
+      if (['aluno', 'professor', 'escola'].includes(tipoUrl)) { const r = document.querySelector(`input[name=tipoConta][value=${tipoUrl}]`); if (r) r.checked = true; }
+      atualizarTipo();
 
       // Veio do link do e-mail (site publicado): já existe uma sessão de recuperação → só falta a nova senha
       if (rota === 'redefinir') {

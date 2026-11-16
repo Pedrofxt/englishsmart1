@@ -184,7 +184,7 @@ guardado no navegador). Se os Termos mudarem de versão (`VERSAO_TERMOS`), o avi
 ## A trilha
 
 ```
-Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 8 lições ──▶ Teste do nível ──▶ Certificado + próximo nível
+Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 10 lições ──▶ Teste do nível ──▶ Certificado + próximo nível
 ```
 
 | Estágio (CEFR) | Níveis | Temas |
@@ -196,7 +196,7 @@ Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 8 lições ──▶ Test
 | C1 · Avançado | 13–15 | Advanced Structures · Natural Fluency · Persuasive Communication |
 | C2 · Proficiente | 16 | Mastery |
 
-**128 lições** nos 16 níveis (8 por nível), mais **100 lições** nas 8 trilhas extras. Cada uma tem:
+**160 lições** nos 16 níveis (10 por nível), mais **108 lições** nas 8 trilhas extras. Cada uma tem:
 - **Aprenda:** explicação de gramática em português, frases de exemplo, 6 palavras/expressões e um diálogo, tudo com áudio (normal e 🐢 devagar).
 - **Pratique:** de 17 a 18 atividades com correção na hora. Os tipos e a dificuldade mudam com o estágio:
 
@@ -210,7 +210,7 @@ Prova de nivelamento ──▶ Nível 1 a 16 ──▶ 8 lições ──▶ Test
   usada numa frase completa e mostra um exemplo da lição para comparar (não corrige a gramática livre).
 - **Resultado:** nota, XP ganho e o próximo passo. A lição conta como concluída com 60%.
 
-**Teste do nível:** 16 questões das 8 lições (1 de gramática e 1 de vocabulário de cada) (mudam a cada tentativa). Com **70%**, o aluno ganha o
+**Teste do nível:** 20 questões das 10 lições (1 de gramática e 1 de vocabulário de cada) (mudam a cada tentativa). Com **70%**, o aluno ganha o
 certificado do nível e sobe para o próximo. No nível 16, ganha o certificado de conclusão do curso.
 
 ### Prova de nivelamento
@@ -245,14 +245,14 @@ certificado e não entram na revisão. O conteúdo fica em `EXTRAS`, no fim de `
 
 | Trilha | Lições | O que treina |
 |---|---|---|
-| Inglês para viagem | 14 | aeroporto, imigração, hotel, carro, restaurante, compras, passeios, emergências, táxi/app |
-| Entrevista de emprego | 14 | apresentação, formação, pontos fortes, conquistas, salário, entrevista online, liderança, follow-up |
-| Inglês no trabalho | 14 | e-mails, reuniões, telefone, Slack, prazos, status, brainstorm, networking, números |
-| Inglês para tecnologia | 10 | stack, daily, code review, bugs, features, entrevista técnica, ágil, documentação, incidentes |
-| Morar no exterior | 10 | aluguel, banco, mercado, vizinhos, médico, burocracia, contas, escola, reparos |
-| Conversação e gírias | 10 | cumprimentos informais, reações, mensagens (BTW, IDK), "muletas", planos, séries, elogios |
-| Atendimento e vendas | 10 | receber o cliente, entender a necessidade, apresentar, objeções, preço, fechamento, pós-venda |
-| Recebendo turistas | 10 | recepção de hotel, direções, restaurantes, passeios, reclamações, comidas brasileiras, check-out |
+| Inglês para viagem | 16 | aeroporto, imigração, hotel, carro, restaurante, compras, passeios, emergências, táxi/app, trem, câmbio |
+| Entrevista de emprego | 16 | apresentação, formação, pontos fortes, conquistas, salário, entrevista online, liderança, follow-up, mudança de carreira, metas |
+| Inglês no trabalho | 16 | e-mails, reuniões, telefone, Slack, prazos, status, brainstorm, networking, números, trabalho remoto, avaliação de desempenho |
+| Inglês para tecnologia | 12 | stack, daily, code review, bugs, features, entrevista técnica, ágil, documentação, incidentes, métricas, segurança |
+| Morar no exterior | 12 | aluguel, banco, mercado, vizinhos, médico, burocracia, contas, escola, reparos, transporte, emergências |
+| Conversação e gírias | 12 | cumprimentos informais, reações, mensagens (BTW, IDK), "muletas", planos, séries, elogios, receber amigos, esportes |
+| Atendimento e vendas | 12 | receber o cliente, entender a necessidade, apresentar, objeções, preço, fechamento, pós-venda, vendas por mensagem, trocas |
+| Recebendo turistas | 12 | recepção de hotel, direções, restaurantes, passeios, reclamações, comidas brasileiras, check-out, segurança, vida noturna |
 
 ### Motivação
 - **Meta semanal** (o aluno escolhe de 1 a 14 atividades), **XP** (10 por acerto, +100 por nível) e **sequência de dias**.
@@ -294,8 +294,28 @@ O saldo e as compras são conferidos no banco (função `comprar_item`), então 
   4,5:1 para texto normal). Por isso o vermelho, o verde, o azul e o laranja de fundo ficaram um tom mais escuros
   (texto branco legível) e os textos cinza ficaram um pouco mais fortes.
 
+## Escolas e professores
+Cadastro em **Criar conta → Escola** ou **Professor** (por conta própria ou numa escola, com o código dela). Área própria em `#/escola`:
+
+| | Escola | Professor independente | Professor vinculado |
+|---|---|---|---|
+| Desconto por aluno | **10%** | **5%** | — (paga a escola) |
+| Painel (estilo Power BI) | toda a escola | as turmas dele | as turmas dele |
+| Criar, editar e excluir turmas | de todos os professores | as dele | as dele |
+| Aprovar alunos | ✓ | ✓ | ✓ (nas turmas dele) |
+| Aprovar/desvincular professores | ✓ | — | — |
+| Financeiro (faturas, Pix, cartão, mensal/anual) | ✓ | ✓ | — |
+| Aulas ao vivo, vídeos, comunidade da turma | ✓ | ✓ | ✓ |
+
+- **Alunos** entram em *Minhas turmas* (`#/turmas`) com o código da turma ou pelo link de convite e ficam aguardando aprovação. Aprovados, ganham acesso às lições enquanto a instituição estiver em dia.
+- **Cobrança:** preço do plano individual (R$ 29,99/mês ou R$ 299,90/ano) por aluno aprovado (contado uma vez), menos o desconto. Fatura por ciclo; quem entra no meio do ciclo gera cobrança proporcional somada à próxima fatura. Faturas automáticas 10 dias antes de vencer (pg_cron `faturas-instituicoes`). Fatura vencida há mais de 7 dias suspende o acesso dos alunos da instituição.
+- **Pagamento:** função `mercadopago` (`fatura_pix`, `fatura_cartao`, `fatura_status`; webhook com `external_reference = fatura:<id>`).
+- **Painel:** alunos, ativos na semana, lições concluídas, média de acertos, revisões, certificados, engajamento diário, alunos por nível, desempenho por turma, tabela de alunos com busca/ordenação e exportação CSV. Filtros por turma e período.
+- **Aulas ao vivo:** sala Jitsi Meet gerada para cada aula (ou link próprio do Meet/Zoom); abre em nova aba. **Vídeos:** links do YouTube/Vimeo viram player na turma.
+- **Comunidade** (`#/comunidade`): pública (todos), da escola e de cada turma. Publicar, curtir, comentar, fixar (moderadores), apagar e denunciar. O admin modera tudo em *Portal → Denúncias* e acompanha as instituições em *Portal → Escolas e professores*.
+
 ## Material de estudo das lições
-Antes das atividades, cada uma das 220 lições (128 dos níveis + 92 das trilhas extras) tem:
+Antes das atividades, cada uma das 268 lições (160 dos níveis + 108 das trilhas extras) tem:
 - **Como se usa:** quadro com a estrutura (afirmativa, negativa, pergunta, respostas…) ou as frases-chave, com áudio;
 - **Na prática:** as frases da lição com a palavra-chave destacada;
 - **Mais exemplos com tradução:** 4 frases novas com áudio; a tradução fica escondida até o aluno tocar (para ele tentar antes);
@@ -384,14 +404,14 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Segurança
 - A chave em `js/config.js` é a chave **pública** do Supabase; pode ficar no navegador.
 - As regras do banco (RLS) garantem que cada aluno só vê os próprios dados, que níveis bloqueados
-  não podem ser registrados, que o teste só é aceito depois das 8 lições e que só o admin vê a turma.
+  não podem ser registrados, que o teste só é aceito depois das 10 lições e que só o admin vê a turma.
 - As notas das lições são calculadas no navegador (é prática, então isso é aceitável); a prova de
   nivelamento é corrigida no banco.
 
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261115c` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261115d` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 
@@ -411,7 +431,7 @@ img/                  Logo, ícones do app e imagem de compartilhamento (compart
 manifest.webmanifest  App instalável (nome, ícones, cores)
 sw.js                 Service worker do app instalável
 js/config.js          Conexão com o Supabase, preços, SITE_URL e TURNSTILE_SITE_KEY
-js/curriculo.js       16 níveis × 8 lições + 8 trilhas extras (conteúdo do curso)
+js/curriculo.js       16 níveis × 10 lições + 8 trilhas extras (conteúdo do curso)
 js/atividades.js      Gera as atividades das lições, do teste e da revisão; corrige respostas digitadas
 js/voz.js             Áudio (voz do navegador) e reconhecimento de fala
 js/som.js             Efeitos sonoros (Web Audio)
@@ -436,6 +456,9 @@ supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (
 supabase/functions/lembretes/index.ts     E-mails de vencimento (já publicada e agendada)
 supabase/functions/notificacoes/index.ts  Notificação diária às 10h (já publicada e agendada)
 js/notificacoes.js    Ativar/desativar o lembrete diário (Web Push)
+js/escola.js          Área de escolas e professores (painel BI, turmas, professores, financeiro)
+js/turma.js           Minhas turmas (aluno) e página da turma (aulas ao vivo, vídeos, alunos)
+js/comunidade.js      Comunidade pública, da escola e da turma
 js/modoprova.js       Tela cheia obrigatória nas provas (pausa, limite de saídas, bloqueio de copiar)
 js/materiais.js       Material de estudo extra de cada lição (estrutura, exemplos, erros comuns, dica)
 .well-known/assetlinks.json  Verificação do domínio para o app da Play Store

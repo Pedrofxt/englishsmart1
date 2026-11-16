@@ -8,6 +8,9 @@
 //   { acao: 'pix', email?, plano?, cupom? }       → gera um Pix que libera 30 dias (mensal) ou 365 dias (anual)
 //   { acao: 'pix_status', id }          → confere se o Pix foi pago
 //   { acao: 'configuracao' }            → (só admin) o que já está configurado para cobrar
+//   { acao: 'fatura_pix', id }          → escola/professor: Pix da fatura da instituição
+//   { acao: 'fatura_cartao', id, voltar } → escola/professor: link de pagamento (cartão) da fatura
+//   { acao: 'fatura_status', id }       → confere se a fatura foi paga
 //
 // Avisos do Mercado Pago (webhook): subscription_preapproval, subscription_authorized_payment e payment (Pix).
 // Nunca confiamos no conteúdo do aviso: sempre buscamos os dados direto na API do Mercado Pago.
@@ -207,6 +210,83 @@ async function aplicarPix(pay: any) {
   return data;
 }
 
+// ---------- Faturas de escolas e professores (external_reference = "fatura:<id>") ----------
+async function aplicarFatura(pay: any) {
+  const ref = String(pay.external_reference || '');
+  if (!ref.startsWith('fatura:')) return null;
+  const id = ref.slice(7);
+  if (!UUID.test(id)) return null;
+  const { data: f } = await db.from('faturas').select('*').eq('id', id).maybeSingle();
+  if (!f) return null;
+  if (pay.status === 'approved' && Number(pay.transaction_amount) >= Number(f.total) - 0.01) {
+    const { data: virou } = await db.from('faturas')
+      .update({ status: 'paga', paga_em: pay.date_approved || new Date().toISOString(), mp_id: String(pay.id), qr_code: null, qr_base64: null })
+      .eq('id', id).eq('status', 'aberta').select('*');
+    if (virou?.length && f.tipo === 'ciclo' && f.periodo_fim) {
+      const { data: inst } = await db.from('instituicoes').select('pago_ate').eq('id', f.instituicao_id).maybeSingle();
+      const novo = new Date(new Date(f.periodo_fim).getTime() + TOLERANCIA);
+      const atual = inst?.pago_ate ? new Date(inst.pago_ate) : null;
+      await db.from('instituicoes').update({ pago_ate: (!atual || novo > atual ? novo : atual).toISOString() }).eq('id', f.instituicao_id);
+    }
+  }
+  const { data } = await db.from('faturas').select('*').eq('id', id).maybeSingle();
+  return data;
+}
+
+async function acaoFatura(user: any, corpo: any) {
+  const { data: inst } = await db.from('instituicoes').select('*').eq('dono', user.id).maybeSingle();
+  if (!inst) return json({ erro: 'Apenas o responsável pela escola ou o professor independente paga as faturas.' }, 403);
+  const id = String(corpo.id || '');
+  const { data: f } = UUID.test(id) ? await db.from('faturas').select('*').eq('id', id).eq('instituicao_id', inst.id).maybeSingle() : { data: null };
+  if (!f) return json({ erro: 'Fatura não encontrada.' }, 404);
+  const limpa = (x: any) => ({ id: x.id, status: x.status, total: Number(x.total), qr_code: x.qr_code, qr_base64: x.qr_base64, link: x.link, expira_em: x.expira_em, paga_em: x.paga_em });
+
+  if (corpo.acao === 'fatura_status') {
+    if (f.status !== 'aberta') return json({ fatura: limpa(f) });
+    const busca = await mp(`/v1/payments/search?external_reference=${encodeURIComponent('fatura:' + f.id)}&sort=date_created&criteria=desc`).catch(() => null);
+    let atual = f;
+    for (const pay of busca?.results || []) { const r = await aplicarFatura(pay); if (r) atual = r; if (atual.status === 'paga') break; }
+    return json({ fatura: limpa(atual) });
+  }
+  if (f.status !== 'aberta') return json({ erro: 'Esta fatura não está em aberto.' }, 409);
+  if (!TOKEN) return json({ erro: 'Pagamentos ainda não configurados. Avise o responsável pela plataforma.' }, 503);
+  const descricao = `English Smart - ${inst.tipo === 'escola' ? 'Escola' : 'Professor'} ${inst.nome} - ${f.tipo === 'ciclo' ? `${f.qtd_alunos} aluno(s), plano ${f.ciclo}` : 'alunos que entraram no meio do ciclo'}`.slice(0, 250);
+
+  if (corpo.acao === 'fatura_pix') {
+    if (f.qr_code && f.expira_em && new Date(f.expira_em).getTime() - Date.now() > 5 * 60e3) return json({ fatura: limpa(f) });
+    const expira = new Date(Date.now() + 60 * 60e3);
+    const pay = await mp('/v1/payments', {
+      method: 'POST',
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+      body: JSON.stringify({
+        transaction_amount: Number(f.total), description: descricao, payment_method_id: 'pix',
+        payer: { email: String(user.email || '').toLowerCase() },
+        external_reference: `fatura:${f.id}`, notification_url: URL_FUNCAO, date_of_expiration: dataMP(expira),
+      }),
+    });
+    const t = pay.point_of_interaction?.transaction_data || {};
+    if (!t.qr_code) return json({ erro: 'O Mercado Pago não gerou o QR Code. Confira se a conta tem uma chave Pix cadastrada.' }, 502);
+    const { data: nova } = await db.from('faturas').update({ mp_id: String(pay.id), qr_code: t.qr_code, qr_base64: t.qr_code_base64, link: t.ticket_url || null, expira_em: expira.toISOString() })
+      .eq('id', f.id).select('*').single();
+    return json({ fatura: limpa(nova) });
+  }
+  if (corpo.acao === 'fatura_cartao') {
+    const voltar = /^https:\/\//.test(corpo.voltar || '') ? corpo.voltar : 'https://englishsmart.app.br/#/escola?aba=financeiro';
+    const pref = await mp('/checkout/preferences', {
+      method: 'POST',
+      body: JSON.stringify({
+        items: [{ title: descricao, quantity: 1, unit_price: Number(f.total), currency_id: 'BRL' }],
+        external_reference: `fatura:${f.id}`, notification_url: URL_FUNCAO,
+        back_urls: { success: voltar, pending: voltar, failure: voltar }, auto_return: 'approved',
+        payer: { email: String(user.email || '').toLowerCase() },
+        payment_methods: { excluded_payment_types: [{ id: 'ticket' }], installments: f.ciclo === 'anual' ? 12 : 1 },
+      }),
+    });
+    return json({ link: pref.init_point });
+  }
+  return json({ erro: 'Ação inválida.' }, 400);
+}
+
 // Confere a assinatura secreta do webhook (x-signature: ts=...,v1=...)
 async function assinaturaValida(req: Request, idDado: string) {
   if (!SEGREDO_WEBHOOK) return true; // sem segredo configurado: segue, pois os dados são sempre buscados na API
@@ -231,7 +311,10 @@ async function webhook(req: Request, url: URL, corpo: any) {
   try {
     if (tipo === 'subscription_preapproval' || tipo === 'preapproval') await aplicarAssinatura(await mp(`/preapproval/${id}`));
     else if (tipo === 'subscription_authorized_payment' || tipo === 'authorized_payment') await aplicarCobranca(await mp(`/authorized_payments/${id}`));
-    else if (tipo === 'payment' || String(corpo?.action || '').startsWith('payment.')) await aplicarPix(await mp(`/v1/payments/${id}`));
+    else if (tipo === 'payment' || String(corpo?.action || '').startsWith('payment.')) {
+      const pay = await mp(`/v1/payments/${id}`);
+      if (String(pay.external_reference || '').startsWith('fatura:')) await aplicarFatura(pay); else await aplicarPix(pay);
+    }
     return json({ ok: true });
   } catch (e) {
     console.error('[webhook]', tipo, id, String(e));
@@ -256,6 +339,7 @@ async function acaoDoAluno(req: Request, corpo: any) {
       valores: { mensal: PLANOS.mensal.valor, anual: PLANOS.anual.valor },
     });
   }
+  if (String(corpo.acao).startsWith('fatura_')) return await acaoFatura(user, corpo);
   const { data: aluno } = await db.from('alunos').select('id, nome, email').eq('id', user.id).maybeSingle();
   if (!aluno) return json({ erro: 'Apenas alunos podem assinar.' }, 403);
   if (!TOKEN) return json({ erro: 'Pagamentos ainda não configurados. Avise o responsável pela plataforma.' }, 503);
