@@ -2400,3 +2400,13 @@ as $function$
     else (select jsonb_build_object('nome', split_part(nome, ' ', 1) || coalesce(' ' || left(nullif(split_part(nome, ' ', 2), ''), 1) || '.', ''), 'avatar', avatar, 'papel', 'aluno') from public.alunos where id = p_id)
   end;
 $function$;
+
+-- =====================================================================
+-- Endurecimento: tabelas fechadas para visitantes; usuários logados só leem (o que as políticas permitem).
+-- Toda gravação passa pelas funções do banco (SECURITY DEFINER), que conferem as regras.
+-- =====================================================================
+revoke all on all tables in schema public from anon;
+revoke insert, update, delete, truncate, references, trigger on all tables in schema public from authenticated;
+revoke select on public.config_privada, public.admins from authenticated;
+alter default privileges in schema public revoke all on tables from anon;
+alter default privileges in schema public revoke insert, update, delete, truncate, references, trigger on tables from authenticated;
