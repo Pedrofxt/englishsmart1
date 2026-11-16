@@ -22,30 +22,7 @@
     App.atualizarAvatares(p);
   }
 
-  // Apaga fotos antigas da pasta do aluno (mantém só a atual, se houver)
-  async function limparFotos(manter = null) {
-    const { data } = await sb.storage.from('avatares').list(p.id);
-    const apagar = (data || []).map((f) => `${p.id}/${f.name}`).filter((c) => c !== manter);
-    if (apagar.length) await sb.storage.from('avatares').remove(apagar);
-  }
-
-  // Recorta em quadrado e reduz para 320×320 (foto leve e rápida)
-  function reduzirImagem(arquivo) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(arquivo);
-      img.onload = () => {
-        const lado = Math.min(img.width, img.height);
-        const c = document.createElement('canvas');
-        c.width = c.height = 320;
-        c.getContext('2d').drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, 320, 320);
-        URL.revokeObjectURL(url);
-        c.toBlob((b) => (b ? resolve(b) : reject(new Error('Não foi possível processar a imagem.'))), 'image/jpeg', 0.86);
-      };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Este arquivo não é uma imagem válida.')); };
-      img.src = url;
-    });
-  }
+  const limparFotos = (manter = null) => Conta.limparFotos(p.id, manter);
 
   function desenharAvatar() {
     el('perfilAvatarGrande').innerHTML = App.avatarHtml(p, 'w-28 h-28 text-3xl');
@@ -78,16 +55,10 @@
     const arquivo = e.target.files[0];
     e.target.value = '';
     if (!arquivo) return;
-    if (!/^image\/(jpeg|png|webp)$/.test(arquivo.type)) return App.toast('Use uma imagem JPG, PNG ou WEBP.');
-    if (arquivo.size > 10 * 1024 * 1024) return App.toast('A imagem é muito grande (máximo 10 MB).');
     el('txtEnviarFoto').textContent = 'Enviando…';
     try {
-      const blob = await reduzirImagem(arquivo);
-      const caminho = `${p.id}/foto-${Date.now()}.jpg`;
-      const { error } = await sb.storage.from('avatares').upload(caminho, blob, { contentType: 'image/jpeg' });
-      if (error) throw error;
-      const { data } = sb.storage.from('avatares').getPublicUrl(caminho);
-      await salvar({ p_avatar: data.publicUrl });
+      const { url, caminho } = await Conta.enviarFoto(p.id, arquivo);
+      await salvar({ p_avatar: url });
       limparFotos(caminho).catch(() => {});
       desenharAvatar();
       App.toast('Foto de perfil atualizada');
@@ -142,6 +113,7 @@
       ? (temSenha ? 'Você entra com o Google ou com e-mail e senha. Use pelo menos 6 caracteres.' : 'Você entra com o Google. Se quiser, defina uma senha para entrar também com e-mail (pelo menos 6 caracteres).')
       : 'Use pelo menos 6 caracteres.';
     el('btnSenha').textContent = temSenha ? 'Alterar senha' : 'Salvar senha';
+    el('caixaSenhaAtual').classList.toggle('hidden', !temSenha);
   }
   el('formSenha').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -151,19 +123,15 @@
     const s2 = el('pfSenha2').value;
     if (s1.length < 6) return mensagem(form, 'A nova senha precisa ter pelo menos 6 caracteres.');
     if (s1 !== s2) return mensagem(form, 'As senhas não são iguais.');
+    if (temSenha && !el('pfSenhaAtual').value) return mensagem(form, 'Digite sua senha atual.');
     const btn = form.querySelector('[type=submit]');
     setLoading(btn, true);
     try {
-      const { error } = await sb.auth.updateUser({ password: s1 });
-      if (error) {
-        const m = (error.message || '').toLowerCase();
-        throw new Error(m.includes('different') ? 'A nova senha precisa ser diferente da atual.'
-          : m.includes('weak') || m.includes('should be') ? 'Escolha uma senha mais forte.'
-          : m.includes('reauth') ? 'Por segurança, saia e entre de novo antes de trocar a senha.'
-          : 'Não foi possível alterar a senha.');
-      }
+      await Conta.alterarSenha(el('pfSenhaAtual').value, s1, { exigirAtual: temSenha });
       form.reset();
-      mensagem(form, temSenha ? 'Senha alterada com sucesso.' : 'Senha salva! Agora você também pode entrar com e-mail e senha.', 'ok');
+      const eraSemSenha = !temSenha;
+      await ajustarSenha();
+      mensagem(form, !eraSemSenha ? 'Senha alterada com sucesso.' : 'Senha salva! Agora você também pode entrar com e-mail e senha.', 'ok');
     } catch (err) {
       mensagem(form, err.message);
     } finally {
@@ -175,8 +143,9 @@
   el('btnExcluirConta').addEventListener('click', async () => {
     const assin = (await App.perfil()).assinatura;
     const ativa = assin?.status === 'ativa' && !!assin?.mp_id;
-    const confirmacao = prompt(`Esta ação apaga para sempre sua conta, seu progresso e seus certificados.${ativa ? '\nSua assinatura também será cancelada no Mercado Pago.' : ''}\n\nPara confirmar, digite EXCLUIR:`);
-    if ((confirmacao || '').trim().toUpperCase() !== 'EXCLUIR') return;
+    const ok = await Conta.confirmarComSenha({ titulo: 'Excluir minha conta', botao: 'Excluir para sempre',
+      texto: `Esta ação apaga para sempre sua conta, seu progresso e seus certificados.${ativa ? ' Sua assinatura também será cancelada no Mercado Pago.' : ''}` });
+    if (!ok) return;
     App.carregando(true);
     try {
       // para de cobrar antes de apagar a conta
@@ -216,12 +185,12 @@
     el('perfilCertificados').innerHTML = certs.length
       ? `<div class="grid sm:grid-cols-2 gap-3">${certs.map((c) => `
           <a href="#/certificado?n=${c.nivel_num}" class="flex items-center gap-3 border border-slate-200 hover:border-navy-900 rounded-2xl p-3 transition">
-            <span class="w-11 h-11 shrink-0 rounded-xl ${FAIXAS[faixaDoNivel(c.nivel_num)].cor} text-white grid place-items-center font-bold">${c.nivel_num}</span>
-            <span class="min-w-0"><span class="block text-sm font-semibold text-navy-900 truncate">Nível ${c.nivel_num} · ${App.escapar(nivelInfo(c.nivel_num).tema)}</span>
+            ${seloCert(c.nivel_num, 'w-11 h-11')}
+            <span class="min-w-0"><span class="block text-sm font-semibold text-navy-900 truncate">${App.escapar(nomeCert(c.nivel_num))}</span>
             <span class="block text-xs text-slate-400">Emitido em ${new Date(c.emitido_em).toLocaleDateString('pt-BR')}</span></span>
             <span class="ml-auto text-slate-300">${Icone('seta', 'w-4 h-4')}</span>
           </a>`).join('')}</div>`
-      : '<p class="text-sm text-slate-500">Você ainda não tem certificados. Conclua o teste do seu nível na trilha para ganhar o primeiro.</p>';
+      : '<p class="text-sm text-slate-500">Você ainda não tem certificados. Conclua o teste do seu nível ou todas as lições de uma trilha extra para ganhar o primeiro.</p>';
   }
 
   // ---------- Turma (código de convite do professor) ----------

@@ -2287,3 +2287,116 @@ alter table public.revisao add constraint revisao_item_check CHECK ((item ~ '^[v
 -- Funções auxiliares internas: não ficam abertas para visitantes sem login
 revoke execute on function public.gerencia_turma(uuid), public.inst_ativa(uuid), public.minha_inst(), public.participa_inst(uuid), public.participa_turma(uuid), public.pode_moderar(text, uuid), public.pode_ver_escopo(text, uuid), public.sou_dono_inst(uuid) from anon, public;
 grant execute on function public.gerencia_turma(uuid), public.inst_ativa(uuid), public.minha_inst(), public.participa_inst(uuid), public.participa_turma(uuid), public.pode_moderar(text, uuid), public.pode_ver_escopo(text, uuid), public.sou_dono_inst(uuid) to authenticated;
+
+-- =====================================================================
+-- Migração: certificados nas trilhas extras (101–108)
+-- Regra: todas as lições da trilha com pelo menos 70% de acertos
+-- =====================================================================
+alter table public.certificados drop constraint if exists certificados_nivel_num_check;
+alter table public.certificados add constraint certificados_nivel_num_check check (nivel_num between 1 and 16 or nivel_num between 101 and 120);
+
+create or replace function public.licoes_trilha(n integer)
+ returns integer language sql immutable set search_path to ''
+as $$ select case when n between 101 and 103 then 16 when n between 104 and 108 then 12 else 0 end; $$;
+revoke execute on function public.licoes_trilha(integer) from anon, public;
+
+do $mig$
+declare d text;
+begin
+  d := pg_get_functiondef('public.registrar_atividade(integer,integer,integer,integer,text)'::regprocedure);
+  if position('certificado da trilha' in d) = 0 then
+    d := replace(d, E'  return json_build_object(\n    ''xp_ganho'', ganho,',
+      E'  -- certificado da trilha extra: todas as lições com pelo menos 70%\n' ||
+      E'  if p_nivel > 100 and p_acertos >= p_total * 0.7 and not exists (select 1 from public.certificados where aluno_id = uid and nivel_num = p_nivel) then\n' ||
+      E'    select count(*) into licoes_ok from public.progresso\n' ||
+      E'     where aluno_id = uid and nivel_num = p_nivel and licao between 1 and public.licoes_trilha(p_nivel) and acertos >= total * 0.7;\n' ||
+      E'    if public.licoes_trilha(p_nivel) > 0 and licoes_ok >= public.licoes_trilha(p_nivel) then\n' ||
+      E'      insert into public.certificados (aluno_id, nivel_num) values (uid, p_nivel) on conflict (aluno_id, nivel_num) do nothing;\n' ||
+      E'      select codigo into cert from public.certificados where aluno_id = uid and nivel_num = p_nivel;\n' ||
+      E'      update public.alunos set xp = xp + 100 where id = uid;\n' ||
+      E'      ganho := ganho + 100;\n' ||
+      E'    end if;\n' ||
+      E'  end if;\n\n' ||
+      E'  return json_build_object(\n    ''xp_ganho'', ganho,');
+    if position('certificado da trilha' in d) = 0 then raise exception 'trecho não encontrado'; end if;
+    execute d;
+  end if;
+end $mig$;
+
+-- Quem já completou alguma trilha com 70% em todas as lições ganha o certificado agora
+insert into public.certificados (aluno_id, nivel_num)
+select p.aluno_id, p.nivel_num from public.progresso p
+ where p.nivel_num between 101 and 108 and p.licao between 1 and public.licoes_trilha(p.nivel_num) and p.acertos >= p.total * 0.7
+ group by p.aluno_id, p.nivel_num
+having count(*) >= public.licoes_trilha(p.nivel_num)
+on conflict (aluno_id, nivel_num) do nothing;
+
+create or replace function public.verificar_certificado(p_codigo text)
+ returns jsonb language sql stable security definer set search_path to ''
+as $function$
+  select jsonb_build_object('nome', a.nome, 'nivel_num', c.nivel_num,
+           'nivel', case when c.nivel_num > 100 then null else public.nivel_cefr(c.nivel_num) end,
+           'trilha', c.nivel_num > 100, 'emitido_em', c.emitido_em, 'codigo', c.codigo)
+    from public.certificados c join public.alunos a on a.id = c.aluno_id
+   where c.codigo = upper(trim(p_codigo)) and upper(trim(p_codigo)) ~ '^[A-Z0-9]{6,16}$';
+$function$;
+
+-- =====================================================================
+-- Migração: perfil de escolas e professores (foto/avatar, telefone, cidade)
+-- =====================================================================
+alter table public.educadores add column if not exists telefone text;
+alter table public.educadores add column if not exists cidade text;
+alter table public.educadores add column if not exists avatar text;
+
+create or replace function public.atualizar_perfil(p_nome text, p_telefone text, p_cidade text, p_avatar text)
+ returns void language plpgsql security definer set search_path to ''
+as $function$
+declare
+  uid uuid := auth.uid();
+  nome_limpo text := trim(coalesce(p_nome, ''));
+  tel text := nullif(trim(coalesce(p_telefone, '')), '');
+  cid text := nullif(trim(coalesce(p_cidade, '')), '');
+  av text := nullif(trim(coalesce(p_avatar, '')), '');
+begin
+  if uid is null then raise exception 'Faça login para continuar.'; end if;
+  if char_length(nome_limpo) < 2 or char_length(nome_limpo) > 80 then raise exception 'Informe um nome entre 2 e 80 caracteres.'; end if;
+  if tel is not null and tel !~ '^[0-9()+\- ]{8,20}$' then raise exception 'Telefone inválido.'; end if;
+  if cid is not null and char_length(cid) > 80 then raise exception 'Cidade muito longa.'; end if;
+  if av is not null and not (
+       av ~ '^cor:#[0-9A-Fa-f]{6}$'
+    or av ~ '^icone:(capelo|livro|globo|estrela|foguete|microfone|fone|cafe)$'
+    or av like 'https://wfxqxvlcrqbwvcvqslzi.supabase.co/storage/v1/object/public/avatares/' || uid::text || '/%'
+    or (av ~ '^https://[a-z0-9.-]+\.googleusercontent\.com/' and char_length(av) <= 300
+        and av in (select a.avatar from public.alunos a where a.id = uid union all select e.avatar from public.educadores e where e.id = uid))
+  ) then
+    raise exception 'Avatar inválido.';
+  end if;
+
+  update public.alunos set nome = nome_limpo, telefone = tel, cidade = cid, avatar = av where id = uid;
+  if found then return; end if;
+  update public.educadores set nome = nome_limpo, telefone = tel, cidade = cid, avatar = av where id = uid;
+  if not found then raise exception 'Cadastro não encontrado.'; end if;
+end;
+$function$;
+
+do $mig$
+declare d text;
+begin
+  d := pg_get_functiondef('public.meu_contexto()'::regprocedure);
+  if position('''avatar'', e.avatar' in d) = 0 then
+    d := replace(d, '''nome'', e.nome, ''email'', e.email,', '''nome'', e.nome, ''email'', e.email, ''avatar'', e.avatar, ''telefone'', e.telefone, ''cidade'', e.cidade,');
+    if position('''avatar'', e.avatar' in d) = 0 then raise exception 'trecho não encontrado'; end if;
+    execute d;
+  end if;
+end $mig$;
+
+create or replace function public.autor_info(p_id uuid)
+ returns jsonb language sql stable security definer set search_path to ''
+as $function$
+  select case
+    when exists (select 1 from public.admins ad join auth.users u on lower(u.email) = ad.email where u.id = p_id) then jsonb_build_object('nome', 'Equipe English Smart', 'papel', 'equipe')
+    when exists (select 1 from public.instituicoes where dono = p_id and tipo = 'escola') then jsonb_build_object('nome', (select nome from public.instituicoes where dono = p_id), 'avatar', (select avatar from public.educadores where id = p_id), 'papel', 'escola')
+    when exists (select 1 from public.educadores where id = p_id) then (select jsonb_build_object('nome', nome, 'avatar', avatar, 'papel', 'professor') from public.educadores where id = p_id)
+    else (select jsonb_build_object('nome', split_part(nome, ' ', 1) || coalesce(' ' || left(nullif(split_part(nome, ' ', 2), ''), 1) || '.', ''), 'avatar', avatar, 'papel', 'aluno') from public.alunos where id = p_id)
+  end;
+$function$;

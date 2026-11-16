@@ -156,7 +156,28 @@
     });
   }
 
-  // ---------- Página de uma trilha extra (sem teste e sem certificado) ----------
+  // ---------- Certificado da trilha extra: todas as lições com pelo menos 70% ----------
+  function blocoCertificadoTrilha(n, x) {
+    const total = x.licoes.length;
+    const com70 = x.licoes.filter((_, i) => { const r = registro(n, i + 1); return !!r && r.acertos >= r.total * 0.7; }).length;
+    const cert = dados.certificados.find((c) => c.nivel_num === n);
+    if (cert) return `
+      <div class="reveal mt-4 bg-white rounded-2xl border-2 border-emerald-200 p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <span class="w-12 h-12 shrink-0 rounded-xl bg-emerald-500 text-white grid place-items-center">${Icone('certificado', 'w-6 h-6')}</span>
+        <div class="flex-1"><h3 class="font-bold text-navy-900">Trilha concluída!</h3>
+          <p class="text-sm text-slate-500">Certificado emitido em ${new Date(cert.emitido_em).toLocaleDateString('pt-BR')}.</p></div>
+        <a href="#/certificado?n=${n}" class="text-center font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Ver certificado</a>
+      </div>`;
+    return `
+      <div class="reveal mt-4 bg-white rounded-2xl border-2 border-slate-200 p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <span class="w-12 h-12 shrink-0 rounded-xl ${x.cor} text-white grid place-items-center">${Icone('certificado', 'w-6 h-6')}</span>
+        <div class="flex-1"><h3 class="font-bold text-navy-900">Certificado da trilha</h3>
+          <p class="text-sm text-slate-500">Faça as ${total} lições com pelo menos 70% de acertos. Você já tem <b class="text-navy-900">${com70} de ${total}</b>.</p>
+          <div class="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${x.cor} rounded-full" style="width:${(com70 / total) * 100}%"></div></div></div>
+      </div>`;
+  }
+
+  // ---------- Página de uma trilha extra ----------
   function renderizarExtra(n) {
     const x = nivelInfo(n);
     const feitas = licoesFeitas(n);
@@ -188,7 +209,8 @@
             <a href="#/licao?n=${n}&l=${i + 1}" class="mt-4 text-center font-semibold rounded-xl py-2.5 transition ${ok ? 'border border-slate-200 text-navy-900 hover:border-navy-900' : 'bg-brand-red hover:bg-brand-redDark text-white'}">${r ? (ok ? 'Praticar de novo' : 'Tentar de novo') : 'Começar'}</a>
           </article>`;
       }).join('')}</div>
-      <p class="reveal mt-4 text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-5">As trilhas extras somam XP e contam para a meta semanal e a sequência. Elas não têm teste nem certificado, e o vocabulário não entra na revisão inteligente.</p>`;
+      ${admin ? '' : blocoCertificadoTrilha(n, x)}
+      <p class="reveal mt-4 text-sm text-slate-500 bg-white rounded-2xl border border-slate-200 p-5">As trilhas extras somam XP e contam para a meta semanal e a sequência. Para ganhar o certificado da trilha, faça todas as lições com pelo menos 70% de acertos. O vocabulário das trilhas não entra na revisão inteligente.</p>`;
     revelar(el('paginaNivel'));
   }
 
@@ -290,12 +312,12 @@
         <div class="mt-4 flex flex-wrap gap-3">
           ${lista.map((c) => `
             <a href="#/certificado?n=${c.nivel_num}" class="flex items-center gap-3 bg-white border border-slate-200 hover:border-navy-900 rounded-2xl px-4 py-3 transition">
-              <span class="w-10 h-10 rounded-xl ${FAIXAS[faixaDoNivel(c.nivel_num)].cor} text-white grid place-items-center font-bold">${c.nivel_num}</span>
-              <span><span class="block text-sm font-semibold text-navy-900">Nível ${c.nivel_num} · ${App.escapar(nivelInfo(c.nivel_num).tema)}</span>
+              ${seloCert(c.nivel_num, 'w-10 h-10')}
+              <span><span class="block text-sm font-semibold text-navy-900">${App.escapar(nomeCert(c.nivel_num))}</span>
               <span class="block text-xs text-slate-400">${new Date(c.emitido_em).toLocaleDateString('pt-BR')}</span></span>
             </a>`).join('')}
         </div>`
-      : '<p class="mt-2 text-sm text-slate-500">Conclua o teste do seu nível para ganhar o primeiro certificado.</p>'}
+      : '<p class="mt-2 text-sm text-slate-500">Conclua o teste do seu nível ou todas as lições de uma trilha extra para ganhar o primeiro certificado.</p>'}
       <div id="cursoRanking" class="mt-8 max-w-2xl"></div>`;
     if (!admin) Loja.desenharRanking(el('cursoRanking'));
   }

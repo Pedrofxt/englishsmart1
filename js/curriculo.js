@@ -876,7 +876,7 @@ const nivelInfo = (n) => (n > 100 ? EXTRAS.find((x) => x.n === n) : CURRICULO[n 
 const ehExtra = (n) => Number(n) > 100;
 const totalLicoes = (n) => nivelInfo(Number(n))?.licoes.length || 0;
 
-// ---------- Trilhas extras (livres para quem assina, sem teste e sem certificado) ----------
+// ---------- Trilhas extras (livres para quem assina, sem teste; certificado com todas as lições ≥ 70%) ----------
 // Números 101–108 para não se misturar com os 16 níveis. Mesmo formato das lições acima.
 const EXTRAS = [
   { n: 101, tema: 'Travel English', nome: 'Inglês para viagem', icone: 'aviao', cor: 'bg-sky-500', objetivo: 'resolver aeroporto, hotel, transporte e imprevistos em uma viagem', licoes: [
@@ -1436,3 +1436,9 @@ const EXTRAS = [
       [["A", "Any suggestions for tonight?"], ["B", "What kind of music do you like?"], ["A", "Samba and MPB."], ["B", "There's live samba at the square, starting at 9."], ["A", "Is there a cover charge?"], ["B", "It's free! And the dress code is casual."]]),
   ] },
 ];
+
+// ---------- Certificados: nome e selo (níveis 1–16 e trilhas extras 101–108) ----------
+const nomeCert = (n) => (n > 100 ? `Trilha extra · ${nivelInfo(n)?.nome || ''}` : `Nível ${n} · ${nivelInfo(n)?.tema || ''}`);
+const seloCert = (n, tam = 'w-10 h-10') => (n > 100
+  ? `<span class="${tam} shrink-0 rounded-xl ${nivelInfo(n)?.cor || 'bg-navy-900'} text-white grid place-items-center">${typeof Icone === 'function' ? Icone(nivelInfo(n)?.icone || 'certificado', 'w-5 h-5') : ''}</span>`
+  : `<span class="${tam} shrink-0 rounded-xl ${FAIXAS[faixaDoNivel(n)].cor} text-white grid place-items-center font-bold">${n}</span>`);

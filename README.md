@@ -240,8 +240,9 @@ memória dele. Cada acerto empurra o item para uma caixa mais alta e aumenta o i
 - Cada acerto vale 5 XP (até 100 XP de revisão por dia) e cada sessão conta na **meta semanal** e na **sequência**.
 
 ### Trilhas extras
-Oito trilhas, liberadas para quem assina, em qualquer ordem. Somam XP, meta e sequência; não têm teste nem
-certificado e não entram na revisão. O conteúdo fica em `EXTRAS`, no fim de `js/curriculo.js`.
+Oito trilhas, liberadas para quem assina, em qualquer ordem. Somam XP, meta e sequência; não têm teste e
+não entram na revisão. Quem faz todas as lições de uma trilha com pelo menos 70% de acertos ganha o
+**certificado da trilha** (+100 XP), com código de verificação como os dos níveis. O conteúdo fica em `EXTRAS`, no fim de `js/curriculo.js`.
 
 | Trilha | Lições | O que treina |
 |---|---|---|
@@ -456,7 +457,8 @@ supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (
 supabase/functions/lembretes/index.ts     E-mails de vencimento (já publicada e agendada)
 supabase/functions/notificacoes/index.ts  Notificação diária às 10h (já publicada e agendada)
 js/notificacoes.js    Ativar/desativar o lembrete diário (Web Push)
-js/escola.js          Área de escolas e professores (painel BI, turmas, professores, financeiro)
+js/escola.js          Área de escolas e professores (painel BI, turmas, professores, financeiro, conta)
+js/conta.js           Conta compartilhada: foto/avatar, troca de senha e exclusão (ambas pedem a senha atual)
 js/turma.js           Minhas turmas (aluno) e página da turma (aulas ao vivo, vídeos, alunos)
 js/comunidade.js      Comunidade pública, da escola e da turma
 js/modoprova.js       Tela cheia obrigatória nas provas (pausa, limite de saídas, bloqueio de copiar)

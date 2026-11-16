@@ -876,6 +876,7 @@
 
     const C = 2 * Math.PI * 54;
     const subiu = resp?.subiu || resp?.concluiu_curso;
+    const certTrilha = st.extra && !!resp?.certificado; // certificado da trilha extra acabou de sair
     const proximo = st.teste ? null : st.l < totalLicoes(st.n) ? `#/licao?n=${st.n}&l=${st.l + 1}` : st.extra ? null : `#/licao?n=${st.n}&l=0`;
 
     let titulo, texto;
@@ -885,9 +886,10 @@
       else if (passou) { titulo = 'Teste aprovado!'; texto = 'Você já tinha concluído este nível. Ótima revisão!'; }
       else { titulo = 'Ainda não foi desta vez'; texto = `Você precisa de ${minimo}% para passar. Revise as lições e tente de novo; você consegue!`; }
     } else {
-      titulo = passou ? 'Lição concluída!' : 'Faltou pouco!';
+      titulo = certTrilha ? 'Trilha concluída!' : passou ? 'Lição concluída!' : 'Faltou pouco!';
       texto = passou ? (st.l < totalLicoes(st.n) ? 'Siga para a próxima lição da trilha.' : st.extra ? 'Você terminou esta trilha extra. Muito bem!' : `Você terminou as ${totalLicoes(st.n)} lições. Hora do teste do nível!`)
         : `Para concluir a lição você precisa de ${minimo}%. Revise o conteúdo e tente de novo.`;
+      if (certTrilha) texto = `Você fez todas as lições de "${nivelInfo(st.n).nome}" com pelo menos 70%. Seu certificado da trilha já está disponível!`;
     }
 
     el('licaoConteudo').innerHTML = `
@@ -907,7 +909,7 @@
         </div>
         ${erro ? `<p class="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">Não foi possível salvar: ${App.escapar(erro)}</p>` : ''}
         <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
-          ${subiu ? `<a href="#/certificado?n=${st.n}" class="btn-shine font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">Ver meu certificado</a>` : ''}
+          ${subiu || certTrilha ? `<a href="#/certificado?n=${st.n}" class="btn-shine font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">Ver meu certificado</a>` : ''}
           ${!st.teste && passou && proximo ? `<a href="${proximo}" class="btn-shine font-semibold bg-brand-red hover:bg-brand-redDark text-white rounded-xl px-6 py-3 shadow-glow transition">${st.l < totalLicoes(st.n) ? 'Próxima lição →' : 'Fazer o teste do nível →'}</a>` : ''}
           ${!passou ? `<button id="btnRefazer" class="font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-6 py-3 transition">Tentar de novo</button>` : ''}
           <a href="#/curso?n=${subiu && resp?.nivel_num ? resp.nivel_num : st.n}" class="font-semibold border border-slate-200 hover:border-navy-900 text-navy-900 rounded-xl px-6 py-3 transition">Voltar à trilha</a>
@@ -919,7 +921,7 @@
       if (anel) anel.style.strokeDashoffset = C * (1 - porcentagem / 100);
     }, 60));
     if (passou) soltarConfete(el('licaoConteudo').firstElementChild);
-    Som.tocar(subiu ? 'nivel' : passou ? 'conclusao' : 'quase');
+    Som.tocar(subiu || certTrilha ? 'nivel' : passou ? 'conclusao' : 'quase');
     contar(el('licaoConteudo').querySelector('.font-display.text-4xl'), porcentagem, { formato: (n) => `${n}%`, dur: 1200 });
     el('btnRefazer')?.addEventListener('click', () => iniciarSessao());
     window.scrollTo(0, 0);

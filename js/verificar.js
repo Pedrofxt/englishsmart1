@@ -23,16 +23,17 @@
       return;
     }
     const final = data.nivel_num === 16;
+    const trilha = data.nivel_num > 100;
     caixa.innerHTML = `
       <div id="certValido" class="anim-sobe bg-white rounded-2xl border-2 border-emerald-300 p-6 md:p-8">
         <div class="flex items-center gap-3 text-emerald-700 font-semibold">${Icone('check', 'w-6 h-6')}Certificado verdadeiro, emitido pelo English Smart</div>
         <dl class="mt-6 grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
           <div><dt class="text-slate-400">Aluno(a)</dt><dd class="mt-0.5 font-display text-xl font-bold text-navy-900">${App.escapar(data.nome)}</dd></div>
-          <div><dt class="text-slate-400">Conclusão</dt><dd class="mt-0.5 font-semibold text-navy-900">${final ? 'Curso completo · 16 níveis (C2)' : `Nível ${data.nivel_num} de 16 · ${App.escapar(data.nivel || '')}`}</dd></div>
+          <div><dt class="text-slate-400">Conclusão</dt><dd class="mt-0.5 font-semibold text-navy-900">${trilha ? `Trilha extra · ${App.escapar(nivelInfo(data.nivel_num)?.nome || '')}` : final ? 'Curso completo · 16 níveis (C2)' : `Nível ${data.nivel_num} de 16 · ${App.escapar(data.nivel || '')}`}</dd></div>
           <div><dt class="text-slate-400">Emitido em</dt><dd class="mt-0.5 font-semibold text-navy-900">${new Date(data.emitido_em).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</dd></div>
           <div><dt class="text-slate-400">Código</dt><dd class="mt-0.5 font-mono font-semibold text-navy-900">${App.escapar(data.codigo)}</dd></div>
         </dl>
-        <p class="mt-6 text-xs text-slate-400">Certificado de conclusão de curso livre de inglês, com níveis baseados no Quadro Europeu Comum de Referência (CEFR). Para conseguir o certificado, o aluno precisa de pelo menos 70% de acertos no teste do nível.</p>
+        <p class="mt-6 text-xs text-slate-400">Certificado de conclusão de curso livre de inglês, com níveis baseados no Quadro Europeu Comum de Referência (CEFR). ${trilha ? 'Para conseguir o certificado da trilha extra, o aluno precisa de pelo menos 70% de acertos em todas as lições da trilha.' : 'Para conseguir o certificado, o aluno precisa de pelo menos 70% de acertos no teste do nível.'}</p>
       </div>`;
   }
 

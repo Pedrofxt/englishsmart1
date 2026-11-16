@@ -70,7 +70,7 @@ const App = (() => {
     }
     const { data: ctx } = await sb.rpc('meu_contexto');
     if (ctx?.papel === 'educador') {
-      perfilCache = { papel: 'educador', id: user.id, email: user.email, nome: ctx.nome, subtipo: ctx.subtipo, instituicao: ctx.instituicao || null, vinculo: ctx.vinculo || null, premium: true };
+      perfilCache = { papel: 'educador', id: user.id, email: user.email, nome: ctx.nome, avatar: ctx.avatar || null, telefone: ctx.telefone || null, cidade: ctx.cidade || null, subtipo: ctx.subtipo, instituicao: ctx.instituicao || null, vinculo: ctx.vinculo || null, premium: true };
       return perfilCache;
     }
 

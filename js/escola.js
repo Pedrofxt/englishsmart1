@@ -411,7 +411,8 @@
   function abaConta(raiz) {
     const vinc = p.vinculo;
     raiz.innerHTML = `
-      <div class="grid lg:grid-cols-2 gap-4">
+      <div class="grid lg:grid-cols-2 gap-4 items-start">
+        <div class="space-y-4">
         ${ehDono() ? `
         <form id="formInst" class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 space-y-3">
           <h3 class="font-bold text-navy-900">${ehEscola() ? 'Dados da escola' : 'Seus dados de professor'}</h3>
@@ -429,13 +430,60 @@
           </form>
           <p class="mt-2 text-xs text-slate-500">Peça o código para a coordenação da escola. Quem paga os alunos das suas turmas é a escola.</p>
         </section>`}
-        <section class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
-          <h3 class="font-bold text-navy-900">Sua conta</h3>
-          <p class="mt-2 text-sm text-slate-600">${esc(p.nome)} · ${esc(p.email)}</p>
-          <div id="contaNotificacoes" class="mt-4"></div>
-          <button type="button" id="btnExcluirContaEdu" class="mt-5 text-sm font-semibold text-red-700 hover:underline">Excluir minha conta</button>
-          <p class="text-xs text-slate-500">${ehDono() ? 'Excluir a conta apaga a instituição, as turmas, as faturas e o vínculo dos professores. Os alunos continuam com as contas deles, mas perdem o acesso liberado pela instituição.' : 'Suas turmas passam para a escola.'}</p>
+        <form id="formContaSenha" class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 space-y-3" novalidate>
+          <h3 id="cSenhaTitulo" class="font-bold text-navy-900">Alterar senha</h3>
+          <p id="cSenhaSub" class="text-sm text-slate-500">Por segurança, confirme a senha atual. A nova precisa ter pelo menos 6 caracteres.</p>
+          <div id="cCaixaAtual"><label for="cSenhaAtual" class="block text-sm font-medium text-slate-600 mb-1">Senha atual</label><input id="cSenhaAtual" type="password" autocomplete="current-password" class="campo" /></div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div><label for="cSenha1" class="block text-sm font-medium text-slate-600 mb-1">Nova senha</label><input id="cSenha1" type="password" autocomplete="new-password" class="campo" /></div>
+            <div><label for="cSenha2" class="block text-sm font-medium text-slate-600 mb-1">Confirmar nova senha</label><input id="cSenha2" type="password" autocomplete="new-password" class="campo" /></div>
+          </div>
+          <p data-msg class="hidden" role="alert"></p>
+          <button type="submit" id="cBtnSenha" class="font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-5 py-3 transition">Alterar senha</button>
+        </form>
+        <section class="bg-white rounded-2xl border border-red-200 p-5 md:p-6">
+          <h3 class="font-bold text-red-700">Excluir conta</h3>
+          <p class="mt-1 text-sm text-slate-500">${ehDono() ? 'Apaga para sempre o seu login, a instituição, as turmas, as faturas e o vínculo dos professores. Os alunos continuam com as contas deles, mas perdem o acesso liberado pela instituição.' : 'Apaga para sempre o seu login. Suas turmas passam para a escola.'} Esta ação pede a sua senha.</p>
+          <button type="button" id="btnExcluirContaEdu" class="mt-4 font-semibold border border-red-300 text-red-700 hover:bg-red-50 rounded-xl px-5 py-2.5 transition">Excluir minha conta</button>
         </section>
+        </div>
+        <div class="space-y-4">
+        <section class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
+          <h3 class="font-bold text-navy-900">Foto de perfil</h3>
+          <p class="text-sm text-slate-500">Aparece no menu, na comunidade e para os alunos das suas turmas.</p>
+          <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div id="contaAvatar"></div>
+            <div class="flex flex-wrap gap-2">
+              <label class="cursor-pointer inline-flex items-center gap-2 font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-4 py-2.5 text-sm transition">
+                <input id="contaFoto" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" />
+                ${Icone('camera', 'w-4 h-4')}<span id="contaTxtFoto">Enviar foto</span></label>
+              <button type="button" id="contaRemoverFoto" class="hidden font-semibold border border-slate-200 hover:border-red-300 text-red-700 rounded-xl px-4 py-2.5 text-sm transition">Remover foto</button>
+            </div>
+          </div>
+          <p class="mt-5 text-sm font-medium text-slate-600">Ou escolha um avatar</p>
+          <div id="contaCores" class="mt-2 grid grid-cols-8 gap-2 max-w-sm"></div>
+          <div id="contaIcones" class="mt-2 grid grid-cols-8 gap-2 max-w-sm"></div>
+
+          <form id="formContaDados" class="mt-6 pt-6 border-t border-slate-100 space-y-3" novalidate>
+            <h3 class="font-bold text-navy-900">${ehEscola() ? 'Dados do responsável' : 'Seus dados'}</h3>
+            <div><label for="cNome" class="block text-sm font-medium text-slate-600 mb-1">Nome completo</label><input id="cNome" maxlength="80" autocomplete="name" value="${esc(p.nome)}" class="campo" /></div>
+            <div><label for="cEmail" class="block text-sm font-medium text-slate-600 mb-1">E-mail de acesso</label><input id="cEmail" value="${esc(p.email)}" disabled class="campo bg-slate-50 text-slate-500" /></div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div><label for="cTel" class="block text-sm font-medium text-slate-600 mb-1">Telefone (opcional)</label><input id="cTel" maxlength="20" autocomplete="tel" inputmode="tel" value="${esc(p.telefone || '')}" class="campo" /></div>
+              <div><label for="cCidade" class="block text-sm font-medium text-slate-600 mb-1">Cidade (opcional)</label><input id="cCidade" maxlength="80" autocomplete="address-level2" value="${esc(p.cidade || '')}" class="campo" /></div>
+            </div>
+            <p data-msg class="hidden" role="alert"></p>
+            <button type="submit" class="font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-xl px-5 py-3 transition">Salvar dados</button>
+          </form>
+        </section>
+
+
+        <section class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
+          <h3 class="font-bold text-navy-900">Notificações</h3>
+          <div id="contaNotificacoes" class="mt-2"></div>
+        </section>
+
+        </div>
       </div>`;
     if (typeof Notificacoes !== 'undefined') Notificacoes.painelPerfil(el('contaNotificacoes'));
     el('formInst')?.addEventListener('submit', async (e) => {
@@ -451,11 +499,106 @@
       App.toast(`Pedido enviado para ${data}. Aguarde a aprovação.`);
       App.limparPerfil(); p = await App.perfil(true); render('conta');
     });
+    contaPerfil();
+  }
+
+  // ---------- Foto, dados pessoais, senha e exclusão (aba Conta) ----------
+  function contaPerfil() {
+    const msg = (form, texto, ok = false) => {
+      const c = form.querySelector('[data-msg]');
+      c.className = `text-sm border rounded-xl px-4 py-3 ${ok ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-700'}`;
+      c.textContent = texto;
+    };
+    const salvar = async (campos) => {
+      const { error: er } = await sb.rpc('atualizar_perfil', { p_nome: p.nome, p_telefone: p.telefone || null, p_cidade: p.cidade || null, p_avatar: p.avatar || null, ...campos });
+      if (er) throw er;
+      App.limparPerfil(); p = await App.perfil(true); App.atualizarAvatares(p);
+    };
+    const desenhar = () => {
+      el('contaAvatar').innerHTML = App.avatarHtml(p, 'w-24 h-24 text-2xl');
+      const foto = (p.avatar || '').startsWith('https://');
+      el('contaRemoverFoto').classList.toggle('hidden', !foto);
+      el('contaTxtFoto').textContent = foto ? 'Trocar foto' : 'Enviar foto';
+      const marc = (v) => (p.avatar === v ? 'ring-navy-900 ring-offset-2' : 'ring-transparent hover:ring-slate-300');
+      el('contaCores').innerHTML = App.CORES_AVATAR.map((c) => `<button type="button" data-av="cor:${c}" class="aspect-square rounded-full ring-2 ${marc(`cor:${c}`)} transition" style="background:${c}" aria-label="Avatar com iniciais nesta cor"></button>`).join('');
+      el('contaIcones').innerHTML = App.ICONES_AVATAR.map((i) => `<button type="button" data-av="icone:${i}" class="aspect-square rounded-full bg-navy-600 text-white grid place-items-center ring-2 ${marc(`icone:${i}`)} transition" aria-label="Avatar ${i}">${Icone(i, 'w-1/2 h-1/2')}</button>`).join('');
+      document.querySelectorAll('#contaCores [data-av], #contaIcones [data-av]').forEach((b) => b.addEventListener('click', async () => {
+        try {
+          const tinhaFoto = (p.avatar || '').startsWith('https://');
+          await salvar({ p_avatar: b.dataset.av });
+          if (tinhaFoto) Conta.limparFotos(p.id).catch(() => {});
+          desenhar(); App.toast('Avatar atualizado');
+        } catch (err) { App.toast(err.message || 'Não foi possível salvar o avatar.'); }
+      }));
+    };
+    desenhar();
+
+    el('contaFoto').addEventListener('change', async (e) => {
+      const arq = e.target.files[0]; e.target.value = '';
+      if (!arq) return;
+      el('contaTxtFoto').textContent = 'Enviando…';
+      try {
+        const { url, caminho } = await Conta.enviarFoto(p.id, arq);
+        await salvar({ p_avatar: url });
+        Conta.limparFotos(p.id, caminho).catch(() => {});
+        App.toast('Foto de perfil atualizada');
+      } catch (err) { App.toast(err.message || 'Não foi possível enviar a foto.'); }
+      desenhar();
+    });
+    el('contaRemoverFoto').addEventListener('click', async () => {
+      try { await salvar({ p_avatar: null }); await Conta.limparFotos(p.id).catch(() => {}); desenhar(); App.toast('Foto removida'); }
+      catch (err) { App.toast(err.message || 'Não foi possível remover a foto.'); }
+    });
+
+    el('formContaDados').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget; const bt = form.querySelector('[type=submit]');
+      const nome = el('cNome').value.trim();
+      if (nome.length < 2) return msg(form, 'Informe seu nome completo.');
+      setLoading(bt, true);
+      try { await salvar({ p_nome: nome, p_telefone: el('cTel').value, p_cidade: el('cCidade').value }); desenhar(); msg(form, 'Dados salvos com sucesso.', true); }
+      catch (err) { msg(form, err.message || 'Não foi possível salvar.'); }
+      finally { setLoading(bt, false, 'Salvar dados'); }
+    });
+
+    let comSenha = true;
+    const ajustar = async () => {
+      const info = await Conta.temSenha();
+      comSenha = info.temSenha;
+      el('cCaixaAtual').classList.toggle('hidden', !comSenha);
+      el('cSenhaTitulo').textContent = comSenha ? 'Alterar senha' : 'Criar senha (opcional)';
+      el('cSenhaSub').textContent = comSenha ? 'Por segurança, confirme a senha atual. A nova precisa ter pelo menos 6 caracteres.' : 'Você entra com o Google. Se quiser, crie uma senha para entrar também com e-mail (pelo menos 6 caracteres).';
+      el('cBtnSenha').textContent = comSenha ? 'Alterar senha' : 'Salvar senha';
+    };
+    ajustar();
+    el('formContaSenha').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget; const bt = el('cBtnSenha');
+      const atual = el('cSenhaAtual').value, s1 = el('cSenha1').value, s2 = el('cSenha2').value;
+      if (comSenha && !atual) return msg(form, 'Digite sua senha atual.');
+      if (s1.length < 6) return msg(form, 'A nova senha precisa ter pelo menos 6 caracteres.');
+      if (s1 !== s2) return msg(form, 'As senhas não são iguais.');
+      const texto = bt.textContent; setLoading(bt, true);
+      try {
+        await Conta.alterarSenha(atual, s1, { exigirAtual: comSenha });
+        form.reset(); msg(form, comSenha ? 'Senha alterada com sucesso.' : 'Senha criada! Agora você também pode entrar com e-mail e senha.', true);
+        await ajustar();
+      } catch (err) { msg(form, err.message); }
+      finally { setLoading(bt, false, el('cBtnSenha').textContent || texto); }
+    });
+
     el('btnExcluirContaEdu').addEventListener('click', async () => {
-      if (!confirm('Excluir sua conta para sempre? Esta ação não pode ser desfeita.')) return;
-      const { error: er } = await sb.rpc('excluir_minha_conta');
-      if (er) return App.toast(er.message);
-      App.toast('Conta excluída.'); App.sair();
+      const ok = await Conta.confirmarComSenha({ titulo: 'Excluir minha conta', botao: 'Excluir para sempre',
+        texto: ehDono() ? 'A instituição, as turmas e as faturas serão apagadas para sempre. Os alunos perdem o acesso liberado por você.' : 'Seu login será apagado para sempre e suas turmas passam para a escola.' });
+      if (!ok) return;
+      App.carregando(true);
+      try {
+        await Conta.limparFotos(p.id).catch(() => {});
+        const { error: er } = await sb.rpc('excluir_minha_conta');
+        if (er) throw er;
+        App.toast('Sua conta foi excluída.'); App.sair();
+      } catch (err) { App.toast(err.message || 'Não foi possível excluir a conta.'); }
+      finally { App.carregando(false); }
     });
   }
 
