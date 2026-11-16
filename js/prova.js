@@ -98,6 +98,21 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // A prova só começa em tela cheia (ModoProva). Na 3ª saída, as respostas são apagadas e ela recomeça.
+  function pedirTelaCheia() {
+    ModoProva.exigir({
+      nome: 'prova de nivelamento',
+      aoComecar: comecar,
+      aoCancelar: (motivo) => {
+        if (motivo !== 'limite') return;
+        apagar(); respostas = {}; questoes = []; atual = 0;
+        el('btnComecarProva').textContent = 'Começar a prova';
+        mostrarSecao('provaIntro');
+        window.scrollTo(0, 0);
+      },
+    });
+  }
+
   async function comecar() {
     const btn = el('btnComecarProva');
     setLoading(btn, true);
@@ -116,12 +131,13 @@
     } finally {
       setLoading(btn, false, Object.keys(recuperar()).length ? 'Continuar a prova' : 'Começar a prova');
     }
+    if (el('provaQuestao').classList.contains('hidden')) ModoProva.encerrar(); // falhou ao carregar
   }
 
   async function finalizar() {
     const emBranco = questoes.filter((q) => respostas[q.id] === undefined).length;
     if (emBranco > 0) {
-      const ok = confirm(`Você deixou ${emBranco} questão(ões) em branco. Elas contam como erro.\n\nQuer enviar mesmo assim?`);
+      const ok = await ModoProva.confirmar(`Você deixou ${emBranco} questão(ões) em branco. Elas contam como erro. Quer enviar mesmo assim?`, 'Enviar mesmo assim', 'Responder');
       if (!ok) return irPara(questoes.findIndex((q) => respostas[q.id] === undefined));
     }
     mostrarSecao('provaCarregando');
@@ -129,11 +145,13 @@
       const { data, error } = await sb.rpc('enviar_prova', { respostas });
       if (error) throw error;
       apagar();
+      ModoProva.encerrar();
       App.limparPerfil();
       renderizarResultado(data, true);
     } catch (err) {
       if ((err.message || '').includes('já fez')) {
         apagar();
+        ModoProva.encerrar();
         const p = await App.perfil(true);
         return renderizarResultado(p, false);
       }
@@ -244,11 +262,12 @@
   }
 
   // ---------- Eventos ----------
-  el('btnComecarProva').addEventListener('click', comecar);
+  el('btnComecarProva').addEventListener('click', pedirTelaCheia);
   el('btnQAnterior').addEventListener('click', () => irPara(atual - 1));
   el('btnQProxima').addEventListener('click', () => (atual === questoes.length - 1 ? finalizar() : irPara(atual + 1)));
   document.addEventListener('keydown', (e) => {
     if (el('provaQuestao').classList.contains('hidden') || document.querySelector('[data-view="prova"]').classList.contains('hidden')) return;
+    if (document.getElementById('modoProvaPausa') || document.getElementById('modoProvaAviso')) return;
     const n = { a: 0, b: 1, c: 2, d: 3, 1: 0, 2: 1, 3: 2, 4: 3 }[e.key.toLowerCase()];
     if (n !== undefined && questoes[atual]?.opcoes[n] !== undefined) escolher(n);
     if (e.key === 'ArrowRight' && atual < questoes.length - 1) irPara(atual + 1);

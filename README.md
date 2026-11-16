@@ -304,6 +304,14 @@ Antes das atividades, cada uma das 220 lições (128 dos níveis + 92 das trilha
 - **Como funciona cada atividade:** dicas para cada tipo de exercício da prática.
 O conteúdo fica em `js/materiais.js` (objeto `MATERIAIS`, chave `"nível|lição"`).
 
+## Provas em tela cheia (anticonsulta)
+A **prova de nivelamento** e os **testes de nível** só começam em tela cheia (`js/modoprova.js`):
+- sair da tela cheia, trocar de aba/app ou clicar em outra janela **pausa** a prova, cobrindo as questões;
+- na **3ª saída** a tentativa é cancelada: a prova de nivelamento recomeça do zero (respostas apagadas) e o teste de nível volta para a capa com questões novas;
+- copiar, recortar, colar, selecionar texto e o botão direito ficam bloqueados durante a prova;
+- no iPhone (que não permite tela cheia em sites) vale o **modo concentrado**: só a troca de app/aba conta como saída.
+É uma barreira contra consulta rápida no mesmo aparelho; não impede consulta em outro aparelho.
+
 ## Notificações: lembrete diário às 10h
 - O aluno ativa no cartão **Lembrete diário às 10h** do painel do curso ou em **Perfil → Notificações** (tem "Enviar teste" e "Desativar").
 - Todo dia às **10h de Brasília** (pg_cron `notificacoes-10h`, 13h UTC) a função `notificacoes` envia para todos que ativaram, com mensagem personalizada: nome, "🔥 N dias seguidos", "Sentimos sua falta" para quem parou há 3+ dias, ou "Você já estudou hoje".
@@ -383,7 +391,7 @@ insert into public.admins (email) values ('novo-admin@email.com');
 ## Publicar atualizações (GitHub Pages)
 - O visual vem do arquivo pronto `css/tailwind.css` (sem depender do site do Tailwind). Se mudar classes no HTML/JS,
   gere de novo: `npx tailwindcss@3.4.19 -c tailwind.config.js -i css/tailwind-entrada.css -o css/tailwind.css --minify`.
-- Os arquivos são chamados com `?v=20261115b` no `index.html`. Ao subir uma versão nova, troque esse número
+- Os arquivos são chamados com `?v=20261115c` no `index.html`. Ao subir uma versão nova, troque esse número
   (localizar e substituir) para todos os navegadores baixarem os arquivos novos na hora.
 - O `sw.js` (app instalável) sempre busca a versão nova primeiro; a cópia guardada só é usada sem internet.
 
@@ -428,6 +436,7 @@ supabase/functions/mercadopago/index.ts   Função do servidor do Mercado Pago (
 supabase/functions/lembretes/index.ts     E-mails de vencimento (já publicada e agendada)
 supabase/functions/notificacoes/index.ts  Notificação diária às 10h (já publicada e agendada)
 js/notificacoes.js    Ativar/desativar o lembrete diário (Web Push)
+js/modoprova.js       Tela cheia obrigatória nas provas (pausa, limite de saídas, bloqueio de copiar)
 js/materiais.js       Material de estudo extra de cada lição (estrutura, exemplos, erros comuns, dica)
 .well-known/assetlinks.json  Verificação do domínio para o app da Play Store
 PLAY_STORE.md         Como publicar na Google Play

@@ -860,6 +860,7 @@
     const porcentagem = Math.round((st.acertos / total) * 100);
     const minimo = st.teste ? 70 : 60;
     const passou = porcentagem >= minimo;
+    if (st.teste) ModoProva.encerrar();
 
     el('licaoConteudo').innerHTML = '<div class="py-24 grid place-items-center"><span class="spinner spinner-escuro" style="width:32px;height:32px"></span></div>';
 
@@ -1070,11 +1071,16 @@
               <li class="flex gap-3"><span class="text-brand-red mt-1">${Icone('check', 'w-4 h-4')}</span>Você precisa de <b>70%</b> de acertos para passar.</li>
               <li class="flex gap-3"><span class="text-brand-red mt-1">${Icone('check', 'w-4 h-4')}</span>Aprovado, você recebe o <b>certificado do nível ${st.n}</b>${st.n < 16 ? ` e libera o <b>nível ${st.n + 1}</b>` : ' e conclui o curso'}.</li>
               <li class="flex gap-3"><span class="text-brand-red mt-1">${Icone('check', 'w-4 h-4')}</span>Pode tentar quantas vezes quiser; as questões mudam a cada tentativa.</li>
+              <li class="flex gap-3"><span class="text-brand-red mt-1">${Icone('check', 'w-4 h-4')}</span><span><b>Feito em tela cheia</b>, sem consultas: sair da tela cheia ou trocar de aba pausa o teste, e na ${ModoProva.LIMITE}ª saída a tentativa é cancelada.</span></li>
             </ul>
             <button id="btnIniciarTeste" class="btn-shine mt-8 w-full bg-brand-red hover:bg-brand-redDark text-white font-display font-semibold text-lg py-4 rounded-2xl shadow-glow transition">Começar o teste</button>
           </div>
         </div>`;
-      el('btnIniciarTeste').addEventListener('click', comecarPratica);
+      el('btnIniciarTeste').addEventListener('click', () => ModoProva.exigir({
+        nome: 'prova do nível',
+        aoComecar: comecarPratica,
+        aoCancelar: (motivo) => { if (motivo === 'limite') iniciarSessao(); }, // volta à capa, com questões novas
+      }));
     } else {
       renderizarAprenda();
     }
