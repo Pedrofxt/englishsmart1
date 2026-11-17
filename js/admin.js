@@ -310,25 +310,69 @@
   }
 
   // ---------- Denúncias da comunidade ----------
+  // ---------- Mensagens: sugestões, reclamações, elogios e denúncias (com o e-mail para responder) ----------
+  let filtroMsg = { status: 'aberta', tipo: '' };
   async function painelDenuncias() {
     const raiz = document.getElementById('painelDenuncias');
-    const { data, error } = await sb.rpc('admin_denuncias');
+    const { data, error } = await sb.rpc('admin_manifestacoes', { p_status: filtroMsg.status || null });
     if (error) throw error;
+    const esc = App.escapar;
+    const COR = { sugestao: 'bg-sky-50 text-sky-800', reclamacao: 'bg-amber-50 text-amber-800', elogio: 'bg-emerald-50 text-emerald-800', denuncia: 'bg-red-50 text-red-800' };
+    const PAPEL = { aluno: 'Aluno', professor: 'Professor', escola: 'Escola', equipe: 'Equipe', visitante: 'Visitante (sem login)' };
+    const lista = data.filter((d) => !filtroMsg.tipo || d.tipo === filtroMsg.tipo);
+    const conta = (t) => data.filter((d) => d.tipo === t).length;
+    const chip = (grupo, valor, texto) => `<button data-filtro="${grupo}" data-valor="${valor}" class="text-sm font-semibold rounded-full px-3.5 py-1.5 border transition ${filtroMsg[grupo] === valor ? 'bg-navy-900 text-white border-navy-900' : 'border-slate-200 text-navy-900 hover:border-navy-900'}">${texto}</button>`;
+    const assunto = (d) => encodeURIComponent(`English Smart · sua ${Contato.ROTULO[d.tipo].toLowerCase()}`);
     raiz.innerHTML = `
-      <p class="text-sm text-slate-500">Publicações e comentários denunciados na comunidade. Apague o conteúdo ou dispense a denúncia.</p>
-      <div class="mt-4 space-y-3">${data.map((d) => `
-        <div class="bg-white rounded-2xl border border-slate-200 p-5">
-          <p class="text-xs text-slate-500">${d.comentario_id ? 'Comentário' : 'Publicação'} de <b>${App.escapar(d.autor?.nome || '—')}</b> · denunciado em ${new Date(d.criada_em).toLocaleString('pt-BR')}</p>
-          <p class="mt-2 text-navy-900">${App.escapar(d.texto || '(já apagado)')}</p>
-          ${d.motivo ? `<p class="mt-1 text-sm text-amber-800">Motivo: ${App.escapar(d.motivo)}</p>` : ''}
-          <div class="mt-3 flex gap-2"><button data-denuncia="${d.id}" data-apagar="1" class="text-sm font-semibold bg-red-600 text-white rounded-lg px-3 py-1.5">Apagar conteúdo</button><button data-denuncia="${d.id}" data-apagar="0" class="text-sm font-semibold border border-slate-200 rounded-lg px-3 py-1.5">Dispensar</button></div>
-        </div>`).join('') || '<div class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">Nenhuma denúncia pendente.</div>'}</div>`;
-    raiz.querySelectorAll('[data-denuncia]').forEach((b) => b.addEventListener('click', async () => {
-      const { error: er } = await sb.rpc('admin_resolver_denuncia', { p_id: Number(b.dataset.denuncia), p_apagar: b.dataset.apagar === '1' });
+      <p class="text-sm text-slate-500">Mensagens enviadas pelo "Fale conosco" e pelas denúncias da comunidade. Cada uma tem o e-mail de quem enviou para vocês responderem.</p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        ${chip('status', 'aberta', 'Abertas')}${chip('status', 'resolvida', 'Resolvidas')}${chip('status', '', 'Todas')}
+        <span class="w-px bg-slate-200 mx-1"></span>
+        ${chip('tipo', '', `Todos os tipos (${data.length})`)}
+        ${Contato.TIPOS.map(([k, n]) => chip('tipo', k, `${n} (${conta(k)})`)).join('')}
+      </div>
+      <div class="mt-4 space-y-3">${lista.map((d) => `
+        <article class="bg-white rounded-2xl border ${d.status === 'aberta' ? 'border-slate-200' : 'border-slate-100 opacity-80'} p-5">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-bold rounded-full px-2.5 py-1 ${COR[d.tipo]}">${Contato.ROTULO[d.tipo]}</span>
+            ${d.status === 'resolvida' ? '<span class="font-semibold rounded-full px-2.5 py-1 bg-slate-100 text-slate-600">Resolvida</span>' : ''}
+            <span class="text-slate-500">${new Date(d.criada_em).toLocaleString('pt-BR')}</span>
+          </div>
+          <div class="mt-3 grid sm:grid-cols-[1fr_auto] gap-3 items-start">
+            <div class="min-w-0">
+              <p class="font-semibold text-navy-900">${esc(d.nome || 'Sem nome')} <span class="text-xs font-normal text-slate-500">· ${PAPEL[d.papel] || ''}</span></p>
+              <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                ${Icone('envelope', 'w-4 h-4 text-slate-400')}<span class="font-mono text-navy-900 break-all">${esc(d.email || '—')}</span>
+                ${d.email ? `<button data-copiar="${esc(d.email)}" class="text-xs font-semibold text-navy-700 hover:underline">Copiar</button>` : ''}
+              </div>
+            </div>
+            ${d.email ? `<a href="mailto:${esc(d.email)}?subject=${assunto(d)}" class="text-center text-sm font-semibold bg-navy-900 hover:bg-navy-800 text-white rounded-lg px-3 py-2">Responder por e-mail</a>` : ''}
+          </div>
+          ${d.mensagem ? `<p class="mt-3 text-slate-700 whitespace-pre-line">${esc(d.mensagem)}</p>` : ''}
+          ${d.post_id || d.comentario_id ? `
+            <div class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <p class="text-xs text-slate-500">${d.comentario_id ? 'Comentário' : 'Publicação'} de <b>${esc(d.autor_conteudo?.nome || '—')}</b> na comunidade</p>
+              <p class="mt-1 text-sm text-navy-900 whitespace-pre-line">${esc(d.conteudo || '(já apagado)')}</p>
+            </div>` : ''}
+          <div class="mt-4 flex flex-wrap gap-2">
+            ${(d.post_id || d.comentario_id) && d.conteudo ? `<button data-msg="${d.id}" data-acao="apagar_conteudo" class="text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-1.5">Apagar conteúdo</button>` : ''}
+            ${d.status === 'aberta' ? `<button data-msg="${d.id}" data-acao="resolver" class="text-sm font-semibold border border-slate-200 hover:border-navy-900 rounded-lg px-3 py-1.5">Marcar como resolvida</button>` : `<button data-msg="${d.id}" data-acao="reabrir" class="text-sm font-semibold border border-slate-200 hover:border-navy-900 rounded-lg px-3 py-1.5">Reabrir</button>`}
+            <button data-msg="${d.id}" data-acao="excluir" class="text-sm font-semibold text-red-700 hover:underline px-2">Excluir</button>
+          </div>
+        </article>`).join('') || `<div class="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">Nenhuma mensagem ${filtroMsg.status === 'aberta' ? 'aberta' : filtroMsg.status === 'resolvida' ? 'resolvida' : ''} por aqui.</div>`}</div>`;
+    raiz.querySelectorAll('[data-filtro]').forEach((b) => b.addEventListener('click', () => { filtroMsg[b.dataset.filtro] = b.dataset.valor; painelDenuncias(); }));
+    raiz.querySelectorAll('[data-copiar]').forEach((b) => b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copiar); App.toast('E-mail copiado'); } catch { App.toast(b.dataset.copiar); }
+    }));
+    raiz.querySelectorAll('[data-msg]').forEach((b) => b.addEventListener('click', async () => {
+      if (b.dataset.acao === 'excluir' && !confirm('Excluir esta mensagem para sempre?')) return;
+      if (b.dataset.acao === 'apagar_conteudo' && !confirm('Apagar o conteúdo denunciado da comunidade?')) return;
+      const { error: er } = await sb.rpc('admin_atualizar_manifestacao', { p_id: Number(b.dataset.msg), p_acao: b.dataset.acao });
       if (er) return App.toast(er.message);
       painelDenuncias();
     }));
   }
+
 
   // ---------- Abas do portal ----------
   let abaAtual = 'alunos';

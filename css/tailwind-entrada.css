@@ -17,3 +17,6 @@
 .tipo-conta:hover span { @apply border-navy-600; }
 .tipo-conta input:checked + span { @apply border-navy-900 bg-navy-900 text-white; }
 .tipo-conta input:focus-visible + span { @apply ring-2 ring-brand-red ring-offset-2; }
+.tipo-msg:hover > span { @apply border-navy-600; }
+.tipo-msg input:checked + span { @apply border-brand-red bg-red-50; }
+.tipo-msg input:focus-visible + span { @apply ring-2 ring-brand-red ring-offset-2; }

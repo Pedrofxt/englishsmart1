@@ -242,6 +242,7 @@ const App = (() => {
         ${p.papel === 'admin' || p.nivel_num ? item('#/revisao', 'brilho', 'Revisão inteligente') : ''}
         ${p.papel === 'aluno' && p.nivel_num ? item('#/loja', 'loja', 'Loja de moedas') : ''}
         ${p.papel === 'aluno' && !(modoApp() && !p.premium) ? item('#/planos', 'estrela', p.premium ? 'Minha assinatura' : 'Assinar') : ''}
+        <button data-menu-contato class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone('envelope', 'w-4 h-4 text-slate-400')}Fale conosco</button>
         ${item('#/termos', 'documento', 'Termos e privacidade')}
         <button data-menu-som class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Som.ligado() ? 'som' : 'mudo', 'w-4 h-4 text-slate-400')}${Som.ligado() ? 'Desligar sons' : 'Ligar sons'}</button>
         <button data-menu-tema class="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-50 transition">${Icone(Tema.escuro() ? 'sol' : 'lua', 'w-4 h-4 text-slate-400')}${Tema.escuro() ? 'Modo claro' : 'Modo escuro'}</button>
@@ -251,6 +252,7 @@ const App = (() => {
     menu.querySelector('[data-menu-sair]').addEventListener('click', () => { fecharMenuAvatar(); sair(); });
     menu.querySelector('[data-menu-tema]').addEventListener('click', () => { fecharMenuAvatar(); Tema.alternar(); });
     menu.querySelector('[data-menu-som]').addEventListener('click', () => { fecharMenuAvatar(); Som.alternar(); });
+    menu.querySelector('[data-menu-contato]').addEventListener('click', () => { fecharMenuAvatar(); Contato.abrir(); });
     Som.tocar('abrir');
     menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', fecharMenuAvatar));
   }

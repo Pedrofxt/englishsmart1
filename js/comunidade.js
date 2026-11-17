@@ -40,7 +40,7 @@ const Comunidade = (() => {
             <div data-menu class="hidden absolute right-0 top-9 z-10 w-44 bg-white border border-slate-200 rounded-xl shadow-card py-1 text-sm">
               ${p.pode_fixar ? `<button type="button" data-fixar="${p.fixado ? 0 : 1}" class="w-full text-left px-3 py-2 hover:bg-slate-50">${p.fixado ? 'Desafixar' : 'Fixar no topo'}</button>` : ''}
               ${p.pode_apagar ? '<button type="button" data-apagar class="w-full text-left px-3 py-2 text-red-700 hover:bg-red-50">Apagar</button>' : ''}
-              ${p.meu ? '' : '<button type="button" data-denunciar class="w-full text-left px-3 py-2 hover:bg-slate-50">Denunciar</button>'}
+              ${p.meu ? '' : '<button type="button" data-denunciar class="w-full text-left px-3 py-2 hover:bg-slate-50">Denunciar ou comentar com a equipe</button>'}
             </div>
           </div>
         </header>
@@ -123,10 +123,7 @@ const Comunidade = (() => {
         if (error) return App.toast(error.message);
         ultimo = null; carregar();
       } else if (alvo.matches('[data-denunciar]')) {
-        const motivo = prompt('Por que você está denunciando esta publicação? (opcional)');
-        if (motivo === null) return;
-        await sb.rpc('denunciar', { p_post: id, p_comentario: null, p_motivo: motivo });
-        App.toast('Obrigado! A equipe vai analisar.');
+        Contato.abrir({ post: id });
       } else if (alvo.matches('[data-comentar]')) {
         const box = art.querySelector('[data-comentarios]');
         if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
@@ -147,7 +144,7 @@ const Comunidade = (() => {
               <p class="text-sm"><b class="text-navy-900">${esc(c.autor?.nome || 'Usuário')}</b> <span class="text-xs text-slate-500">${quando(c.criado_em)}</span></p>
               <p class="text-sm text-slate-700 break-words">${comLinks(c.texto)}</p>
             </div>
-            ${c.pode_apagar ? `<button type="button" data-apagar-com="${c.id}" class="text-xs text-slate-500 hover:text-red-700 px-1" aria-label="Apagar comentário">${Icone('x', 'w-3.5 h-3.5')}</button>` : `<button type="button" data-denunciar-com="${c.id}" class="text-xs text-slate-500 hover:text-navy-900 px-1" title="Denunciar">!</button>`}
+            ${c.pode_apagar ? `<button type="button" data-apagar-com="${c.id}" class="text-xs text-slate-500 hover:text-red-700 px-1" aria-label="Apagar comentário">${Icone('x', 'w-3.5 h-3.5')}</button>` : `<button type="button" data-denunciar-com="${c.id}" class="text-xs text-slate-500 hover:text-navy-900 px-1" title="Denunciar ou falar com a equipe" aria-label="Denunciar comentário">${Icone('bandeira', 'w-3.5 h-3.5')}</button>`}
           </div>`).join('')}
         <form data-form-com class="flex gap-2">
           <label class="sr-only" for="com-${id}">Comentário</label>
@@ -170,10 +167,7 @@ const Comunidade = (() => {
         desenharComentarios(box, id, art);
       }));
       box.querySelectorAll('[data-denunciar-com]').forEach((b) => b.addEventListener('click', async () => {
-        const motivo = prompt('Por que você está denunciando este comentário? (opcional)');
-        if (motivo === null) return;
-        await sb.rpc('denunciar', { p_post: null, p_comentario: Number(b.dataset.denunciarCom), p_motivo: motivo });
-        App.toast('Obrigado! A equipe vai analisar.');
+        Contato.abrir({ comentario: Number(b.dataset.denunciarCom) });
       }));
     }
 

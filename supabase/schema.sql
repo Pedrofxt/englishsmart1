@@ -2410,3 +2410,16 @@ revoke insert, update, delete, truncate, references, trigger on all tables in sc
 revoke select on public.config_privada, public.admins from authenticated;
 alter default privileges in schema public revoke all on tables from anon;
 alter default privileges in schema public revoke insert, update, delete, truncate, references, trigger on tables from authenticated;
+
+-- =====================================================================
+-- Fale conosco: a tabela "denuncias" guarda sugestões, reclamações, elogios e denúncias,
+-- sempre com o e-mail de contato para a equipe responder (aba Mensagens do portal).
+-- Funções: enviar_manifestacao (visitante ou logado), admin_manifestacoes, admin_atualizar_manifestacao.
+-- O SQL completo foi aplicado pela migração "fale_conosco_manifestacoes".
+-- =====================================================================
+alter table public.denuncias add column if not exists tipo text not null default 'denuncia';
+alter table public.denuncias add column if not exists email text;
+alter table public.denuncias add column if not exists nome text;
+alter table public.denuncias add column if not exists papel text;
+alter table public.denuncias add column if not exists status text not null default 'aberta';
+alter table public.denuncias add column if not exists resolvida_em timestamptz;

@@ -91,6 +91,8 @@ window.Icone = (() => {
     documento: '<path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/>',
     lento: '<path d="M4 18a8 8 0 1116 0"/><path d="M12 18l-3-4"/>',
     relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    alerta: '<path d="M12 4L2.5 20h19L12 4z"/><path d="M12 10v4M12 17.5v.5"/>',
+    bandeira: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
     brilho: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/>',
     olho: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     capelo: '<path d="M2 9l10-5 10 5-10 5L2 9zM6 11v5c3 2 9 2 12 0v-5"/>',
